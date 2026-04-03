@@ -1,6 +1,7 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
+import { cn } from "@/src/lib/utils";
+
 import type { AnyFieldApi } from "@tanstack/react-form";
 import React from "react";
 
@@ -76,12 +77,11 @@ const AppField = ({
                 )}
             />
 
-          {append && (
-      <div className="absolute inset-y-0 right-0 flex items-center pr-3 z-10">
-        {append}
-      </div>
-)}
-
+            {
+                append && (<div className="absolute inset-y-0 right-0 items-center pr-3 pointer-events-none z-10">
+                    {append}
+                </div>)
+            }
 
             {
                 hasError && (

@@ -4,7 +4,7 @@ import "./globals.css";
 
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import QueryProviders from "../providers/QueryProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,30 +19,27 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "ConsultEdge — Expert Consultation Marketplace",
   description:
-    "Connect with verified experts and get guidance that gives you a real advantage. ConsultEdge helps you make smarter, faster, and more confident decisions.",
+    "Connect with verified experts and get guidance that gives you a real advantage.",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">
+    <html lang="en" suppressHydrationWarning>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} min-h-full flex flex-col antialiased`}
+      >
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
-          <TooltipProvider delayDuration={150}>
-            {children}
-            <Toaster richColors />
-          </TooltipProvider>
+          <QueryProviders>{children}</QueryProviders>
+          <Toaster richColors />
         </ThemeProvider>
       </body>
     </html>
