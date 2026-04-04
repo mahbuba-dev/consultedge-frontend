@@ -53,11 +53,11 @@ const getTokenRemainingTime = (token: string): number => {
 export const setTokenInCookies = async (
     name: string,
     token: string,
-    maxAgeInSeconds: number
+    fallbackMaxAgeInSeconds = 60 * 60 * 24 // Default to 1 days if no token or fallback provided
 ) => {
     // ⏳ Calculate actual remaining time from token payload
     const maxAgeInSecond = getTokenRemainingTime(token);
 
     // 🍪 Save cookie using your custom cookie utility
-    await setCookie(name, token, maxAgeInSecond);
-};
+    await setCookie(name, token, maxAgeInSecond || fallbackMaxAgeInSeconds);
+}

@@ -1,6 +1,6 @@
 import { dehydrate, HydrationBoundary, QueryClient } from "@tanstack/react-query";
 import { getExperts } from "./_actions";
-import ExpertList from "@/src/components/modules/Experts/ExpertsList";
+import ExpertList from "@/components/modules/Experts/ExpertsList";
 
 export default async function expertsPage() {
 
