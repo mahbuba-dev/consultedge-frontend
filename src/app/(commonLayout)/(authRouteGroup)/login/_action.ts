@@ -102,13 +102,13 @@ export const loginAction = async (payload : ILoginPayload, redirectPath ?: strin
         await setTokenInCookies("refreshToken", refreshToken, 30 * 24 * 60 * 60); // 30 days
         await setTokenInCookies("better-auth.session_token", token, 24 * 60 * 60); // 1 day in seconds
 
-        // if(!emailVerified){
-        //     redirect("/verify-email");
-        // }else // in the catch block
+        if(!emailVerified){
+            redirect("/verify-email");
+        }else // in the catch block
             
         if(needPasswordChange){
             //TODO : refactoring
-            redirect(`/reset-password?email=${email}`);
+            redirect(`/change-password?email=${email}`);
         }else{
             // redirect(redirectPath || "/dashboard");
             const targetPath = redirectPath && isValidRedirectForRole(redirectPath, role as UserRole) ? redirectPath : getDefaultDashboardRoute(role as UserRole);

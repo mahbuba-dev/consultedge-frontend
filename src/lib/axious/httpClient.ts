@@ -1,5 +1,8 @@
 import { ApiResponse } from "@/src/types/api.types";
 import axios from "axios";
+import { isTokenExpiringSoon } from "../tokenUtils";
+import { cookies, headers } from "next/headers";
+import { getNewTokensWithRefreshToken } from "@/src/services/auth.services";
 
 // ---------------------------------------------
 // Validate API Base URL
@@ -14,6 +17,30 @@ if (!API_BASE_URL) {
 
 
 
+
+async function tryRefreshToken(
+    accessToken: string,
+    refreshToken: string
+): Promise<void>
+{
+    if(!(await isTokenExpiringSoon(accessToken))) {
+        return;
+    }
+
+    const requestHeader = await headers();
+
+    if (requestHeader.get("x-token-refreshed") === "1") {
+        return; // avoid multiple refresh attempts in the same request lifecycle
+    }
+
+    try {
+        await getNewTokensWithRefreshToken(refreshToken);
+    } catch (error : any) {
+        console.error("Error refreshing token in http client:", error);
+    }
+}
+
+
 // ---------------------------------------------
 // Create Axios Instance (Singleton Factory)
 // ---------------------------------------------
@@ -21,12 +48,29 @@ if (!API_BASE_URL) {
 // - timeout: Max wait time before request auto-fails
 // - headers: Default headers for all requests
 // ---------------------------------------------
-const axiousInstance = () => {
+const axiousInstance = async () => {
+ 
+     const cookieStore = await cookies();
+    const accessToken = cookieStore.get("accessToken")?.value;
+    const refreshToken = cookieStore.get("refreshToken")?.value;
+
+    if(accessToken && refreshToken){
+        await tryRefreshToken(accessToken, refreshToken);
+    }
+
+    const cookieHeader = cookieStore
+                                .getAll()
+                                .map((cookie) => `${cookie.name}=${cookie.value}`)
+                                .join("; ");    
+    // eg Cookie: "accessToken=abc123; refreshToken=def456"
+
+
   const instance = axios.create({
     baseURL: API_BASE_URL,
     timeout: 30000, // 30 seconds timeout
     headers: {
       "Content-Type": "application/json",
+        Cookie : cookieHeader
     },
     // withCredentials: true, // Enable if backend uses cookies
   });
@@ -55,7 +99,7 @@ export interface ApiRequestOptions {
 // ---------------------------------------------
 const httpGet = async <TData>(endpoint: string, options?: ApiRequestOptions):Promise<ApiResponse<TData>> => {
   try {
-    const instance = axiousInstance();
+    const instance = await axiousInstance();
     const response = await instance.get<ApiResponse<TData>>(endpoint, {
       params: options?.params,
       headers: options?.headers,
@@ -79,7 +123,7 @@ const httpPost = async <TData> (
   options?: ApiRequestOptions
 ) : Promise<ApiResponse<TData>> => {
   try {
-    const instance = axiousInstance();
+    const instance = await axiousInstance();
     const response = await instance.post<ApiResponse<TData>>(endpoint, data, {
       params: options?.params,
       headers: options?.headers,
@@ -103,7 +147,7 @@ const httpPut = async <TData> (
   options?: ApiRequestOptions
 ) : Promise<ApiResponse<TData>> => {
   try {
-    const instance = axiousInstance();
+    const instance = await axiousInstance();
     const response = await instance.put<ApiResponse<TData>>(endpoint, data, {
       params: options?.params,
       headers: options?.headers,
@@ -127,7 +171,7 @@ const httpPatch = async <TData> (
   options?: ApiRequestOptions
 ) : Promise<ApiResponse<TData>> => {
   try {
-    const instance = axiousInstance();
+    const instance = await axiousInstance();
     const response = await instance.patch<ApiResponse<TData>>(endpoint, data, {
       params: options?.params,
       headers: options?.headers,
@@ -148,7 +192,7 @@ const httpPatch = async <TData> (
 // ---------------------------------------------
 const httpDelete = async <TData>(endpoint: string, options?: ApiRequestOptions): Promise<ApiResponse<TData>> => {
   try {
-    const instance = axiousInstance();
+    const instance = await axiousInstance();
     const response = await instance.delete<ApiResponse<TData>>(endpoint, {
       params: options?.params,
       headers: options?.headers,

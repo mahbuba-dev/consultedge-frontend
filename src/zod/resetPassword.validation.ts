@@ -1,7 +1,6 @@
-// src/zod/resetPassword.validation.ts
 import { z } from "zod";
 
-export const resetPasswordZodSchema = z
+export const resetPasswordSchema = z
   .object({
     password: z
       .string()
@@ -11,12 +10,10 @@ export const resetPasswordZodSchema = z
       .regex(/[0-9]/, "Must contain at least one number")
       .regex(/[^A-Za-z0-9]/, "Must contain at least one special character"),
     confirmPassword: z.string(),
-    token: z.string().min(1, "Invalid or missing token"),
-    email: z.string().email("Invalid email"),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    path: ["confirmPassword"],
     message: "Passwords do not match",
+    path: ["confirmPassword"],
   });
 
-export type IResetPasswordPayload = z.infer<typeof resetPasswordZodSchema>;
+export type ResetPasswordType = z.infer<typeof resetPasswordSchema>;

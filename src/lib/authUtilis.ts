@@ -16,8 +16,8 @@ export const commonProtectedRoutes : RouteConfig = {
     pattern : []
 }
 
-export const doctorProtectedRoutes : RouteConfig = {
-    pattern: [/^\/doctor\/dashboard/ ], // Matches any path that starts with /doctor/dashboard
+export const expertProtectedRoutes : RouteConfig = {
+    pattern: [/^\/expert\/dashboard/ ], // Matches any path that starts with /expert/dashboard
     exact : []
 }
 
@@ -26,12 +26,9 @@ export const adminProtectedRoutes : RouteConfig = {
     exact : []
 }
 
-// export const superAdminProtectedRoutes : RouteConfig = {
-//     pattern: [/^\/admin\/dashboard/ ], // Matches any path that starts with /super-admin/dashboard
-//     exact : []
-// }
 
-export const patientProtectedRoutes : RouteConfig = {
+
+export const clientProtectedRoutes : RouteConfig = {
     pattern: [/^\/dashboard/ ], // Matches any path that starts with /dashboard
     exact : [ "/payment/success"]
 };
@@ -43,21 +40,19 @@ export const isRouteMatches = (pathname : string, routes : RouteConfig) => {
     return routes.pattern.some((pattern : RegExp) => pattern.test(pathname));
 }
 
-export const getRouteOwner = (pathname : string) : "SUPER_ADMIN" | "ADMIN" | "DOCTOR" | "PATIENT" | "COMMON" | null => {
-    if(isRouteMatches(pathname, doctorProtectedRoutes)) {
-        return "DOCTOR";
+export const getRouteOwner = (pathname : string) :  "ADMIN" | "EXPERT" | "CLIENT" | "COMMON" | null => {
+    if(isRouteMatches(pathname, expertProtectedRoutes)) {
+        return "EXPERT";
     }
 
-    // if (isRouteMatches(pathname, superAdminProtectedRoutes)) {
-    //     return "SUPER_ADMIN";
-    // }
+   
 
     if(isRouteMatches(pathname, adminProtectedRoutes)) {
         return "ADMIN";
     }
     
-    if(isRouteMatches(pathname, patientProtectedRoutes)) {
-        return "PATIENT";
+    if(isRouteMatches(pathname, clientProtectedRoutes)) {
+        return "CLIENT";
     }
 
     if(isRouteMatches(pathname, commonProtectedRoutes)) {
@@ -68,13 +63,13 @@ export const getRouteOwner = (pathname : string) : "SUPER_ADMIN" | "ADMIN" | "DO
 }
 
 export const getDefaultDashboardRoute = (role : UserRole) => {
-    if(role === "ADMIN" || role === "SUPER_ADMIN") {
+    if(role === "ADMIN" ) {
         return "/admin/dashboard";
     }
-    if(role === "DOCTOR") {
-        return "/doctor/dashboard";
+    if(role === "EXPERT") {
+        return "/expert/dashboard";
     }
-    if(role === "PATIENT") {
+    if(role === "CLIENT") {
         return "/dashboard";
     }
 
@@ -82,11 +77,7 @@ export const getDefaultDashboardRoute = (role : UserRole) => {
 }
 
 export const isValidRedirectForRole = (redirectPath : string, role : UserRole) => {
-    const unifySuperAdminAndAdminRole = role === "SUPER_ADMIN" ? "ADMIN" : role;
-
-    role = unifySuperAdminAndAdminRole;
-
-    const sanitizedRedirectPath = redirectPath.split("?")[0] || redirectPath;
+   const sanitizedRedirectPath = redirectPath.split("?")[0] || redirectPath;
     const routeOwner = getRouteOwner(sanitizedRedirectPath);
 
     if(routeOwner === null || routeOwner === "COMMON"){

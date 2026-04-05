@@ -1,26 +1,27 @@
 "use client";
 
 import { useForm } from "@tanstack/react-form";
-import { resetPasswordSchema } from "@/src/zod/resetPassword.validation";
+
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { resetPasswordService } from "@/src/services/auth.services";
+import { changePasswordService } from "@/src/services/auth.services";
+import { changePasswordSchema } from "@/src/zod/changePassword.validation";
 
-export default function ResetPasswordForm({ email }: { email: string }) {
+export default function ChangePasswordForm() {
   const router = useRouter();
 
   const form = useForm({
     defaultValues: {
-      otp: "",
-      password: "",
+      currentPassword: "",
+      newPassword: "",
       confirmPassword: "",
     },
 
     validators: {
       onSubmit: ({ value }) => {
-        const result = resetPasswordSchema.safeParse(value);
+        const result = changePasswordSchema.safeParse(value);
         if (!result.success) {
           return result.error.flatten().fieldErrors;
         }
@@ -29,10 +30,9 @@ export default function ResetPasswordForm({ email }: { email: string }) {
     },
 
     onSubmit: async ({ value }) => {
-      const res = await resetPasswordService({
-        email,
-        otp: value.otp,
-        password: value.password,
+      const res = await changePasswordService({
+        currentPassword: value.currentPassword,
+        newPassword: value.newPassword,
       });
 
       if (!res.success) {
@@ -40,22 +40,22 @@ export default function ResetPasswordForm({ email }: { email: string }) {
         return;
       }
 
-      toast.success("Password updated successfully");
+      toast.success("Password changed successfully");
 
       setTimeout(() => {
-        router.push("/login");
+        router.push("/dashboard");
       }, 1200);
     },
   });
 
   return (
     <form onSubmit={form.handleSubmit} className="space-y-5">
-      <form.Field name="otp">
+      <form.Field name="currentPassword">
         {(field) => (
           <div>
             <Input
-              type="text"
-              placeholder="Enter OTP"
+              type="password"
+              placeholder="Current Password"
               value={field.state.value}
               onChange={(e) => field.handleChange(e.target.value)}
             />
@@ -66,7 +66,7 @@ export default function ResetPasswordForm({ email }: { email: string }) {
         )}
       </form.Field>
 
-      <form.Field name="password">
+      <form.Field name="newPassword">
         {(field) => (
           <div>
             <Input
@@ -99,7 +99,7 @@ export default function ResetPasswordForm({ email }: { email: string }) {
       </form.Field>
 
       <Button type="submit" className="w-full">
-        Reset Password
+        Change Password
       </Button>
     </form>
   );
