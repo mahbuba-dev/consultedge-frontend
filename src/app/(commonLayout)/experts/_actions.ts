@@ -1,11 +1,7 @@
-import { httpClient } from "@/src/lib/axious/httpClient"
-import { IExpert } from "@/src/types/expert.types"
+"use server";
 
+import { getExperts as getExpertsFromService } from "@/src/services/expert.services";
 
-
-
-
-export const getExperts = async () => {
-    const experts = await httpClient.get<IExpert[]>('/experts')
-    return experts
-}
+export const getExperts = async (queryString?: string) => {
+  return getExpertsFromService(queryString);
+};

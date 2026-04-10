@@ -1,158 +1,307 @@
-"use client"
+"use client";
+
+import { useMemo } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { formatDistanceToNow } from "date-fns";
+import {
+  Bell,
+  Calendar,
+  CheckCheck,
+  CheckCircle,
+  Clock,
+  Loader2,
+  Trash2,
+  UserPlus,
+} from "lucide-react";
+import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { formatDistanceToNow } from "date-fns";
-import { Bell, Calendar, CheckCircle, Clock, UserPlus } from "lucide-react";
+import {
+  deleteNotification,
+  getMyNotifications,
+  markAllNotificationsAsRead,
+  markNotificationAsRead,
+} from "@/src/services/notification.service";
+import type { INotification, NotificationType } from "@/src/types/notification.types";
 
-interface Notification {
-    id: string;
-    title: string;
-    message: string;
-    type : "bookings" | "schedule" | "system" | "user";
-    timestamp: Date;
-    read : boolean;
-}
-
-const MOCK_NOTIFICATIONS: Notification[] = [
-    {
-        id: "1",
-        title: "New Consultation Scheduled",
-        message: "You have a new consultation scheduled with John Doe on 2024-06-15 at 10:00 AM.",
-        type : "bookings",
-        timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-        read : false
-    },
-
-    {
-        id: "2",
-        title: "Schedule Updated",
-        message: "Your schedule has been updated for the week of 2024-06-17.",
-        type : "schedule",
-        timestamp: new Date(Date.now() - 1000 * 60 * 60), // 1 hour ago
-        read : true
-    },
-
-    {
-        id: "3",
-        title: "System Maintenance",
-        message: "The system will undergo maintenance on 2024-06-20 from 1:00 AM to 3:00 AM.",
-        type : "system",
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
-        read : false
-    },
-
-    {
-        id: "4",
-        title: "New User Registered",
-        message: "A new user, Jane Smith, has registered on the platform.",
-        type : "user",
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 48), // 2 days ago
-        read : true
+type NotificationCollection =
+  | INotification[]
+  | {
+      notifications?: INotification[];
+      items?: INotification[];
+      data?: INotification[];
     }
-]
+  | undefined;
 
-const getNotificationIcon = (type : Notification["type"]) => {
-    switch(type){
-        case "bookings":
-            return <Calendar className="h-4 w-4 text-blue-600"/>
-        case "schedule":
-            return <Clock className="h-4 w-4 text-amber-600"/>
-        case "system":
-            return <CheckCircle className="h-4 w-4 text-purple-600"/>
-        case "user":
-            return <UserPlus className="h-4 w-4 text-green-600"/>
-        default:
-            return <Bell className="h-4 w-4 text-gray-600"/>
-    }
-}
+const getNormalizedNotificationType = (type: NotificationType | string) =>
+  String(type ?? "").toUpperCase();
 
+const normalizeNotifications = (payload: NotificationCollection): INotification[] => {
+  if (!payload) {
+    return [];
+  }
 
+  const notifications = Array.isArray(payload)
+    ? payload
+    : Array.isArray(payload.notifications)
+      ? payload.notifications
+      : Array.isArray(payload.items)
+        ? payload.items
+        : Array.isArray(payload.data)
+          ? payload.data
+          : [];
+
+  return notifications
+    .map((notification) => ({
+      ...notification,
+      createdAt:
+        notification.createdAt ?? notification.updatedAt ?? new Date().toISOString(),
+      read: Boolean(notification.read ?? notification.isRead),
+    }))
+    .sort(
+      (left, right) =>
+        new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
+    );
+};
+
+const getNotificationIcon = (type: NotificationType | string) => {
+  const normalizedType = getNormalizedNotificationType(type);
+
+  if (normalizedType.includes("BOOK")) {
+    return <Calendar className="h-4 w-4 text-blue-600" />;
+  }
+
+  if (normalizedType.includes("SCHEDULE")) {
+    return <Clock className="h-4 w-4 text-amber-600" />;
+  }
+
+  if (normalizedType.includes("SYSTEM")) {
+    return <CheckCircle className="h-4 w-4 text-purple-600" />;
+  }
+
+  if (normalizedType.includes("EXPERT") || normalizedType.includes("USER")) {
+    return <UserPlus className="h-4 w-4 text-green-600" />;
+  }
+
+  return <Bell className="h-4 w-4 text-gray-600" />;
+};
+
+const getNotificationTitle = (notification: INotification) => {
+  const normalizedType = getNormalizedNotificationType(notification.type);
+
+  if (normalizedType.includes("BOOK")) {
+    return "Booking update";
+  }
+
+  if (normalizedType.includes("SCHEDULE")) {
+    return "Schedule update";
+  }
+
+  if (normalizedType.includes("SYSTEM")) {
+    return "System notice";
+  }
+
+  if (normalizedType.includes("APPLICATION")) {
+    return "Expert application";
+  }
+
+  if (normalizedType.includes("APPROV") || normalizedType.includes("VERIF")) {
+    return "Expert approved";
+  }
+
+  if (normalizedType.includes("REJECT") || normalizedType.includes("DECLIN")) {
+    return "Expert rejected";
+  }
+
+  if (normalizedType.includes("EXPERT") || normalizedType.includes("USER")) {
+    return "User activity";
+  }
+
+  return "Notification";
+};
 
 const NotificationDropdown = () => {
+  const queryClient = useQueryClient();
 
-    const unreadCount = MOCK_NOTIFICATIONS.filter(notification => !notification.read).length;
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ["my-notifications"],
+    queryFn: getMyNotifications,
+    retry: false,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+    refetchInterval: 15000,
+  });
+
+  const notifications = useMemo(() => normalizeNotifications(data?.data), [data?.data]);
+  const unreadCount = notifications.filter((notification) => !notification.read).length;
+
+  const markAllMutation = useMutation({
+    mutationFn: markAllNotificationsAsRead,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["my-notifications"] });
+      toast.success("All notifications marked as read.");
+    },
+  });
+
+  const markOneMutation = useMutation({
+    mutationFn: (id: string) => markNotificationAsRead(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["my-notifications"] });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteNotification(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["my-notifications"] });
+      toast.success("Notification deleted.");
+    },
+  });
+
   return (
-    <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-            <Button variant={"outline"} size={"icon"} className="relative">
-                <Bell className="h-5 w-5" />
-                <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded full p-0 flex items-center justify-center" variant={"destructive"}>
-                    <span className="text-[10px">
-                        {unreadCount > 9 ? "9+" : unreadCount}
-                    </span>
-                </Badge>
-            </Button>
-        </DropdownMenuTrigger>
+    <DropdownMenu
+      onOpenChange={(open) => {
+        if (open) {
+          void refetch();
+        }
+      }}
+    >
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" size="icon" className="relative">
+          <Bell className="h-5 w-5" />
+          {unreadCount > 0 ? (
+            <Badge
+              className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full p-0"
+              variant="destructive"
+            >
+              <span className="text-[10px]">{unreadCount > 9 ? "9+" : unreadCount}</span>
+            </Badge>
+          ) : null}
+        </Button>
+      </DropdownMenuTrigger>
 
-        <DropdownMenuContent align={"end"} className="w-80">
-            <DropdownMenuLabel className="flex items-center justify-between">
-                <span>
-                    Notifications
-                </span>
-                {
-                    unreadCount > 0 && (
-                        <Badge variant={"secondary"} className="ml-2">
-                            {unreadCount} new
-                        </Badge>
-                    )
-                }
-            </DropdownMenuLabel>
+      <DropdownMenuContent align="end" className="w-88">
+        <DropdownMenuLabel className="flex items-center justify-between gap-3">
+          <div>
+            <span>Notifications</span>
+            {unreadCount > 0 ? (
+              <Badge variant="secondary" className="ml-2">
+                {unreadCount} new
+              </Badge>
+            ) : null}
+          </div>
 
-            <DropdownMenuSeparator/>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            disabled={!unreadCount || markAllMutation.isPending}
+            onClick={() => markAllMutation.mutate()}
+          >
+            {markAllMutation.isPending ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <CheckCheck className="size-4" />
+            )}
+          </Button>
+        </DropdownMenuLabel>
 
-            <ScrollArea className="h-75">
-                {
-                    MOCK_NOTIFICATIONS.length > 0 ? (
-                        MOCK_NOTIFICATIONS.map(notification => (
-                            <DropdownMenuItem key={notification.id} className="flex flex-col items-start gap-2 p-3 cursor-pointer">
-                                <div className="mt-0.5">
-                                    {getNotificationIcon(notification.type)}
-                                </div>
+        <DropdownMenuSeparator />
 
-                                <div className="flex-1 space-y-1">
-                                    <div className="flex items-center justify-between">
-                                        <p className="text-sm font-medium leading-none">
-                                            {notification.title}
-                                        </p>
-                                        {
-                                            !notification.read && (
-                                                <div className="h-2 w-2 rounded-full bg-blue-600"/>
-                                            )
-                                        }
-                                    </div>
+        <ScrollArea className="h-80">
+          {isLoading ? (
+            <div className="space-y-2 p-3">
+              {[1, 2, 3].map((item) => (
+                <div key={item} className="h-16 animate-pulse rounded-xl bg-muted" />
+              ))}
+            </div>
+          ) : isError ? (
+            <div className="space-y-3 p-4 text-center text-sm text-muted-foreground">
+              <p>Could not load notifications right now.</p>
+              <Button type="button" variant="outline" size="sm" onClick={() => void refetch()}>
+                Try again
+              </Button>
+            </div>
+          ) : notifications.length > 0 ? (
+            notifications.map((notification) => (
+              <DropdownMenuItem
+                key={notification.id}
+                className="flex items-start gap-3 p-3"
+                onSelect={(event) => event.preventDefault()}
+              >
+                <div className="mt-0.5 rounded-full bg-muted p-2">
+                  {getNotificationIcon(notification.type)}
+                </div>
 
-                                    <p className="text-xs text-muted-foreground line-clamp-2">
-                                        {notification.message}
-                                    </p>
+                <div className="min-w-0 flex-1 space-y-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="text-sm font-medium leading-none">
+                        {getNotificationTitle(notification)}
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground line-clamp-2">
+                        {notification.message}
+                      </p>
+                    </div>
 
-                                    <p className="text-xs text-muted-foreground">
-                                        {formatDistanceToNow(notification.timestamp, {
-                                            addSuffix: true
-                                        })}
-                                    </p>
-                                </div>
-                            </DropdownMenuItem>
-                        ))
-                    ) : (
-                        <div className="p-6 text-center text-sm text-muted-foreground">
-                            No notifications
-                        </div>
-                    ) 
-                }
-            </ScrollArea>
+                    {!notification.read ? (
+                      <div className="mt-1 h-2 w-2 rounded-full bg-blue-600" />
+                    ) : null}
+                  </div>
 
-            <DropdownMenuSeparator/>
+                  <div className="flex items-center justify-between gap-2 pt-1">
+                    <p className="text-xs text-muted-foreground">
+                      {formatDistanceToNow(new Date(notification.createdAt), {
+                        addSuffix: true,
+                      })}
+                    </p>
 
-            <DropdownMenuItem className="text-center justify-center cursor-pointer">
-                View All Notifications
-            </DropdownMenuItem>
-        </DropdownMenuContent>
+                    <div className="flex items-center gap-1">
+                      {!notification.read ? (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => markOneMutation.mutate(notification.id)}
+                        >
+                          <CheckCheck className="size-4" />
+                        </Button>
+                      ) : null}
 
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-destructive hover:text-destructive"
+                        onClick={() => deleteMutation.mutate(notification.id)}
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </DropdownMenuItem>
+            ))
+          ) : (
+            <div className="p-6 text-center text-sm text-muted-foreground">
+              No notifications yet.
+            </div>
+          )}
+        </ScrollArea>
+      </DropdownMenuContent>
     </DropdownMenu>
-  )
-}
+  );
+};
 
 export default NotificationDropdown

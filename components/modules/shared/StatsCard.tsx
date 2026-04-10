@@ -21,7 +21,7 @@ const StatsCard = ({
   return (
     <Card
       className={cn(
-        "relative overflow-hidden border border-neutral-200 hover:shadow-lg transition-all rounded-xl",
+        "relative overflow-hidden rounded-xl border border-border/60 bg-card/90 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg",
         className
       )}
     >
@@ -31,7 +31,7 @@ const StatsCard = ({
         </CardTitle>
 
         {/* Icon Container */}
-        <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary-500/20 to-primary-accent/20 flex items-center justify-center text-primary-600">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-sm">
           {createElement(getIconComponent(iconName), {
             className: "w-5 h-5",
           })}

@@ -23,11 +23,6 @@ export const getCommonNavItems = (role: UserRole): NavSection[] => {
           href: "/my-profile",
           icon: "User",
         },
-      ],
-    },
-    {
-      title: "Settings",
-      items: [
         {
           title: "Change Password",
           href: "/change-password",
@@ -43,6 +38,11 @@ export const expertNavItems: NavSection[] = [
   {
     title: "Expert Management",
     items: [
+       {
+        title: "Set Availability",
+        href: "/expert/dashboard/set-availability",
+        icon: "Clock",
+      },
       {
         title: "My Clients",
         href: "/expert/dashboard/my-clients",
@@ -97,8 +97,20 @@ export const adminNavItems: NavSection[] = [
       },
       {
         title: "Industries",
-        href: "/admin/dashboard/industries-management",
         icon: "Folder",
+        children: [
+          {
+            title: "Create Industry",
+            href: "/admin/dashboard/industries-management/create",
+            icon: "PlusCircle",
+          },
+          {
+            title: "Manage Industries",
+            href: "/admin/dashboard/industries-management",
+            icon: "List",
+          },
+        ],
+        href: ""
       },
       
       

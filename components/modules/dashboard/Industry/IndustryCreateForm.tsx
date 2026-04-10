@@ -1,11 +1,33 @@
 "use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { useForm } from "@tanstack/react-form";
+
 import AppField from "@/components/form/AppField";
 import AppSubmitButton from "@/components/form/AppSubmitButton";
-import { createIndustryAction } from "@/src/services/industry.services";
-import { useForm } from "@tanstack/react-form";
-import { useState } from "react";
+import { createIndustry } from "@/src/services/industry.services";
+
+const getErrorMessage = (error: unknown) => {
+  if (typeof error === "object" && error !== null) {
+    const maybeError = error as {
+      response?: { data?: { message?: string } };
+      message?: string;
+    };
+
+    return (
+      maybeError.response?.data?.message ??
+      maybeError.message ??
+      "Failed to create industry"
+    );
+  }
+
+  return "Failed to create industry";
+};
 
 export default function IndustryCreateForm() {
+  const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
 
   const form = useForm({
@@ -19,17 +41,32 @@ export default function IndustryCreateForm() {
       fd.append("description", value.description);
       if (file) fd.append("file", file);
 
-      const res = await createIndustryAction(fd);
+      try {
+        const res = await createIndustry(fd);
 
-      if (!res?.success) {
-        alert(res?.message || "Failed to create industry");
-        return;
+        if (!res?.success) {
+          const message = res?.message || "Failed to create industry";
+          toast.error(message, {
+            description: "Please review the details and try again.",
+          });
+          return;
+        }
+
+        const industryName = value.name.trim() || "Your new industry";
+
+        toast.success("Industry created successfully ✨", {
+          description: `${industryName} is now ready to manage from the dashboard.`,
+        });
+
+        form.reset();
+        setFile(null);
+        router.push("/admin/dashboard/industries-management");
+        router.refresh();
+      } catch (error: unknown) {
+        toast.error(getErrorMessage(error), {
+          description: "The industry could not be created right now.",
+        });
       }
-
-      alert("Industry created successfully!");
-
-      form.reset();
-      setFile(null);
     },
   });
 
@@ -37,9 +74,10 @@ export default function IndustryCreateForm() {
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        form.handleSubmit();
+        e.stopPropagation();
+        void form.handleSubmit();
       }}
-      className="space-y-6 max-w-lg mx-auto"
+      className="mx-auto max-w-lg space-y-6"
     >
       <form.Field name="name">
         {(field) => (

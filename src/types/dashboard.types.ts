@@ -1,7 +1,8 @@
 export interface NavItem {
     title : string,
     href : string,
-    icon : string
+    icon : string,
+     children?: NavItem[];
 }
 
 export interface NavSection {
@@ -16,7 +17,7 @@ export interface PieChartData {
 
 export interface BarChartData {
     month: Date | string,
-    count: number
+    count?: number,
+    amount?: number
 }
-
 

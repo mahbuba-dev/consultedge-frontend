@@ -7,16 +7,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 
 interface ConsultationsBarChartProps {
     data : BarChartData[]
+    title?: string
+    description?: string
 }
 
-const ConsultationsBarChart = ({data}: ConsultationsBarChartProps) => {
+const ConsultationsBarChart = ({
+  data,
+  title = "Consultation Trends",
+  description = "Monthly Consultation Statistics",
+}: ConsultationsBarChartProps) => {
 
     if(!data || !Array.isArray(data)){
         return (
             <Card className="col-span-4">
                 <CardHeader>
-                    <CardTitle>Consultation Trends</CardTitle>
-                    <CardDescription>Monthly Consultation Statistics</CardDescription>
+                    <CardTitle>{title}</CardTitle>
+                    <CardDescription>{description}</CardDescription>
                 </CardHeader>
                 <CardContent className="flex items-center justify-center h-75">
                     <p className="text-sm text-muted-foreground">
@@ -31,7 +37,7 @@ const ConsultationsBarChart = ({data}: ConsultationsBarChartProps) => {
     const formattedData = data.map((item) => ({
         month : typeof item.month === "string" ? format(new Date(item.month), "MMM yyyy") : format(item.month, "MMM yyyy"),
 
-        consultations : Number(item.count)
+        consultations : Number(item.amount ?? item.count ?? 0)
     }))
 
 
@@ -39,8 +45,8 @@ const ConsultationsBarChart = ({data}: ConsultationsBarChartProps) => {
         return (
           <Card className="col-span-4">
             <CardHeader>
-              <CardTitle>Consultation Trends</CardTitle>
-              <CardDescription>Monthly Consultation Statistics</CardDescription>
+              <CardTitle>{title}</CardTitle>
+              <CardDescription>{description}</CardDescription>
             </CardHeader>
             <CardContent className="flex items-center justify-center h-75">
               <p className="text-sm text-muted-foreground">
@@ -53,8 +59,8 @@ const ConsultationsBarChart = ({data}: ConsultationsBarChartProps) => {
   return (
     <Card className="col-span-4">
         <CardHeader>
-            <CardTitle>Consultation Trends</CardTitle>
-            <CardDescription>Monthly Consultation Statistics</CardDescription>
+            <CardTitle>{title}</CardTitle>
+            <CardDescription>{description}</CardDescription>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={350}>
@@ -69,7 +75,7 @@ const ConsultationsBarChart = ({data}: ConsultationsBarChartProps) => {
               <Tooltip />
               <Legend />
               <Bar
-                dataKey="appointments"
+                dataKey="consultations"
                 fill="oklch(0.646 0.222 41.116)"
                 radius={[4, 4, 0, 0]}
                 maxBarSize={60}

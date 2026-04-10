@@ -34,6 +34,26 @@ const LoginForm = ({ redirectPath }: LoginFormProps) => {
   // Toggle password visibility
   const [showPassword, setShowPassword] = useState(false);
 
+  const safeRedirectPath =
+    redirectPath?.startsWith("/") && !redirectPath.startsWith("//")
+      ? redirectPath
+      : undefined;
+
+  const registerHref = safeRedirectPath
+    ? `/register?redirect=${encodeURIComponent(safeRedirectPath)}`
+    : "/register";
+
+  const handleGoogleAuth = () => {
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "");
+    const redirectTarget = safeRedirectPath || "/dashboard";
+    const callbackURL = new URL(
+      redirectTarget,
+      window.location.origin
+    ).toString();
+
+    window.location.href = `${baseUrl || window.location.origin}/auth/login/google?callbackURL=${encodeURIComponent(callbackURL)}&redirect=${encodeURIComponent(redirectTarget)}`;
+  };
+
   /**
    * React Query mutation for login
    * Calls loginAction(payload, redirectPath)
@@ -184,11 +204,7 @@ const LoginForm = ({ redirectPath }: LoginFormProps) => {
         </div>
 
         {/* Google Login */}
-         <Button variant="outline" className="w-full" onClick={() => {
-            const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-            //TODO redirect path after login in frontend
-            window.location.href = `${baseUrl}/auth/login/google`;
-        }}>
+         <Button variant="outline" className="w-full" type="button" onClick={handleGoogleAuth}>
           
           {/* Google Icon */}
           <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
@@ -218,7 +234,7 @@ const LoginForm = ({ redirectPath }: LoginFormProps) => {
         <p className="text-sm text-muted-foreground">
           Don&apos;t have an account?{" "}
           <Link
-            href="/register"
+            href={registerHref}
             className="text-primary font-medium hover:underline underline-offset-4"
           >
             Sign Up for an account

@@ -1,16 +1,19 @@
 "use client";
 
+import { useState } from "react";
 import { useForm } from "@tanstack/react-form";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { changePasswordService } from "@/src/services/auth.services";
 import { changePasswordSchema } from "@/src/zod/changePassword.validation";
 
 export default function ChangePasswordForm() {
   const router = useRouter();
+  const [submitMessage, setSubmitMessage] = useState<string | null>(null);
 
   const form = useForm({
     defaultValues: {
@@ -18,7 +21,6 @@ export default function ChangePasswordForm() {
       newPassword: "",
       confirmPassword: "",
     },
-
     validators: {
       onSubmit: ({ value }) => {
         const result = changePasswordSchema.safeParse(value);
@@ -28,28 +30,54 @@ export default function ChangePasswordForm() {
         return {};
       },
     },
-
     onSubmit: async ({ value }) => {
-      const res = await changePasswordService({
-        currentPassword: value.currentPassword,
-        newPassword: value.newPassword,
-      });
+      setSubmitMessage(null);
 
-      if (!res.success) {
-        toast.error(res.message);
-        return;
+      try {
+        const res = await changePasswordService({
+          currentPassword: value.currentPassword,
+          newPassword: value.newPassword,
+        });
+
+        if (!res.success) {
+          const message = res.message || "Failed to change password";
+          setSubmitMessage(message);
+          toast.error(message);
+          return;
+        }
+
+        const message = res.message || "Password changed successfully";
+        setSubmitMessage(message);
+        toast.success(message);
+        form.reset();
+
+        setTimeout(() => {
+          router.push("/");
+          router.refresh();
+        }, 1200);
+      } catch (error: any) {
+        const message = error?.message || "Failed to change password";
+        setSubmitMessage(message);
+        toast.error(message);
       }
-
-      toast.success("Password changed successfully");
-
-      setTimeout(() => {
-        router.push("/dashboard");
-      }, 1200);
     },
   });
 
   return (
-    <form onSubmit={form.handleSubmit} className="space-y-5">
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        void form.handleSubmit();
+      }}
+      className="space-y-5"
+    >
+      {submitMessage && (
+        <Alert>
+          <AlertDescription>{submitMessage}</AlertDescription>
+        </Alert>
+      )}
+
       <form.Field name="currentPassword">
         {(field) => (
           <div>
@@ -59,8 +87,8 @@ export default function ChangePasswordForm() {
               value={field.state.value}
               onChange={(e) => field.handleChange(e.target.value)}
             />
-            {field.state.meta.errors && (
-              <p className="text-red-500 text-sm">{field.state.meta.errors[0]}</p>
+            {field.state.meta.errors?.[0] && (
+              <p className="text-sm text-red-500">{String(field.state.meta.errors[0])}</p>
             )}
           </div>
         )}
@@ -75,8 +103,8 @@ export default function ChangePasswordForm() {
               value={field.state.value}
               onChange={(e) => field.handleChange(e.target.value)}
             />
-            {field.state.meta.errors && (
-              <p className="text-red-500 text-sm">{field.state.meta.errors[0]}</p>
+            {field.state.meta.errors?.[0] && (
+              <p className="text-sm text-red-500">{String(field.state.meta.errors[0])}</p>
             )}
           </div>
         )}
@@ -91,16 +119,20 @@ export default function ChangePasswordForm() {
               value={field.state.value}
               onChange={(e) => field.handleChange(e.target.value)}
             />
-            {field.state.meta.errors && (
-              <p className="text-red-500 text-sm">{field.state.meta.errors[0]}</p>
+            {field.state.meta.errors?.[0] && (
+              <p className="text-sm text-red-500">{String(field.state.meta.errors[0])}</p>
             )}
           </div>
         )}
       </form.Field>
 
-      <Button type="submit" className="w-full">
-        Change Password
-      </Button>
+      <form.Subscribe selector={(state) => [state.isSubmitting] as const}>
+        {([isSubmitting]) => (
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? "Changing Password..." : "Change Password"}
+          </Button>
+        )}
+      </form.Subscribe>
     </form>
   );
 }

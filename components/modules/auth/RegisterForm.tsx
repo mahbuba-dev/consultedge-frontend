@@ -33,6 +33,26 @@ const RegisterForm = ({ redirectPath }: RegisterFormProps) => {
   const [serverError, setServerError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
+  const safeRedirectPath =
+    redirectPath?.startsWith("/") && !redirectPath.startsWith("//")
+      ? redirectPath
+      : undefined;
+
+  const loginHref = safeRedirectPath
+    ? `/login?redirect=${encodeURIComponent(safeRedirectPath)}`
+    : "/login";
+
+  const handleGoogleAuth = () => {
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "");
+    const redirectTarget = safeRedirectPath || "/dashboard";
+    const callbackURL = new URL(
+      redirectTarget,
+      window.location.origin
+    ).toString();
+
+    window.location.href = `${baseUrl || window.location.origin}/auth/login/google?callbackURL=${encodeURIComponent(callbackURL)}&redirect=${encodeURIComponent(redirectTarget)}`;
+  };
+
   const { mutateAsync, isPending } = useMutation({
     mutationFn: (payload: IRegisterPayload) =>
       registerAction(payload, redirectPath),
@@ -180,10 +200,8 @@ const RegisterForm = ({ redirectPath }: RegisterFormProps) => {
         <Button
           variant="outline"
           className="w-full"
-          onClick={() => {
-            const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-            window.location.href = `${baseUrl}/auth/login/google`;
-          }}
+          type="button"
+          onClick={handleGoogleAuth}
         >
           <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
             <path
@@ -211,7 +229,7 @@ const RegisterForm = ({ redirectPath }: RegisterFormProps) => {
         <p className="text-sm text-muted-foreground">
           Already have an account?{" "}
           <Link
-            href="/login"
+            href={loginHref}
             className="text-primary font-medium hover:underline underline-offset-4"
           >
             Log In

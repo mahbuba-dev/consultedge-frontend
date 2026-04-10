@@ -18,11 +18,12 @@ export const setCookie = async (
   maxAgeInSeconds: number
 ) => {
   const cookieStore = await cookies();
+  const isProduction = process.env.NODE_ENV === "production";
 
   cookieStore.set(name, value, {
     httpOnly: true,      // 🔒 Prevents JS access (secure against XSS)
-    secure: true,        // 🔐 Only sent over HTTPS
-    sameSite: "strict",  // 🚫 Prevents CSRF attacks
+    secure: isProduction, // 🔐 HTTPS only in production
+    sameSite: "lax",    // ✅ works better for OAuth redirects
     path: "/",           // 🌍 Cookie available across the entire site
     maxAge: maxAgeInSeconds, // ⏳ Expiration time
   });

@@ -1,8 +1,6 @@
 import { ApiResponse } from "@/src/types/api.types";
 import axios from "axios";
 import { isTokenExpiringSoon } from "../tokenUtils";
-import { cookies, headers } from "next/headers";
-import { getNewTokensWithRefreshToken } from "@/src/services/auth.services";
 
 // ---------------------------------------------
 // Validate API Base URL
@@ -15,31 +13,51 @@ if (!API_BASE_URL) {
   );
 }
 
+type ServerRequestContext = {
+  cookieStore: any;
+  requestHeaders: Headers;
+};
 
+const getServerRequestContext = async (): Promise<ServerRequestContext | null> => {
+  if (typeof window !== "undefined") {
+    return null;
+  }
 
+  try {
+    const { cookies, headers } = await import("next/headers");
+    const cookieStore = await cookies();
+    const requestHeaders = await headers();
+
+    return { cookieStore, requestHeaders };
+  } catch {
+    return null;
+  }
+};
 
 async function tryRefreshToken(
-    accessToken: string,
-    refreshToken: string
-): Promise<void>
-{
-    if(!(await isTokenExpiringSoon(accessToken))) {
-        return;
-    }
+  accessToken: string,
+  refreshToken: string,
+  requestHeaders?: Headers
+): Promise<void> {
+  if (!requestHeaders) {
+    return;
+  }
 
-    const requestHeader = await headers();
+  if (!(await isTokenExpiringSoon(accessToken))) {
+    return;
+  }
 
-    if (requestHeader.get("x-token-refreshed") === "1") {
-        return; // avoid multiple refresh attempts in the same request lifecycle
-    }
+  if (requestHeaders.get("x-token-refreshed") === "1") {
+    return; // avoid multiple refresh attempts in the same request lifecycle
+  }
 
-    try {
-        await getNewTokensWithRefreshToken(refreshToken);
-    } catch (error : any) {
-        console.error("Error refreshing token in http client:", error);
-    }
+  try {
+    const { getNewTokensWithRefreshToken } = await import("@/src/services/auth.services");
+    await getNewTokensWithRefreshToken(refreshToken);
+  } catch (error: any) {
+    console.error("Error refreshing token in http client:", error);
+  }
 }
-
 
 // ---------------------------------------------
 // Create Axios Instance (Singleton Factory)
@@ -49,30 +67,32 @@ async function tryRefreshToken(
 // - headers: Default headers for all requests
 // ---------------------------------------------
 const axiousInstance = async () => {
- 
-     const cookieStore = await cookies();
+  let cookieHeader = "";
+  const serverContext = await getServerRequestContext();
+
+  if (serverContext) {
+    const { cookieStore, requestHeaders } = serverContext;
     const accessToken = cookieStore.get("accessToken")?.value;
     const refreshToken = cookieStore.get("refreshToken")?.value;
 
-    if(accessToken && refreshToken){
-        await tryRefreshToken(accessToken, refreshToken);
+    if (accessToken && refreshToken) {
+      await tryRefreshToken(accessToken, refreshToken, requestHeaders);
     }
 
-    const cookieHeader = cookieStore
-                                .getAll()
-                                .map((cookie) => `${cookie.name}=${cookie.value}`)
-                                .join("; ");    
-    // eg Cookie: "accessToken=abc123; refreshToken=def456"
-
+    cookieHeader = cookieStore
+      .getAll()
+      .map((cookie: any) => `${cookie.name}=${cookie.value}`)
+      .join("; ");
+  }
 
   const instance = axios.create({
     baseURL: API_BASE_URL,
     timeout: 30000, // 30 seconds timeout
     headers: {
       "Content-Type": "application/json",
-        Cookie : cookieHeader
+      ...(cookieHeader ? { Cookie: cookieHeader } : {}),
     },
-    // withCredentials: true, // Enable if backend uses cookies
+    withCredentials: true, // Enable for automatic cookie inclusion in client context
   });
 
   return instance;
@@ -91,6 +111,7 @@ export interface ApiRequestOptions {
   params?: Record<string, unknown>;
   headers?: Record<string, string>;
   withCredentials?: boolean; // For cookie-based auth if needed
+  silent?: boolean;
 }
 
 
@@ -108,7 +129,9 @@ const httpGet = async <TData>(endpoint: string, options?: ApiRequestOptions):Pro
 
     return response.data
   } catch (error) {
-    console.error(`GET request failed for endpoint ${endpoint}:`, error);
+    if (!options?.silent) {
+      console.error(`GET request failed for endpoint ${endpoint}:`, error);
+    }
     throw error;
   }
 };
@@ -132,7 +155,9 @@ const httpPost = async <TData> (
 
     return response.data;
   } catch (error) {
-    console.error(`POST request failed for endpoint ${endpoint}:`, error);
+    if (!options?.silent) {
+      console.error(`POST request failed for endpoint ${endpoint}:`, error);
+    }
     throw error;
   }
 };
@@ -156,7 +181,9 @@ const httpPut = async <TData> (
 
     return response.data;
   } catch (error) {
-    console.error(`PUT request failed for endpoint ${endpoint}:`, error);
+    if (!options?.silent) {
+      console.error(`PUT request failed for endpoint ${endpoint}:`, error);
+    }
     throw error;
   }
 };
@@ -180,7 +207,9 @@ const httpPatch = async <TData> (
 
     return response.data;
   } catch (error) {
-    console.error(`PATCH request failed for endpoint ${endpoint}:`, error);
+    if (!options?.silent) {
+      console.error(`PATCH request failed for endpoint ${endpoint}:`, error);
+    }
     throw error;
   }
 };
@@ -201,7 +230,9 @@ const httpDelete = async <TData>(endpoint: string, options?: ApiRequestOptions):
 
     return response.data;
   } catch (error) {
-    console.error(`DELETE request failed for endpoint ${endpoint}:`, error);
+    if (!options?.silent) {
+      console.error(`DELETE request failed for endpoint ${endpoint}:`, error);
+    }
     throw error;
   }
 };

@@ -1,14 +1,7 @@
 "use server";
 
-import {
-  getDefaultDashboardRoute,
-  isValidRedirectForRole,
-  UserRole,
-} from "@/src/lib/authUtilis";
-
-import { setTokenInCookies } from "@/src/lib/tokenUtils";
 import { ApiErrorResponse } from "@/src/types/api.types";
-import { ILOginResponse, IRegisterResponse } from "@/src/types/auth.types";
+import { IRegisterResponse } from "@/src/types/auth.types";
 
 import { redirect } from "next/navigation";
 import { httpClient } from "@/src/lib/axious/httpClient";
@@ -20,8 +13,7 @@ import { IRegisterPayload, registerZodSchema } from "@/src/zod/auth.validation";
  * Handles:
  * - Zod validation
  * - API request to backend
- * - Token storage
- * - Redirect logic (verify email, role-based)
+ * - Redirect to login after successful registration
  */
 
 export const registerAction = async (
@@ -41,34 +33,18 @@ export const registerAction = async (
 
   try {
     // 2️⃣ Call backend API
-    const response = await httpClient.post<ILOginResponse>(
-      "/auth/register",
-      parsed.data
-    );
+    await httpClient.post<IRegisterResponse>("/auth/register", parsed.data);
 
-    const { accessToken, refreshToken, token, user } = response.data;
-    const { role, emailVerified, needPasswordChange, email } = user;
-
-    // 3️⃣ Save tokens
-    await setTokenInCookies("accessToken", accessToken, 7 * 24 * 60 * 60);
-    await setTokenInCookies("refreshToken", refreshToken, 30 * 24 * 60 * 60);
-   
-    // 4️⃣ Redirect logic
-    if (!emailVerified) {
-      redirect(`/verify-email?email=${email}`);
-    }
-
-    if (needPasswordChange) {
-      redirect(`/reset-password?email=${email}`);
-    }
-
-    const targetPath =
-      redirectPath &&
-      isValidRedirectForRole(redirectPath, role as UserRole)
+    const safeRedirectPath =
+      redirectPath?.startsWith("/") && !redirectPath.startsWith("//")
         ? redirectPath
-        : getDefaultDashboardRoute(role as UserRole);
+        : undefined;
 
-    redirect(targetPath);
+    const loginUrl = safeRedirectPath
+      ? `/login?redirect=${encodeURIComponent(safeRedirectPath)}`
+      : "/login";
+
+    redirect(loginUrl);
   } catch (error: any) {
     console.log(error, "register error");
 

@@ -2,8 +2,6 @@
 import AdminDashboardContent from "@/components/modules/dashboard/AdminDashboardContent";
 import { getDashboardData } from "@/src/services/dashboard.services";
 import { IAdminDashboardStats } from "@/src/types/admin.dashboard";
-import { ApiResponse } from "@/src/types/api.types";
-
 import { dehydrate, HydrationBoundary, QueryClient } from "@tanstack/react-query";
 
 const AdminDashboardPage = async () => {
@@ -11,21 +9,16 @@ const AdminDashboardPage = async () => {
 
   await queryClient.prefetchQuery({
     queryKey: ["admin-dashboard-data"],
-    queryFn: getDashboardData,
-    staleTime: 30 * 1000, // 30 seconds - data stays fresh if this data is accessed again within 30 seconds, it will use the cached data instead of making a new request
-    gcTime: 5 * 60 * 1000, // 5 minutes - garbage collection time, after this time the cached data will be removed from memory if it's not used
+    queryFn: () => getDashboardData<IAdminDashboardStats>(),
+    staleTime: 30 * 1000,
+    gcTime: 5 * 60 * 1000,
   });
-
-
-  const dashboardData = queryClient.getQueryData(["admin-dashboard-data"]) as ApiResponse<IAdminDashboardStats>;
-
-  console.log(dashboardData.data, "Dashboard Data from Page Component");
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-        <AdminDashboardContent/>
+      <AdminDashboardContent />
     </HydrationBoundary>
-  )
-}
+  );
+};
 
-export default AdminDashboardPage
+export default AdminDashboardPage;

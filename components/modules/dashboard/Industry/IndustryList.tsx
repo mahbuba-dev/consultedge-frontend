@@ -1,10 +1,19 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
+import { getAllIndustries } from "@/src/services/industry.services";
 import Link from "next/link";
 import DateCell from "../../shared/Cell/DataCell";
-import { IIndustry } from "@/src/types/industry.types";
 
-export default function IndustryList({ industries }: { industries: IIndustry[] }) {
+export default function IndustryList() {
+  const { data: industriesResponse } = useQuery({
+    queryKey: ["industries"],
+    queryFn: getAllIndustries,
+    refetchOnWindowFocus: "always",
+  });
+
+  const industries = industriesResponse?.data || [];
+
   return (
     <div className="border rounded-lg overflow-hidden">
       <table className="w-full border-collapse">
@@ -20,48 +29,27 @@ export default function IndustryList({ industries }: { industries: IIndustry[] }
         </thead>
 
         <tbody>
-          {industries.length === 0 && (
-            <tr>
-              <td colSpan={6} className="p-4 text-center text-gray-500">
-                No industries found
-              </td>
-            </tr>
-          )}
-
-          {industries.map((industry) => (
+          {industries.map((industry: any) => (
             <tr key={industry.id} className="border-t">
-              {/* Icon */}
               <td className="p-3">
                 {industry.icon ? (
-                  <img
-                    src={industry.icon}
-                    alt={industry.name}
-                    className="w-10 h-10 object-cover rounded"
-                  />
+                  <img src={industry.icon} className="w-10 h-10 rounded" />
                 ) : (
                   <span className="text-gray-400">No Icon</span>
                 )}
               </td>
 
-              {/* Name */}
               <td className="p-3 font-medium">{industry.name}</td>
+              <td className="p-3 text-gray-600">{industry.description}</td>
 
-              {/* Description */}
-              <td className="p-3 text-gray-600">
-                {industry.description || "—"}
-              </td>
-
-              {/* Created */}
               <td className="p-3">
                 <DateCell date={industry.createdAt} />
               </td>
 
-              {/* Updated */}
               <td className="p-3">
                 <DateCell date={industry.updatedAt} />
               </td>
 
-              {/* Actions */}
               <td className="p-3 space-x-3">
                 <Link
                   href={`/admin/industries-management/${industry.id}/edit`}
@@ -70,10 +58,7 @@ export default function IndustryList({ industries }: { industries: IIndustry[] }
                   Edit
                 </Link>
 
-                <button
-                  className="text-red-600 hover:underline"
-                  onClick={() => console.log("Delete", industry.id)}
-                >
+                <button className="text-red-600 hover:underline">
                   Delete
                 </button>
               </td>

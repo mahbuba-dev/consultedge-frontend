@@ -10,5 +10,16 @@ export interface IIndustry {
   isDeleted: boolean;
 }
 
+export interface IIndustryCreatePayload {
+  name: string;
+  description?: string | null;
+  file?: File | null; // MUST be "file" because backend uses multerUpload.single("file")
+}
+
+export interface IIndustryUpdatePayload {
+  name?: string;
+  description?: string | null;
+  file?: File | null; // MUST be "file" because backend uses multerUpload.single("file")
+}
 
 export type IIndustryListResponse = ApiResponse<IIndustry[]>;

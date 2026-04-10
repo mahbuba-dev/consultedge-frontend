@@ -51,28 +51,56 @@ export async function getNewTokensWithRefreshToken(refreshToken  : string) : Pro
 export async function getUserInfo() {
     try {
         const cookieStore = await cookies();
-        const accessToken = cookieStore.get("accessToken")?.value;
-        const sessionToken = cookieStore.get("better-auth.session_token")?.value
+        const refreshToken = cookieStore.get("refreshToken")?.value;
 
-        if (!accessToken) {
+        const buildCookieHeader = async () => {
+            const currentCookieStore = await cookies();
+            return currentCookieStore
+                .getAll()
+                .filter((cookie) => Boolean(cookie.value))
+                .map((cookie) => `${cookie.name}=${cookie.value}`)
+                .join("; ");
+        };
+
+        const fetchUserInfo = async (cookieHeader: string) => {
+            return fetch(`${BASE_API_URL}/auth/me`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    Cookie: cookieHeader,
+                },
+                cache: "no-store",
+            });
+        };
+
+        const cookieHeader = await buildCookieHeader();
+
+        if (!cookieHeader) {
             return null;
         }
 
-        const res = await fetch(`${BASE_API_URL}/auth/me`, {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                Cookie: `accessToken=${accessToken}; better-auth.session_token=${sessionToken}`
+        let res = await fetchUserInfo(cookieHeader);
+
+        if (res.status === 401 && refreshToken) {
+            const refreshed = await getNewTokensWithRefreshToken(refreshToken);
+
+            if (refreshed) {
+                const updatedCookieHeader = await buildCookieHeader();
+
+                if (updatedCookieHeader) {
+                    res = await fetchUserInfo(updatedCookieHeader);
+                }
             }
-        });
+        }
 
         if (!res.ok) {
-            console.error("Failed to fetch user info:", res.status, res.statusText);
+            if (res.status !== 401) {
+                console.error("Failed to fetch user info:", res.status, res.statusText);
+            }
             return null;
         }
 
         const { data } = await res.json();
-
         return data;
     } catch (error) {
         console.error("Error fetching user info:", error);
@@ -110,27 +138,48 @@ export interface ChangePasswordPayload {
 }
 
 export async function changePasswordService(payload: ChangePasswordPayload) {
-  // get session token from cookie or localStorage
-  const sessionToken = localStorage.getItem("betterAuthSessionToken"); // অথবা cookie থেকে handle করো
+  try {
+    const response = await httpClient.post<{ message?: string; success?: boolean }>(
+      "/auth/change-password",
+      payload
+    );
 
-  if (!sessionToken) {
-    throw new Error("Session token missing. Please login again.");
+    return {
+      ...response,
+      success: response?.success ?? true,
+      message: response?.message || "Password changed successfully",
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      message:
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to change password",
+    };
   }
-
-  const response = await fetch(`${BASE_API_URL}/auth/change-password`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${sessionToken}`, // send token to backend
-    },
-    body: JSON.stringify(payload),
-  });
-
-  console.log('Final response:', response);
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData?.message || "Failed to change password");
-  }
-
-  return response.json(); // backend থেকে accessToken, refreshToken, message return হবে
 }
+
+
+
+
+
+import type { ApiResponse } from "@/src/types/api.types";
+
+import { httpClient } from "../lib/axious/httpClient";
+import { IUpdateProfilePayload, IUpdateProfileResponse, IUserProfile } from "../types/auth.types";
+
+export const getMe = async (): Promise<IUserProfile> => {
+  const response = await httpClient.get<IUserProfile>("/auth/me");
+  return response.data;
+};
+
+
+
+export const updateProfile = async (payload: IUpdateProfilePayload) => {
+  const response = await httpClient.put<IUpdateProfileResponse>(
+    "/auth/update-profile",
+    payload
+  );
+  return response.data;
+};

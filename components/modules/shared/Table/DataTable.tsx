@@ -15,10 +15,18 @@ import DataTableFilters, {
 import DataTablePagination from "../Table/DataTablePagination";
 import DataTableSearch from "../Table/DataTableSearch";
 
+interface DataTableRowAction {
+    label: string;
+    onClick: () => void | Promise<void>;
+    disabled?: boolean;
+    destructive?: boolean;
+}
+
 interface DataTableActions<TData> {
     onView ?: (data : TData) => void;
     onEdit ?: (data : TData) => void;
     onDelete ?: (data : TData) => void;
+    items?: (data: TData) => DataTableRowAction[];
 }
 
 interface DataTableProps<TData> {
@@ -102,11 +110,25 @@ const DataTable = <TData,>({ data = [] as TData[], columns, actions, toolbarActi
 
                             {
                                 actions.onDelete && (
-                                    <DropdownMenuItem onClick={() => actions.onDelete?.(rowData)}>
+                                    <DropdownMenuItem
+                                      onClick={() => actions.onDelete?.(rowData)}
+                                      className="text-destructive focus:text-destructive"
+                                    >
                                         Delete
                                     </DropdownMenuItem>
                                 )
                             }
+
+                            {actions.items?.(rowData).map((item) => (
+                              <DropdownMenuItem
+                                key={item.label}
+                                disabled={item.disabled}
+                                onClick={() => void item.onClick()}
+                                className={item.destructive ? "text-destructive focus:text-destructive" : undefined}
+                              >
+                                {item.label}
+                              </DropdownMenuItem>
+                            ))}
 
                         </DropdownMenuContent>
                     </DropdownMenu>
@@ -119,6 +141,12 @@ const DataTable = <TData,>({ data = [] as TData[], columns, actions, toolbarActi
     const table = useReactTable({
       data,
       columns: tableColumns,
+      initialState: {
+        pagination: {
+          pageIndex: 0,
+          pageSize: 10,
+        },
+      },
       getCoreRowModel: getCoreRowModel(),
       getSortedRowModel:getSortedRowModel(),
       getPaginationRowModel: getPaginationRowModel(),
@@ -256,14 +284,12 @@ const DataTable = <TData,>({ data = [] as TData[], columns, actions, toolbarActi
             </TableBody>
           </Table>
 
-          {pagination && (
-            <DataTablePagination
-              table={table}
-              totalPages={meta?.totalPages}
-              totalRows={meta?.total}
-              isLoading={hydratedIsLoading}
-            />
-          )}
+          <DataTablePagination
+            table={table}
+            totalPages={pagination ? meta?.totalPages : undefined}
+            totalRows={pagination ? meta?.total : data.length}
+            isLoading={hydratedIsLoading}
+          />
         </div>
       </div>
     );

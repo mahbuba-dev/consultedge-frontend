@@ -3,6 +3,7 @@ import {
   getDefaultDashboardRoute,
   getRouteOwner,
   isAuthRoute,
+  isValidRedirectForRole,
   UserRole,
 } from "./lib/authUtilis";
 import { jwtUtils } from "./lib/jwtUtilis";
@@ -32,6 +33,7 @@ export async function proxy(request: NextRequest) {
 
     const accessToken = request.cookies.get("accessToken")?.value;
     const refreshToken = request.cookies.get("refreshToken")?.value;
+    const sessionToken = request.cookies.get("better-auth.session_token")?.value;
 
     const decodedAccessToken =
       accessToken &&
@@ -54,6 +56,23 @@ export async function proxy(request: NextRequest) {
 
     const routerOwner = getRouteOwner(pathname);
     const isAuth = isAuthRoute(pathname);
+    const requestedRedirect = request.nextUrl.searchParams.get("redirect");
+    const safeRedirectPath =
+      requestedRedirect?.startsWith("/") && !requestedRedirect.startsWith("//")
+        ? requestedRedirect
+        : undefined;
+
+    const getPostLoginRedirectPath = (role: UserRole | null) => {
+      if (
+        role &&
+        safeRedirectPath &&
+        isValidRedirectForRole(safeRedirectPath, role)
+      ) {
+        return safeRedirectPath;
+      }
+
+      return role ? getDefaultDashboardRoute(role) : "/";
+    };
 
     // ---------------------------------------------------------
     // 1) PROACTIVE TOKEN REFRESH
@@ -87,13 +106,18 @@ export async function proxy(request: NextRequest) {
     // ---------------------------------------------------------
     if (
       isAuth &&
-      isValidAccessToken &&
       pathname !== "/verify-email" &&
-      pathname !== "/reset-password"
+      pathname !== "/reset-password" &&
+      (accessToken || sessionToken)
     ) {
-      return NextResponse.redirect(
-        new URL(getDefaultDashboardRoute(userRole as UserRole), request.url)
-      );
+      const userInfo = await getUserInfo();
+      const resolvedRole = (userInfo?.role as UserRole) || userRole;
+
+      if (userInfo || (isValidAccessToken && resolvedRole)) {
+        return NextResponse.redirect(
+          new URL(getPostLoginRedirectPath(resolvedRole ?? null), request.url)
+        );
+      }
     }
 
     // ---------------------------------------------------------
@@ -105,14 +129,19 @@ export async function proxy(request: NextRequest) {
       // Case 1: Logged-in ADMIN with needPasswordChange → allow reset-password
       if (accessToken && email) {
         const userInfo = await getUserInfo();
+        const resolvedRole = (userInfo?.role as UserRole) || userRole;
 
-        if (userInfo.needPasswordChange) {
+        if (userInfo?.needPasswordChange) {
           return NextResponse.next();
-        } else {
+        }
+
+        if (userInfo || (isValidAccessToken && resolvedRole)) {
           return NextResponse.redirect(
-            new URL(getDefaultDashboardRoute(userRole as UserRole), request.url)
+            new URL(getPostLoginRedirectPath(resolvedRole ?? null), request.url)
           );
         }
+
+        return NextResponse.next();
       }
 
       // Case 2: Forgot-password flow → allow reset-password
@@ -136,7 +165,7 @@ export async function proxy(request: NextRequest) {
     // ---------------------------------------------------------
     // 5) NOT LOGGED IN → BLOCK PROTECTED ROUTES
     // ---------------------------------------------------------
-    if (!accessToken || !isValidAccessToken) {
+    if ((!accessToken || !isValidAccessToken) && !sessionToken) {
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("redirect", pathWithQuery);
       return NextResponse.redirect(loginUrl);
@@ -145,8 +174,20 @@ export async function proxy(request: NextRequest) {
     // ---------------------------------------------------------
     // 6) ENFORCE EMAIL VERIFICATION + PASSWORD CHANGE
     // ---------------------------------------------------------
-    if (accessToken) {
+    if (accessToken || sessionToken) {
       const userInfo = await getUserInfo();
+
+      if (!userInfo) {
+        if (isValidAccessToken && userRole) {
+          return NextResponse.next();
+        }
+
+        const loginUrl = new URL("/login", request.url);
+        loginUrl.searchParams.set("redirect", pathWithQuery);
+        return NextResponse.redirect(loginUrl);
+      }
+
+      userRole = (userInfo.role as UserRole) || userRole;
 
       if (userInfo) {
         // EMAIL NOT VERIFIED → force verify-email
@@ -176,11 +217,9 @@ export async function proxy(request: NextRequest) {
           return NextResponse.next();
         }
 
-        // ADMIN already changed password → block change-password page
-        if (!userInfo.needPasswordChange && pathname === "/change-password") {
-          return NextResponse.redirect(
-            new URL(getDefaultDashboardRoute(userRole as UserRole), request.url)
-          );
+        // Allow access to change-password for all authenticated users (voluntary or forced)
+        if (pathname === "/change-password") {
+          return NextResponse.next();
         }
       }
     }

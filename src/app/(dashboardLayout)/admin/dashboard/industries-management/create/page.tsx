@@ -8,10 +8,10 @@ export default function CreateIndustryPage() {
         <h1 className="text-2xl font-semibold">Create Industry</h1>
 
         <Link
-          href="/admin/industries-management"
-          className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+          href="/admin/dashboard/industries-management"
+          className="rounded-lg bg-gray-200 px-4 py-2 text-sm font-medium transition hover:bg-gray-300"
         >
-          Back
+          Back to industries
         </Link>
       </div>
 

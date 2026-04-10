@@ -19,7 +19,11 @@ const CHART_COLORS = [
 ];
 
 
-const ConsultationsPieChart = ({data, title, description}: ConsultationsPieChartProps) => {
+const ConsultationsPieChart = ({
+  data,
+  title = "Consultation Status",
+  description = "Status distribution across consultations",
+}: ConsultationsPieChartProps) => {
 
     if(!data || !Array.isArray(data)){
         return (

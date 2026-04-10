@@ -1,5 +1,82 @@
-export default function HomePage() {
+import Banner from "@/components/modules/HomePage/Banner";
+import ExpertAnimated from "@/components/modules/HomePage/ExpertAnimated";
+import HomeSection2 from "@/components/modules/HomePage/HomeSection2";
+import HomeSection3 from "@/components/modules/HomePage/HomeSection3";
+import IndustryTicker from "@/components/modules/HomePage/IndustryTicker";
+import { getExperts } from "@/src/services/expert.services";
+import { getAllIndustries } from "@/src/services/industry.services";
+import { getAllTestimonials } from "@/src/services/testimonial.services";
+import type { IExpert } from "@/src/types/expert.types";
+import type { IIndustry } from "@/src/types/industry.types";
+import type { ITestimonial } from "@/src/types/testimonial.types";
+
+const fallbackTestimonials: ITestimonial[] = [
+  {
+    id: "fallback-1",
+    rating: 5,
+    comment: "ConsultEdge made it easy to find the right expert and book a valuable session fast.",
+    clientId: "client-1",
+    expertId: "expert-1",
+    consultationId: "consultation-1",
+    createdAt: new Date().toISOString(),
+    expert: { fullName: "Growth Specialist" },
+    client: { fullName: "Verified Client" },
+  },
+  {
+    id: "fallback-2",
+    rating: 5,
+    comment: "The platform feels modern, organized, and genuinely useful for business consultation workflows.",
+    clientId: "client-2",
+    expertId: "expert-2",
+    consultationId: "consultation-2",
+    createdAt: new Date().toISOString(),
+    expert: { fullName: "Strategy Advisor" },
+    client: { fullName: "Startup Founder" },
+  },
+  {
+    id: "fallback-3",
+    rating: 4,
+    comment: "From expert discovery to follow-up, the whole experience feels smooth and premium.",
+    clientId: "client-3",
+    expertId: "expert-3",
+    consultationId: "consultation-3",
+    createdAt: new Date().toISOString(),
+    expert: { fullName: "Operations Consultant" },
+    client: { fullName: "Business Owner" },
+  },
+];
+
+const HomePage = async () => {
+  const [expertsResult, industriesResult, testimonialsResult] = await Promise.allSettled([
+    getExperts(),
+    getAllIndustries(),
+    getAllTestimonials(3),
+  ]);
+
+  const featuredExperts: IExpert[] =
+    expertsResult.status === "fulfilled" && Array.isArray(expertsResult.value?.data)
+      ? expertsResult.value.data.slice(0, 3)
+      : [];
+
+  const featuredIndustries: IIndustry[] =
+    industriesResult.status === "fulfilled" && Array.isArray(industriesResult.value?.data)
+      ? industriesResult.value.data.slice(0, 6)
+      : [];
+
+  const featuredTestimonials: ITestimonial[] =
+    testimonialsResult.status === "fulfilled" && testimonialsResult.value.length > 0
+      ? testimonialsResult.value.slice(0, 3)
+      : fallbackTestimonials;
+
   return (
-    <div>HomePage</div>
-  )
-}
+    <div className="space-y-12 pb-16 md:space-y-16">
+      <Banner />
+      <HomeSection2 testimonials={featuredTestimonials} />
+      <IndustryTicker industries={featuredIndustries} />
+      <ExpertAnimated experts={featuredExperts} />
+      <HomeSection3 />
+    </div>
+  );
+};
+
+export default HomePage;
