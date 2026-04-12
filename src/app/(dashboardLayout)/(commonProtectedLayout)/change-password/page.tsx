@@ -1,4 +1,5 @@
-import ChangePasswordForm from "@/components/form/ChangePasswordForm";
+import ForgetPasswordForm from "@/components/modules/auth/ForgetPasswordForm";
+import { getUserInfo } from "@/src/services/auth.services";
 
 type ChangePasswordParams = {
   email?: string;
@@ -10,21 +11,20 @@ export default async function ChangePasswordPage({
   searchParams: Promise<ChangePasswordParams>;
 }) {
   const params = await searchParams;
-  const email = params.email;
+  const user = await getUserInfo();
+  const email = params.email || user?.email;
 
   return (
     <div className="max-w-md mx-auto py-10 space-y-4">
-      <p className="text-center text-gray-600">
-        Please change your password to continue
-      </p>
-
-      {email && (
-        <p className="text-center text-sm text-gray-500">
-          Logged in as <span className="font-semibold">{email}</span>
-        </p>
-      )}
-
-      <ChangePasswordForm />
+      <ForgetPasswordForm
+        initialEmail={email ?? ""}
+        lockEmail={Boolean(email)}
+        title="Change Password"
+        description="We will send a reset OTP to your email so you can set a new password securely."
+        submitLabel="Send OTP"
+        pendingLabel="Sending OTP..."
+        showLoginLink={false}
+      />
     </div>
   );
 }

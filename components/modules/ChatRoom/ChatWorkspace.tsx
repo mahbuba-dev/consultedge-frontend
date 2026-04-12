@@ -28,6 +28,7 @@ interface ChatWorkspaceProps {
   dashboardHref: string;
   selectedRoomId?: string;
   expertId?: string;
+  participantId?: string;
   title?: string;
   description?: string;
   readOnly?: boolean;
@@ -38,14 +39,16 @@ export default function ChatWorkspace({
   dashboardHref,
   selectedRoomId,
   expertId,
+  participantId,
   title = "Messages",
   description = "Keep every consultation conversation in one place.",
   readOnly = false,
 }: ChatWorkspaceProps) {
   const router = useRouter();
-  const attemptedExpertRoomRef = useRef<string | null>(null);
+  const attemptedRoomTargetRef = useRef<string | null>(null);
+  const roomTargetId = participantId ?? expertId;
 
-  const { isConnected } = useChatSocketContext();
+  const { isConnected, socket, setActiveRoomId, markRoomAsRead } = useChatSocketContext();
   const { currentUser, getPresence } = usePresence();
   const {
     rooms,
@@ -56,31 +59,81 @@ export default function ChatWorkspace({
     isCreatingRoom,
   } = useChatRooms();
 
+  const visibleRooms = useMemo(() => {
+    if (!currentUser?.role) {
+      return rooms;
+    }
+
+    if (currentUser.role === "EXPERT") {
+      return rooms.filter(
+        (room) =>
+          room.participants.length === 0 ||
+          room.participants.some((participant) => participant.role === "CLIENT"),
+      );
+    }
+
+    if (currentUser.role === "CLIENT") {
+      return rooms.filter(
+        (room) =>
+          room.participants.length === 0 ||
+          room.participants.some((participant) => participant.role === "EXPERT"),
+      );
+    }
+
+    return rooms;
+  }, [currentUser?.role, rooms]);
+
   const selectedRoom = useMemo(
-    () => rooms.find((room) => room.id === selectedRoomId) ?? null,
-    [rooms, selectedRoomId],
+    () => visibleRooms.find((room) => room.id === selectedRoomId) ?? null,
+    [selectedRoomId, visibleRooms],
   );
 
   useEffect(() => {
-    if (!expertId || selectedRoomId || attemptedExpertRoomRef.current === expertId) {
+    if (!roomTargetId || selectedRoomId || attemptedRoomTargetRef.current === roomTargetId) {
       return;
     }
 
-    attemptedExpertRoomRef.current = expertId;
+    attemptedRoomTargetRef.current = roomTargetId;
 
-    ensureRoom(expertId)
+    ensureRoom(roomTargetId)
       .then((room) => {
         if (room?.id) {
+          void refetchRooms();
           router.replace(`${basePath}/${room.id}`);
           return;
         }
 
-        toast.error("We could not open a room for this expert yet.");
+        attemptedRoomTargetRef.current = null;
+        toast.error("We could not open this conversation yet.");
       })
       .catch((error) => {
+        attemptedRoomTargetRef.current = null;
         toast.error(error instanceof Error ? error.message : "Unable to open the chat room.");
       });
-  }, [basePath, ensureRoom, expertId, router, selectedRoomId]);
+  }, [basePath, ensureRoom, roomTargetId, refetchRooms, router, selectedRoomId]);
+
+  useEffect(() => {
+    if (selectedRoomId || roomTargetId || !visibleRooms.length) {
+      return;
+    }
+
+    router.replace(`${basePath}/${visibleRooms[0].id}`);
+  }, [basePath, roomTargetId, router, selectedRoomId, visibleRooms]);
+
+  useEffect(() => {
+    if (!selectedRoomId || isRoomsLoading || roomsError || selectedRoom) {
+      return;
+    }
+
+    if (visibleRooms.length > 0) {
+      toast.error("That conversation is unavailable. Opening your latest room instead.");
+      router.replace(`${basePath}/${visibleRooms[0].id}`);
+      return;
+    }
+
+    toast.error("That conversation is no longer available.");
+    router.replace(basePath);
+  }, [basePath, isRoomsLoading, roomsError, router, selectedRoom, selectedRoomId, visibleRooms]);
 
   const otherParticipant = useMemo(() => {
     return selectedRoom?.participants.find(
@@ -91,6 +144,22 @@ export default function ChatWorkspace({
   const otherParticipantPresence = getPresence(otherParticipant?.userId ?? otherParticipant?.id);
   const activeRoomId = selectedRoom?.id;
   const isReadOnly = readOnly || currentUser?.role === "ADMIN";
+
+  useEffect(() => {
+    if (!socket || !activeRoomId) {
+      setActiveRoomId(null);
+      return;
+    }
+
+    setActiveRoomId(activeRoomId);
+    socket.emit("join_room", activeRoomId);
+    markRoomAsRead(activeRoomId);
+
+    return () => {
+      socket.emit("leave_room", activeRoomId);
+      setActiveRoomId((current) => (current === activeRoomId ? null : current));
+    };
+  }, [activeRoomId, markRoomAsRead, setActiveRoomId, socket]);
 
   const {
     messages,
@@ -144,13 +213,14 @@ export default function ChatWorkspace({
     <div className="space-y-4">
       <div className="grid gap-4 xl:grid-cols-[340px_minmax(0,1fr)]">
         <ChatSidebar
-          rooms={rooms}
+          rooms={visibleRooms}
           currentUserId={currentUser?.userId}
           selectedRoomId={selectedRoom?.id}
           isLoading={isRoomsLoading || isCreatingRoom}
           isRefreshing={isRoomsLoading}
           title={title}
           description={description}
+          role={currentUser?.role ?? null}
           onRefresh={() => void refetchRooms()}
           onSelectRoom={handleSelectRoom}
         />
@@ -176,11 +246,18 @@ export default function ChatWorkspace({
               </Card>
             </div>
           ) : !selectedRoom ? (
-            <ChatEmptyState
-              expertId={expertId}
-              isLoading={Boolean(expertId && isCreatingRoom)}
-              dashboardHref={dashboardHref}
-            />
+            visibleRooms.length > 0 ? (
+              <div className="flex h-full items-center justify-center p-6 text-sm text-muted-foreground">
+                Opening your latest conversation...
+              </div>
+            ) : (
+              <ChatEmptyState
+                expertId={roomTargetId}
+                isLoading={Boolean(roomTargetId && isCreatingRoom)}
+                dashboardHref={dashboardHref}
+                role={currentUser?.role ?? null}
+              />
+            )
           ) : (
             <>
               <ChatRoomHeader

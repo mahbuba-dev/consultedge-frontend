@@ -1,12 +1,22 @@
 import Link from "next/link";
-import { ArrowRight, Mail, MapPin, Phone } from "lucide-react";
+import {
+  ArrowRight,
+  CalendarRange,
+  Mail,
+  MapPin,
+  Phone,
+  ShieldCheck,
+  Sparkles,
+  Users,
+} from "lucide-react";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 const quickLinks = [
   { label: "Home", href: "/" },
   { label: "Experts", href: "/experts" },
-  { label: "Industries", href: "/industries" },
+  { label: "How it works", href: "/industries" },
   { label: "Contact", href: "/contact" },
 ];
 
@@ -24,20 +34,50 @@ const socialLinks = [
   { label: "yt", name: "YouTube", href: "https://www.youtube.com/@ConsultEdge.Global" },
 ];
 
+const trustSignals = [
+  { label: "Verified experts", icon: ShieldCheck },
+  { label: "Secure booking", icon: CalendarRange },
+  { label: "Client-first experience", icon: Users },
+];
+
 export default function Footer() {
   return (
     <footer className="mt-16 border-t border-slate-800 bg-slate-950 text-slate-200">
       <div className="mx-auto w-full max-w-7xl px-4 pt-8 md:px-6">
-        <div className="rounded-[1.75rem] border border-cyan-400/20 bg-linear-to-r from-violet-950 via-slate-900 to-cyan-950 p-5 shadow-lg shadow-cyan-500/10 md:p-6">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div className="space-y-2">
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-200">
-                Let’s build what matters
-              </p>
-              <h2 className="text-2xl font-bold text-white">Need help choosing the right expert?</h2>
-              <p className="max-w-2xl text-sm text-slate-300 md:text-base">
-                Talk to the ConsultEdge team and get matched with the right specialist for your next move.
-              </p>
+        <div className="relative overflow-hidden rounded-[1.75rem] border border-cyan-400/20 bg-linear-to-r from-violet-950 via-slate-900 to-cyan-950 p-5 shadow-[0_24px_70px_-30px_rgba(34,211,238,0.3)] md:p-8">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.08),transparent_35%)]" />
+
+          <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div className="space-y-4">
+              <Badge className="border-white/15 bg-white/10 text-white hover:bg-white/10">
+                <Sparkles className="mr-1 size-3.5" />
+                Need help getting started?
+              </Badge>
+
+              <div className="space-y-2">
+                <h2 className="text-2xl font-bold text-white md:text-3xl">
+                  Talk with the right expert, faster.
+                </h2>
+                <p className="max-w-2xl text-sm text-slate-300 md:text-base">
+                  Browse trusted specialists, book with confidence, and let ConsultEdge support your next smart move.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {trustSignals.map((item) => {
+                  const Icon = item.icon;
+
+                  return (
+                    <div
+                      key={item.label}
+                      className="flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-medium text-slate-100"
+                    >
+                      <Icon className="size-3.5 text-cyan-200" />
+                      <span>{item.label}</span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
             <div className="flex flex-wrap gap-3">
@@ -60,14 +100,35 @@ export default function Footer() {
         </div>
       </div>
 
-      <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-12 md:grid-cols-[1.1fr_0.7fr_0.7fr_0.9fr] md:px-6">
-        <div className="space-y-4">
-          <div>
-            <p className="text-xl font-semibold text-white">ConsultEdge</p>
-            <p className="mt-2 max-w-sm text-sm text-slate-300">
-              Premium expert consultation for modern teams — designed to help clients discover,
-              book, and manage high-value sessions with clarity.
-            </p>
+      <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-12 md:grid-cols-[1.15fr_0.7fr_0.7fr_0.95fr] md:px-6">
+        <div className="space-y-5">
+          <Link href="/" className="inline-flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-linear-to-br from-violet-600 via-fuchsia-600 to-sky-500 text-white shadow-lg shadow-violet-500/25">
+              <Sparkles className="size-5" />
+            </div>
+            <div>
+              <p className="text-xl font-semibold text-white">ConsultEdge</p>
+              <p className="text-xs text-slate-400">Premium expert consultation network</p>
+            </div>
+          </Link>
+
+          <p className="max-w-sm text-sm text-slate-300">
+            A modern platform that helps clients discover, book, and manage valuable expert sessions with more clarity and confidence.
+          </p>
+
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
+              <p className="text-sm font-semibold text-white">Trusted</p>
+              <p className="mt-1 text-xs text-slate-400">Verified professionals</p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
+              <p className="text-sm font-semibold text-white">Secure</p>
+              <p className="mt-1 text-xs text-slate-400">Smooth payment flow</p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
+              <p className="text-sm font-semibold text-white">Simple</p>
+              <p className="mt-1 text-xs text-slate-400">Smart dashboards</p>
+            </div>
           </div>
 
           <div className="flex flex-wrap gap-2">
@@ -117,7 +178,7 @@ export default function Footer() {
           <h3 className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
             Contact
           </h3>
-          <div className="space-y-3 text-sm text-slate-300">
+          <div className="space-y-4 text-sm text-slate-300">
             <a href="mailto:sales@consultedge.global" className="flex items-start gap-2 transition hover:text-white">
               <Mail className="mt-0.5 size-4" />
               <span>sales@consultedge.global</span>

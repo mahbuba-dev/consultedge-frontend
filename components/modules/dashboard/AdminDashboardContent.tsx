@@ -38,7 +38,8 @@ const AdminDashboardContent = () => {
   const { data: adminDashboardResponse, isLoading, isError } = useQuery({
     queryKey: ["admin-dashboard-data"],
     queryFn: () => getDashboardData<IAdminDashboardStats>(),
-    refetchOnWindowFocus: "always",
+    refetchOnWindowFocus: false,
+    retry: false,
   });
 
   const data = (adminDashboardResponse as ApiResponse<IAdminDashboardStats> | undefined)?.data;

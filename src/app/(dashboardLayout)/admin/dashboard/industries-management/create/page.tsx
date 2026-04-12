@@ -17,12 +17,12 @@ export default function CreateIndustryPage() {
 
       <IndustryCreateForm />
 
-      <div className="pt-4">
+      <div className="flex justify-center pt-2">
         <Link
           href="/admin/dashboard/industries-management"
-          className="block w-full text-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          className="inline-flex items-center rounded-full border border-slate-200 bg-white px-5 py-2 text-sm font-medium text-slate-700 transition hover:border-violet-300 hover:text-violet-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-violet-500/40 dark:hover:text-violet-300"
         >
-          View All Created Industries
+          View all industries
         </Link>
       </div>
     </div>

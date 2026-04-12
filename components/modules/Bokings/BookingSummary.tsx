@@ -36,19 +36,28 @@ type BookingSummaryProps = {
 const formatCurrency = (value?: number | null) =>
   typeof value === "number" ? `$${value}` : "Contact for pricing";
 
+const getStartDateTime = (selectedSlot?: IExpertAvailability | null) => {
+  const rawSlot = selectedSlot as (IExpertAvailability & { startDateTime?: string | null }) | null | undefined;
+  return selectedSlot?.schedule?.startDateTime ?? rawSlot?.startDateTime ?? "";
+};
+
+const getEndDateTime = (selectedSlot?: IExpertAvailability | null) => {
+  const rawSlot = selectedSlot as (IExpertAvailability & { endDateTime?: string | null }) | null | undefined;
+  return selectedSlot?.schedule?.endDateTime ?? rawSlot?.endDateTime ?? null;
+};
+
 const getSelectedDate = (selectedSlot?: IExpertAvailability | null) => {
-  const dateValue = selectedSlot?.schedule?.startDateTime;
+  const dateValue = getStartDateTime(selectedSlot);
   return dateValue ? format(parseISO(dateValue), "EEEE, MMM d, yyyy") : "Pick a date";
 };
 
 const getSelectedTime = (selectedSlot?: IExpertAvailability | null) => {
-  const startValue = selectedSlot?.schedule?.startDateTime;
+  const startValue = getStartDateTime(selectedSlot);
   if (!startValue) return "Choose an available time";
 
   const start = parseISO(startValue);
-  const end = selectedSlot?.schedule?.endDateTime
-    ? parseISO(selectedSlot.schedule.endDateTime)
-    : null;
+  const endValue = getEndDateTime(selectedSlot);
+  const end = endValue ? parseISO(endValue) : null;
 
   return end
     ? `${format(start, "h:mm a")} - ${format(end, "h:mm a")}`
@@ -66,7 +75,7 @@ export default function BookingSummary({
   onBookNow,
   onPayLater,
 }: BookingSummaryProps) {
-  const isDisabled = !selectedSlot || !isLoggedIn || !isClient || Boolean(actionLoading);
+  const isDisabled = Boolean(actionLoading);
 
   return (
     <Card className="overflow-hidden border-violet-200/70 shadow-xl shadow-violet-500/10">
@@ -143,6 +152,7 @@ export default function BookingSummary({
           <Button
             className="w-full bg-violet-600 text-white hover:bg-violet-700"
             disabled={isDisabled}
+            type="button"
             onClick={onBookNow}
           >
             {actionLoading === "pay-now" ? (
@@ -162,6 +172,7 @@ export default function BookingSummary({
             variant="outline"
             className="w-full border-violet-200 text-violet-700 hover:bg-violet-50"
             disabled={isDisabled}
+            type="button"
             onClick={onPayLater}
           >
             {actionLoading === "pay-later" ? (

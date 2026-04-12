@@ -25,9 +25,10 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface LoginFormProps {
   redirectPath?: string;
+  passwordReset?: boolean;
 }
 
-const LoginForm = ({ redirectPath }: LoginFormProps) => {
+const LoginForm = ({ redirectPath, passwordReset = false }: LoginFormProps) => {
   // Track server-side error messages
   const [serverError, setServerError] = useState<string | null>(null);
 
@@ -86,6 +87,15 @@ const LoginForm = ({ redirectPath }: LoginFormProps) => {
 
         // Success case handled inside loginAction (redirect)
       } catch (error: any) {
+        // Next.js server redirect can surface as an exception on the client.
+        // In that case, do not show a false "Login failed" message.
+        if (
+          (typeof error?.digest === "string" && error.digest.startsWith("NEXT_REDIRECT")) ||
+          String(error?.message || "").includes("NEXT_REDIRECT")
+        ) {
+          return;
+        }
+
         console.log(`Login failed: ${error.message}`);
         setServerError(`Login failed: ${error.message}`);
       }
@@ -103,6 +113,14 @@ const LoginForm = ({ redirectPath }: LoginFormProps) => {
       </CardHeader>
 
       <CardContent>
+        {passwordReset ? (
+          <Alert className="mb-4 border-emerald-200 bg-emerald-50 text-emerald-800">
+            <AlertDescription>
+              Password updated successfully. Please sign in with your new password.
+            </AlertDescription>
+          </Alert>
+        ) : null}
+
         {/* Form */}
         <form
           method="POST"

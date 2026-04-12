@@ -1,9 +1,122 @@
 "use client";
 
-export default function Page() {
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useForm } from "@tanstack/react-form";
+import { toast } from "sonner";
+
+import AppSubmitButton from "@/components/form/AppSubmitButton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { forgotPasswordService } from "@/src/services/auth.services";
+import { forgotPasswordZodSchema } from "@/src/zod/auth.validation";
+
+type ForgetPasswordFormProps = {
+  initialEmail?: string;
+  lockEmail?: boolean;
+  title?: string;
+  description?: string;
+  submitLabel?: string;
+  pendingLabel?: string;
+  showLoginLink?: boolean;
+};
+
+export default function ForgetPasswordForm({
+  initialEmail = "",
+  lockEmail = false,
+  title = "Forgot Password",
+  description = "Enter your email and we will send you an OTP to reset your password.",
+  submitLabel = "Send Reset OTP",
+  pendingLabel = "Sending OTP...",
+  showLoginLink = true,
+}: ForgetPasswordFormProps) {
+  const router = useRouter();
+
+  const form = useForm({
+    defaultValues: {
+      email: initialEmail,
+    },
+    onSubmit: async ({ value }) => {
+      const validation = forgotPasswordZodSchema.safeParse(value);
+
+      if (!validation.success) {
+        const message = validation.error.flatten().fieldErrors.email?.[0] || "Enter a valid email";
+        toast.error(message);
+        return;
+      }
+
+      try {
+        const response = await forgotPasswordService({ email: value.email.trim() });
+
+        if (!response?.success) {
+          const message = response?.message || "Failed to send reset OTP";
+          toast.error(message);
+          return;
+        }
+
+        toast.success(response.message || "Reset OTP sent to your email");
+        router.push(`/reset-password?email=${encodeURIComponent(value.email.trim())}&otpSent=true`);
+      } catch (error: any) {
+        const message = error?.response?.data?.message || error?.message || "Failed to send reset OTP";
+        toast.error(message);
+      }
+    },
+  });
+
   return (
-    <div>
-      <h1 className="text-2xl font-bold">Forgot Password form</h1>
+    <div className="mx-auto w-full max-w-md space-y-4 py-10">
+      <div className="space-y-1 text-center">
+        <h1 className="text-2xl font-bold">{title}</h1>
+        <p className="text-sm text-muted-foreground">{description}</p>
+      </div>
+
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          void form.handleSubmit();
+        }}
+        className="space-y-4"
+      >
+        <form.Field name="email">
+          {(field) => (
+            <div className="space-y-1.5">
+              <input
+                id="forgot-email"
+                type="email"
+                autoComplete="email"
+                placeholder="Enter your email"
+                value={field.state.value}
+                onChange={(e) => field.handleChange(e.target.value)}
+                onBlur={field.handleBlur}
+                readOnly={lockEmail}
+                className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none transition placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring read-only:bg-muted/50 read-only:text-muted-foreground"
+              />
+              {field.state.meta.errors?.[0] ? (
+                <Alert variant="destructive">
+                  <AlertDescription>{String(field.state.meta.errors[0])}</AlertDescription>
+                </Alert>
+              ) : null}
+            </div>
+          )}
+        </form.Field>
+
+        <form.Subscribe selector={(state) => [state.isSubmitting] as const}>
+          {([isSubmitting]) => (
+            <AppSubmitButton isPending={isSubmitting} pendingLabel={pendingLabel}>
+              {submitLabel}
+            </AppSubmitButton>
+          )}
+        </form.Subscribe>
+      </form>
+
+      {showLoginLink ? (
+        <p className="text-center text-sm text-muted-foreground">
+          Remember your password?{" "}
+          <Link href="/login" className="font-medium text-primary hover:underline">
+            Back to login
+          </Link>
+        </p>
+      ) : null}
     </div>
   );
 }

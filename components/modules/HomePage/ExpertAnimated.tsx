@@ -1,5 +1,13 @@
 import Link from "next/link";
-import { ArrowRight, BadgeCheck, BriefcaseBusiness, Wallet } from "lucide-react";
+import {
+  ArrowRight,
+  BadgeCheck,
+  BriefcaseBusiness,
+  ShieldCheck,
+  Sparkles,
+  TrendingUp,
+  Wallet,
+} from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -21,27 +29,79 @@ const getInitials = (name: string) =>
 
 export default function ExpertAnimated({ experts }: ExpertAnimatedProps) {
   const tickerExperts = experts.length > 0 ? [...experts, ...experts] : [];
+  const verifiedCount = experts.filter((expert) => Boolean(expert.isVerified)).length;
+  const averageExperience = experts.length
+    ? Math.round(
+        experts.reduce((total, expert) => total + Number(expert.experience ?? 0), 0) /
+          experts.length,
+      )
+    : 0;
 
   return (
     <section className="space-y-5">
-      <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-        <div>
-          <Badge variant="secondary" className="mb-2 bg-cyan-100 text-cyan-700">
+      <div className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
+        <div className="space-y-3">
+          <Badge variant="secondary" className="mb-2 gap-1 bg-cyan-100 text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-200">
+            <Sparkles className="size-3.5" />
             Featured experts
           </Badge>
-          <h2 className="text-2xl font-bold tracking-tight md:text-3xl">Meet standout professionals</h2>
-          <p className="text-muted-foreground">
-            Explore trusted experts in a smooth single-line showcase and open their full profile in one click.
+          <h2 className="text-2xl font-bold tracking-tight md:text-3xl lg:text-4xl">
+            Meet standout professionals ready for high-impact consulting
+          </h2>
+          <p className="max-w-2xl text-muted-foreground md:text-base">
+            Explore trusted specialists in a premium expert showcase, compare profiles quickly, and open the right consultation flow in one click.
           </p>
         </div>
 
+        <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
+          <Card className="border-cyan-200/70 bg-white/85 shadow-sm dark:border-white/10 dark:bg-slate-900/80">
+            <CardContent className="flex items-center gap-3 p-4">
+              <div className="rounded-full bg-cyan-100 p-2 text-cyan-700">
+                <TrendingUp className="size-4" />
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Experts</p>
+                <p className="text-xl font-semibold text-foreground">{experts.length}</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-violet-200/70 bg-white/85 shadow-sm dark:border-white/10 dark:bg-slate-900/80">
+            <CardContent className="flex items-center gap-3 p-4">
+              <div className="rounded-full bg-violet-100 p-2 text-violet-700">
+                <ShieldCheck className="size-4" />
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Verified</p>
+                <p className="text-xl font-semibold text-foreground">{verifiedCount}</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-emerald-200/70 bg-white/85 shadow-sm dark:border-white/10 dark:bg-slate-900/80">
+            <CardContent className="flex items-center gap-3 p-4">
+              <div className="rounded-full bg-emerald-100 p-2 text-emerald-700">
+                <BriefcaseBusiness className="size-4" />
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Avg. experience</p>
+                <p className="text-xl font-semibold text-foreground">{averageExperience}+ yrs</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      <div className="flex justify-end">
         <Link href="/experts">
-          <Button variant="outline" className="rounded-full">Browse experts</Button>
+          <Button variant="outline" className="rounded-full border-cyan-200 text-cyan-700 hover:bg-cyan-50 dark:border-cyan-400/30 dark:text-cyan-200 dark:hover:bg-cyan-950/30">
+            Browse experts
+          </Button>
         </Link>
       </div>
 
       {tickerExperts.length > 0 ? (
-        <div className="relative overflow-hidden rounded-[2rem] border border-cyan-100 bg-linear-to-r from-slate-950 via-slate-900 to-cyan-950 px-2 py-4 shadow-lg shadow-cyan-500/10">
+        <div className="relative overflow-hidden rounded-[2rem] border border-cyan-100 bg-linear-to-r from-slate-950 via-violet-950 to-cyan-950 px-2 py-4 shadow-[0_24px_70px_-26px_rgba(34,211,238,0.35)]">
           <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-linear-to-r from-slate-950 to-transparent" />
           <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-linear-to-l from-cyan-950 to-transparent" />
 
@@ -58,10 +118,10 @@ export default function ExpertAnimated({ experts }: ExpertAnimatedProps) {
                   href={`/experts/${expert.id}`}
                   className="block w-64 shrink-0 sm:w-70"
                 >
-                  <Card className="h-full border-white/10 bg-white/10 text-white backdrop-blur transition duration-300 hover:-translate-y-1 hover:border-cyan-300/70 hover:bg-white/15">
+                  <Card className="h-full border-white/10 bg-white/10 text-white backdrop-blur transition duration-300 hover:-translate-y-1 hover:border-cyan-300/70 hover:bg-white/15 hover:shadow-[0_24px_60px_-28px_rgba(34,211,238,0.45)]">
                     <CardContent className="space-y-4 p-4">
                       <div className="flex items-start gap-3">
-                        <Avatar size="lg" className="size-14 border border-white/20">
+                        <Avatar size="lg" className="size-14 border border-white/20 ring-2 ring-white/10">
                           {expert.profilePhoto ? (
                             <AvatarImage src={expert.profilePhoto} alt={expert.fullName} />
                           ) : null}
@@ -98,7 +158,7 @@ export default function ExpertAnimated({ experts }: ExpertAnimatedProps) {
                       </div>
 
                       <div className="grid gap-2 sm:grid-cols-2">
-                        <div className="rounded-xl bg-white/10 p-2.5">
+                        <div className="rounded-xl border border-white/10 bg-white/10 p-2.5">
                           <div className="mb-1 flex items-center gap-1.5 text-cyan-200">
                             <BriefcaseBusiness className="size-3.5" />
                             <span className="text-[10px] uppercase tracking-wide">Experience</span>
@@ -106,19 +166,25 @@ export default function ExpertAnimated({ experts }: ExpertAnimatedProps) {
                           <p className="text-sm font-semibold">{expert.experience} years</p>
                         </div>
 
-                        <div className="rounded-xl bg-white/10 p-2.5">
+                        <div className="rounded-xl border border-white/10 bg-white/10 p-2.5">
                           <div className="mb-1 flex items-center gap-1.5 text-cyan-200">
                             <Wallet className="size-3.5" />
                             <span className="text-[10px] uppercase tracking-wide">Fee</span>
                           </div>
                           <p className="text-sm font-semibold">
-                            {typeof expertPrice === "number" ? `$${expertPrice}` : "Contact"}
+                            {typeof expertPrice === "number"
+                              ? new Intl.NumberFormat("en-US", {
+                                  style: "currency",
+                                  currency: "USD",
+                                  maximumFractionDigits: 0,
+                                }).format(expertPrice)
+                              : "Contact"}
                           </p>
                         </div>
                       </div>
 
                       <div className="flex items-center justify-between text-sm font-medium text-cyan-100">
-                        <span>View details</span>
+                        <span>View profile</span>
                         <ArrowRight className="size-4" />
                       </div>
                     </CardContent>

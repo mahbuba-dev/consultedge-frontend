@@ -3,18 +3,48 @@ import { MessageCircleMore, Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import type { ChatRole } from "@/src/types/chat.types";
 
 interface ChatEmptyStateProps {
   expertId?: string;
   isLoading?: boolean;
   dashboardHref?: string;
+  role?: ChatRole | null;
 }
 
 export default function ChatEmptyState({
   expertId,
   isLoading = false,
   dashboardHref = "/dashboard",
+  role,
 }: ChatEmptyStateProps) {
+  const isExpert = role === "EXPERT";
+  const isAdmin = role === "ADMIN";
+
+  const heading = isLoading
+    ? "Preparing your conversations"
+    : expertId && !isExpert
+      ? "Opening your expert conversation"
+      : isExpert
+        ? "Your client inbox is ready"
+        : isAdmin
+          ? "Your message desk is ready"
+          : "Your messages hub is ready";
+
+  const description = expertId && !isExpert
+    ? "We’re looking for the matching room so you can message this expert from one polished dashboard workspace."
+    : isExpert
+      ? "Client conversations will appear here as soon as someone messages you or books a consultation."
+      : isAdmin
+        ? "Choose a room from the sidebar to review conversations and keep message operations organized."
+        : "Choose a room from the sidebar to continue a conversation, share files, or start a secure video call.";
+
+  const primaryAction = isExpert
+    ? { href: "/expert/dashboard/my-consultations", label: "View consultations" }
+    : isAdmin
+      ? { href: "/admin/dashboard", label: "Open admin dashboard" }
+      : { href: "/experts", label: "Explore experts" };
+
   return (
     <Card className="flex h-full items-center justify-center border-dashed bg-linear-to-br from-violet-50/70 via-background to-sky-50/70 shadow-sm">
       <CardContent className="max-w-xl space-y-4 py-14 text-center">
@@ -24,24 +54,18 @@ export default function ChatEmptyState({
 
         <div className="space-y-2">
           <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-            {isLoading
-              ? "Preparing your conversations"
-              : expertId
-                ? "Opening your expert conversation"
-                : "Your messages hub is ready"}
+            {heading}
           </h2>
           <p className="text-sm text-muted-foreground md:text-base">
-            {expertId
-              ? "We’re looking for the matching room so you can message this expert from one polished dashboard workspace."
-              : "Choose a room from the sidebar to continue a conversation, share files, or start a secure video call."}
+            {description}
           </p>
         </div>
 
         <div className="flex flex-wrap items-center justify-center gap-3">
           <Button asChild className="bg-violet-600 hover:bg-violet-700">
-            <Link href="/experts">
+            <Link href={primaryAction.href}>
               <Sparkles className="mr-2 size-4" />
-              Explore experts
+              {primaryAction.label}
             </Link>
           </Button>
 

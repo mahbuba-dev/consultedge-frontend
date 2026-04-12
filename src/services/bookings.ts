@@ -1,4 +1,5 @@
 import { httpClient } from "../lib/axious/httpClient";
+import type { ApiResponse } from "../types/api.types";
 import type {
   IBookConsultationPayload,
   IBookConsultationResult,
@@ -6,6 +7,21 @@ import type {
   IConsultationQueryParams,
   IInitiateConsultationPaymentResult,
 } from "../types/booking.types";
+
+const isNotFoundError = (error: unknown) => {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "response" in error &&
+    (error as { response?: { status?: number } }).response?.status === 404
+  );
+};
+
+const emptyBookingsResponse = (): ApiResponse<IConsultation[]> => ({
+  success: true,
+  message: "No consultations found.",
+  data: [],
+} as unknown as ApiResponse<IConsultation[]>);
 
 export const bookConsultation = async (
   payload: IBookConsultationPayload,
@@ -40,15 +56,66 @@ export const initiateConsultationPayment = async (
 };
 
 export const getMyBookings = async (params?: IConsultationQueryParams) => {
-  return httpClient.get<IConsultation[]>("/consultations/me", {
-    params,
-  });
+  try {
+    return await httpClient.get<IConsultation[]>("/consultations/me", {
+      params,
+      silent: true,
+    });
+  } catch (error) {
+    if (!isNotFoundError(error)) {
+      throw error;
+    }
+
+    try {
+      return await httpClient.get<IConsultation[]>("/consultations/client/me", {
+        params,
+        silent: true,
+      });
+    } catch (fallbackError) {
+      if (!isNotFoundError(fallbackError)) {
+        throw fallbackError;
+      }
+
+      try {
+        return await httpClient.get<IConsultation[]>("/consultations", {
+          params,
+          silent: true,
+        });
+      } catch (finalError) {
+        if (isNotFoundError(finalError)) {
+          return emptyBookingsResponse();
+        }
+
+        throw finalError;
+      }
+    }
+  }
 };
 
 export const getMyExpertBookings = async (params?: IConsultationQueryParams) => {
-  return httpClient.get<IConsultation[]>("/consultations/expert/me", {
-    params,
-  });
+  try {
+    return await httpClient.get<IConsultation[]>("/consultations/expert/me", {
+      params,
+      silent: true,
+    });
+  } catch (error) {
+    if (!isNotFoundError(error)) {
+      throw error;
+    }
+
+    try {
+      return await httpClient.get<IConsultation[]>("/consultations", {
+        params,
+        silent: true,
+      });
+    } catch (fallbackError) {
+      if (isNotFoundError(fallbackError)) {
+        return emptyBookingsResponse();
+      }
+
+      throw fallbackError;
+    }
+  }
 };
 
 export const updateConsultationStatus = async (

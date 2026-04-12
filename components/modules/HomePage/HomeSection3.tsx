@@ -1,32 +1,44 @@
 import Link from "next/link";
-import { CheckCircle2 } from "lucide-react";
+import { ArrowRight, CheckCircle2, HeadphonesIcon, Layers3, ShieldCheck } from "lucide-react";
 
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-const pricingPlans = [
+const engagementOptions = [
   {
-    name: "Starter",
-    price: "$0",
-    description: "Ideal for exploring experts and discovering the right fit.",
+    name: "Explore",
+    price: "Free",
+    description: "Ideal for discovering experts, comparing profiles, and finding the right fit.",
     features: ["Expert discovery", "Profile browsing", "Industry filters"],
     accent: "from-sky-50 to-white",
+    href: "/experts",
+    cta: "Browse experts",
   },
   {
-    name: "Growth",
-    price: "$49",
-    description: "Perfect for individuals and teams booking consultations regularly.",
-    features: ["Priority booking", "Faster scheduling", "Consultation history"],
+    name: "Book a session",
+    price: "Pay per consultation",
+    description: "Perfect for professionals and teams ready to unlock direct expert guidance.",
+    features: ["Flexible expert rates", "Secure payment flow", "Consultation tracking"],
     accent: "from-violet-50 to-white",
+    href: "/experts",
+    cta: "Start booking",
+    featured: true,
   },
   {
-    name: "Scale",
+    name: "Team support",
     price: "Custom",
-    description: "Best for larger organizations needing ongoing strategic support.",
-    features: ["Dedicated expert matching", "Team coordination", "Custom workflows"],
+    description: "Best for organizations that need recurring strategic support or coordinated sessions.",
+    features: ["Priority coordination", "Multi-stakeholder planning", "Custom workflow help"],
     accent: "from-emerald-50 to-white",
+    href: "/contact",
+    cta: "Talk to us",
   },
 ];
 
@@ -53,68 +65,126 @@ const faqItems = [
   },
 ];
 
+const supportHighlights = [
+  {
+    title: "Secure payments",
+    description: "A cleaner checkout and booking confirmation experience.",
+    icon: ShieldCheck,
+    tone: "text-emerald-700 bg-emerald-100",
+  },
+  {
+    title: "Smart dashboards",
+    description: "Keep consultations, schedules, and progress in one place.",
+    icon: Layers3,
+    tone: "text-violet-700 bg-violet-100",
+  },
+  {
+    title: "Human support",
+    description: "Reach out when you need extra help or a tailored setup.",
+    icon: HeadphonesIcon,
+    tone: "text-cyan-700 bg-cyan-100",
+  },
+];
+
 export default function HomeSection3() {
   return (
     <>
       <section className="space-y-6">
-        <div>
-          <Badge variant="secondary" className="mb-2 bg-amber-100 text-amber-700">
-            Pricing
-          </Badge>
-          <h2 className="text-2xl font-bold tracking-tight md:text-3xl">
-            Simple plans for every stage
-          </h2>
-          <p className="text-muted-foreground">
-            Start free, grow with premium features, or contact us for a custom team setup.
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <Badge variant="secondary" className="mb-2 bg-amber-100 text-amber-700">
+              Get started
+            </Badge>
+            <h2 className="text-2xl font-bold tracking-tight md:text-3xl">
+              Flexible ways to engage with ConsultEdge
+            </h2>
+          </div>
+          <p className="max-w-2xl text-sm text-muted-foreground md:text-base">
+            Start by exploring experts, book when you are ready, or contact us for a more tailored team setup.
           </p>
         </div>
 
         <div className="grid gap-5 lg:grid-cols-3">
-          {pricingPlans.map((plan, index) => (
+          {engagementOptions.map((option) => (
             <Card
-              key={plan.name}
-              className={`border-border/60 bg-linear-to-br ${plan.accent} shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg ${
-                index === 1 ? "ring-2 ring-violet-200" : ""
+              key={option.name}
+              className={`border-border/60 bg-linear-to-br ${option.accent} shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg dark:border-white/10 dark:from-slate-900 dark:to-slate-950 dark:shadow-black/20 ${
+                option.featured ? "ring-2 ring-violet-200 dark:ring-violet-500/40" : ""
               }`}
             >
               <CardHeader>
-                <CardTitle>{plan.name}</CardTitle>
-                <CardDescription>{plan.description}</CardDescription>
-                <div className="pt-2 text-3xl font-bold text-foreground">{plan.price}</div>
+                <div className="flex items-center justify-between gap-3">
+                  <CardTitle>{option.name}</CardTitle>
+                  {option.featured ? (
+                    <Badge className="bg-violet-600 text-white hover:bg-violet-600">Popular</Badge>
+                  ) : null}
+                </div>
+                <CardDescription>{option.description}</CardDescription>
+                <div className="pt-2 text-2xl font-bold text-foreground md:text-3xl">{option.price}</div>
               </CardHeader>
               <CardContent className="space-y-3">
-                {plan.features.map((feature) => (
+                {option.features.map((feature) => (
                   <div key={feature} className="flex items-center gap-2 text-sm text-muted-foreground">
                     <CheckCircle2 className="size-4 text-emerald-600" />
                     <span>{feature}</span>
                   </div>
                 ))}
-                <Button className="mt-2 w-full bg-violet-600 hover:bg-violet-700">
-                  Choose {plan.name}
-                </Button>
+
+                <Link href={option.href}>
+                  <Button
+                    className={`mt-2 w-full ${
+                      option.featured
+                        ? "bg-violet-600 hover:bg-violet-700"
+                        : "bg-slate-900 hover:bg-slate-800"
+                    }`}
+                  >
+                    {option.cta}
+                    <ArrowRight className="ml-2 size-4" />
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
           ))}
         </div>
       </section>
 
-      <section className="space-y-6 rounded-[2rem] border bg-linear-to-r from-cyan-50 via-white to-violet-50 p-6 shadow-sm md:p-10">
-        <div>
-          <Badge variant="secondary" className="mb-2 bg-sky-100 text-sky-700">
-            FAQ
-          </Badge>
-          <h2 className="text-2xl font-bold tracking-tight md:text-3xl">
-            Frequently asked questions
-          </h2>
-          <p className="text-muted-foreground">
-            Quick answers to the most common questions about the platform.
-          </p>
+      <section className="grid gap-6 rounded-[2rem] border bg-linear-to-r from-cyan-50 via-white to-violet-50 p-6 shadow-sm dark:border-white/10 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 md:p-8 lg:grid-cols-[0.8fr_1.2fr]">
+        <div className="space-y-4">
+          <div>
+            <Badge variant="secondary" className="mb-2 bg-sky-100 text-sky-700">
+              FAQ
+            </Badge>
+            <h2 className="text-2xl font-bold tracking-tight md:text-3xl">
+              Answers that keep things moving
+            </h2>
+            <p className="text-muted-foreground">
+              Quick guidance for the most common questions about booking, payments, and expert access.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            {supportHighlights.map((item) => {
+              const Icon = item.icon;
+
+              return (
+                <div key={item.title} className="flex gap-3 rounded-2xl border bg-white/80 p-3 dark:border-white/10 dark:bg-slate-950/70">
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${item.tone}`}>
+                    <Icon className="size-4" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-foreground">{item.title}</p>
+                    <p className="text-sm text-muted-foreground">{item.description}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
-        <Accordion type="single" collapsible className="w-full rounded-xl bg-background/70 p-4">
+        <Accordion type="single" collapsible className="w-full rounded-2xl border bg-background/80 p-4 dark:border-white/10 dark:bg-slate-950/80">
           {faqItems.map((item, index) => (
             <AccordionItem key={item.question} value={`faq-${index}`}>
-              <AccordionTrigger className="text-base font-semibold">
+              <AccordionTrigger className="text-left text-base font-semibold">
                 {item.question}
               </AccordionTrigger>
               <AccordionContent className="text-muted-foreground">
@@ -125,16 +195,27 @@ export default function HomeSection3() {
         </Accordion>
       </section>
 
-      <section className="rounded-[2rem] border border-slate-900 bg-linear-to-r from-slate-950 via-violet-950 to-cyan-950 p-6 text-white shadow-xl md:p-10">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className="space-y-2">
+      <section className="relative overflow-hidden rounded-[2rem] border border-slate-900 bg-linear-to-r from-slate-950 via-violet-950 to-cyan-950 p-6 text-white shadow-xl md:p-10">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.08),transparent_35%)]" />
+
+        <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+          <div className="space-y-3">
+            <Badge className="border-white/15 bg-white/10 text-white hover:bg-white/10">
+              Start today
+            </Badge>
             <h2 className="text-2xl font-bold tracking-tight md:text-3xl">
-              Ready to make your next smart move?
+              Ready to turn expert insight into momentum?
             </h2>
             <p className="max-w-2xl text-slate-200">
-              Join a platform designed to connect insight seekers with industry experts through a fast,
-              modern, and delightful experience.
+              Join a platform designed to connect insight seekers with the right industry experts through a fast,
+              modern, and more confident consultation experience.
             </p>
+
+            <div className="flex flex-wrap gap-2 text-xs font-medium text-slate-100">
+              <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1">Expert discovery</span>
+              <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1">Secure booking</span>
+              <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1">Smart dashboards</span>
+            </div>
           </div>
 
           <div className="flex flex-wrap gap-3">

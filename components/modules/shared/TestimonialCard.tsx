@@ -28,7 +28,7 @@ const TestimonialCard = ({ testimonial, compact = false }: TestimonialCardProps)
   const replyDate = getFormattedDate(testimonial.repliedAt);
 
   return (
-    <Card className="h-full border-border/60 bg-card/95 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+    <Card className="h-full border-border/60 bg-card/95 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg dark:border-white/10 dark:bg-slate-900/85 dark:shadow-black/20">
       <CardContent className={compact ? "space-y-3 p-4" : "space-y-4 p-5"}>
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -36,7 +36,7 @@ const TestimonialCard = ({ testimonial, compact = false }: TestimonialCardProps)
             <p className="text-xs text-muted-foreground">{reviewDate}</p>
           </div>
 
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-linear-to-br from-violet-100 to-sky-100 text-violet-700">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-linear-to-br from-violet-100 to-sky-100 text-violet-700 dark:from-violet-500/20 dark:to-cyan-500/20 dark:text-violet-200">
             <Quote className="size-4" />
           </div>
         </div>
@@ -58,7 +58,7 @@ const TestimonialCard = ({ testimonial, compact = false }: TestimonialCardProps)
         </p>
 
         {testimonial.expertReply ? (
-          <div className="rounded-2xl border border-violet-200/70 bg-violet-50/70 p-3">
+          <div className="rounded-2xl border border-violet-200/70 bg-violet-50/70 p-3 dark:border-violet-500/20 dark:bg-violet-500/10">
             <div className="flex items-center justify-between gap-2">
               <p className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-violet-700">
                 <MessageSquareReply className="size-3.5" />
@@ -73,7 +73,7 @@ const TestimonialCard = ({ testimonial, compact = false }: TestimonialCardProps)
 
         <div className="flex flex-wrap gap-2">
           {testimonial.expert?.fullName ? (
-            <Badge variant="secondary" className="bg-violet-100 text-violet-700">
+            <Badge variant="secondary" className="bg-violet-100 text-violet-700 dark:bg-violet-500/10 dark:text-violet-200">
               For {testimonial.expert.fullName}
             </Badge>
           ) : null}

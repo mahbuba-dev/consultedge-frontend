@@ -19,7 +19,7 @@ export default function MessageExpertButton({
   const normalizedRole = userRole?.toUpperCase();
 
   const href = !isLoggedIn
-    ? `/login?redirectPath=${encodeURIComponent(`/dashboard/chat?expertId=${expertId}`)}`
+    ? `/login?redirect=${encodeURIComponent(`/dashboard/chat?expertId=${expertId}`)}`
     : normalizedRole === "ADMIN"
       ? `/admin/dashboard/messages?expertId=${expertId}`
       : normalizedRole === "EXPERT"

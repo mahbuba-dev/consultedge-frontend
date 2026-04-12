@@ -58,12 +58,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getAllIndustries, getIndustries } from "@/src/services/industry.services";
+import { getIndustries } from "@/src/services/industry.services";
 import { getExperts } from "@/src/services/expert.services";
 import { IIndustry } from "@/src/types/industry.types";
 import { cn } from "@/src/lib/utils";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowUpDown, Sparkles } from "lucide-react";
+import { ArrowUpDown, ShieldCheck, Sparkles, TrendingUp, Users } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useMemo } from "react";
 import ExpertCard from "./ExpertCard";
@@ -250,6 +250,22 @@ export default function ExpertsPageClient() {
   ]);
 
   const totalExperts = displayedExperts.length;
+  const verifiedExpertsCount = useMemo(
+    () => displayedExperts.filter((expert) => Boolean(expert.isVerified)).length,
+    [displayedExperts],
+  );
+  const averageExperience = useMemo(() => {
+    if (!displayedExperts.length) {
+      return 0;
+    }
+
+    const totalExperience = displayedExperts.reduce(
+      (sum, expert) => sum + Number(expert.experience ?? 0),
+      0,
+    );
+
+    return Math.round(totalExperience / displayedExperts.length);
+  }, [displayedExperts]);
 
   const updateUrlParams = useCallback(
     (
@@ -377,7 +393,7 @@ export default function ExpertsPageClient() {
   return (
     <div className="mx-auto max-w-6xl space-y-6 py-6">
       <div className="animate-in slide-in-from-top-2 fade-in-0 rounded-3xl border border-violet-200/70 bg-linear-to-br from-violet-500/10 via-background to-fuchsia-500/10 p-5 shadow-lg shadow-violet-500/5 duration-500 md:p-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
           <div className="space-y-3">
             <Badge
               variant="secondary"
@@ -388,25 +404,52 @@ export default function ExpertsPageClient() {
             </Badge>
 
             <div className="space-y-2">
-              <h1 className="text-3xl font-semibold tracking-tight text-foreground">
-                Find the right expert faster
+              <h1 className="text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
+                Discover experts with a premium consulting profile
               </h1>
-              <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-                Search by name, title, or industry, then refine results with
-                verification, experience, and price filters.
+              <p className="max-w-2xl text-sm leading-6 text-muted-foreground md:text-base">
+                Explore vetted experts by industry, experience, and pricing, then book the right consultant with a polished end-to-end flow.
               </p>
             </div>
           </div>
 
-          <Card className="border-violet-200/70 bg-white/80 shadow-sm shadow-violet-500/10 lg:min-w-56">
-            <CardContent className="p-4">
-              <p className="text-sm text-muted-foreground">Showing</p>
-              <p className="text-2xl font-semibold text-foreground">{totalExperts}</p>
-              <p className="text-sm text-muted-foreground">
-                {totalExperts === 1 ? "expert" : "experts"} available
-              </p>
-            </CardContent>
-          </Card>
+          <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
+            <Card className="border-violet-200/70 bg-white/85 shadow-sm shadow-violet-500/10">
+              <CardContent className="flex items-center gap-3 p-4">
+                <div className="rounded-full bg-violet-100 p-2 text-violet-700">
+                  <Users className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Experts</p>
+                  <p className="text-xl font-semibold text-foreground">{totalExperts}</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-sky-200/70 bg-white/85 shadow-sm shadow-sky-500/10">
+              <CardContent className="flex items-center gap-3 p-4">
+                <div className="rounded-full bg-sky-100 p-2 text-sky-700">
+                  <ShieldCheck className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Verified</p>
+                  <p className="text-xl font-semibold text-foreground">{verifiedExpertsCount}</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-emerald-200/70 bg-white/85 shadow-sm shadow-emerald-500/10">
+              <CardContent className="flex items-center gap-3 p-4">
+                <div className="rounded-full bg-emerald-100 p-2 text-emerald-700">
+                  <TrendingUp className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Avg. experience</p>
+                  <p className="text-xl font-semibold text-foreground">{averageExperience}+ yrs</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
         <div className="mt-6 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">

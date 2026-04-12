@@ -5,7 +5,7 @@ import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { ChatRoom } from "@/src/types/chat.types";
+import type { ChatRole, ChatRoom } from "@/src/types/chat.types";
 import ChatRoomListItem from "./ChatRoomListItem";
 
 interface ChatSidebarProps {
@@ -16,6 +16,7 @@ interface ChatSidebarProps {
   isRefreshing?: boolean;
   title?: string;
   description?: string;
+  role?: ChatRole | null;
   onSelectRoom: (roomId: string) => void;
   onRefresh?: () => void;
 }
@@ -28,9 +29,17 @@ export default function ChatSidebar({
   isRefreshing = false,
   title = "Messages",
   description = "Stay close to your active conversations.",
+  role,
   onSelectRoom,
   onRefresh,
 }: ChatSidebarProps) {
+  const emptyMessage =
+    role === "EXPERT"
+      ? "No client conversations yet. New consultation threads will appear here when clients message you."
+      : role === "ADMIN"
+        ? "No conversation threads yet. Active message rooms will appear here automatically."
+        : "No conversations yet. Open a room from an expert profile to get started.";
+
   return (
     <aside className="flex min-h-[70vh] flex-col rounded-2xl border bg-background shadow-sm">
       <div className="flex items-start justify-between gap-3 border-b p-4">
@@ -67,7 +76,7 @@ export default function ChatSidebar({
             ))
           ) : rooms.length === 0 ? (
             <div className="rounded-2xl border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
-              No conversations yet. Open a room from an expert profile to get started.
+              {emptyMessage}
             </div>
           ) : (
             rooms.map((room) => (

@@ -158,6 +158,65 @@
   animation-play-state: paused;
 }
 
+@keyframes consultedge-carousel-fade {
+  0%,
+  28% {
+    opacity: 1;
+  }
+
+  33%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes consultedge-carousel-zoom {
+  0%,
+  100% {
+    transform: scale(1.04);
+  }
+
+  50% {
+    transform: scale(1.14);
+  }
+}
+
+@keyframes consultedge-banner-copy {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 18px, 0);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.consultedge-carousel-slide {
+  opacity: 0;
+  animation: consultedge-carousel-fade 18s ease-in-out infinite;
+  will-change: opacity;
+}
+
+.consultedge-carousel-slide--delay-1 {
+  animation-delay: 6s;
+}
+
+.consultedge-carousel-slide--delay-2 {
+  animation-delay: 12s;
+}
+
+.consultedge-carousel-image {
+  animation: consultedge-carousel-zoom 18s ease-in-out infinite;
+  will-change: transform;
+}
+
+.consultedge-banner-copy {
+  animation: consultedge-banner-copy 650ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform, opacity;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

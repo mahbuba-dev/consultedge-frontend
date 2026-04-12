@@ -126,30 +126,13 @@ export async function proxy(request: NextRequest) {
     if (pathname === "/reset-password") {
       const email = request.nextUrl.searchParams.get("email");
 
-      // Case 1: Logged-in ADMIN with needPasswordChange → allow reset-password
-      if (accessToken && email) {
-        const userInfo = await getUserInfo();
-        const resolvedRole = (userInfo?.role as UserRole) || userRole;
-
-        if (userInfo?.needPasswordChange) {
-          return NextResponse.next();
-        }
-
-        if (userInfo || (isValidAccessToken && resolvedRole)) {
-          return NextResponse.redirect(
-            new URL(getPostLoginRedirectPath(resolvedRole ?? null), request.url)
-          );
-        }
-
-        return NextResponse.next();
-      }
-
-      // Case 2: Forgot-password flow → allow reset-password
+      // If email is present, always allow reset-password.
+      // This supports both forgot-password and dashboard OTP-based change-password flows.
       if (email) {
         return NextResponse.next();
       }
 
-      // Case 3: No email → redirect to login
+      // No email → redirect to login
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("redirect", pathWithQuery);
       return NextResponse.redirect(loginUrl);

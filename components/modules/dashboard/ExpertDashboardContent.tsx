@@ -42,7 +42,8 @@ const ExpertDashboardContent = () => {
   const { data: expertDashboardResponse, isLoading, isError } = useQuery({
     queryKey: ["expert-dashboard-data"],
     queryFn: () => getDashboardData<IExpertDashboardStats>(),
-    refetchOnWindowFocus: "always",
+    refetchOnWindowFocus: false,
+    retry: false,
   });
 
   const data = (
@@ -57,9 +58,7 @@ const ExpertDashboardContent = () => {
 
   const expertId = profile?.expert?.id;
 
-  const { data: testimonials = [], isLoading: isTestimonialsLoading } = useQuery<
-    ITestimonial[]
-  >({
+  const { data: testimonials = [] } = useQuery<ITestimonial[]>({
     queryKey: ["expert-testimonials", expertId],
     queryFn: () => getTestimonialsByExpert(expertId as string),
     enabled: Boolean(expertId),
@@ -270,16 +269,7 @@ const ExpertDashboardContent = () => {
           </CardHeader>
 
           <CardContent className="space-y-4">
-            {isTestimonialsLoading ? (
-              <div className="space-y-3">
-                {Array.from({ length: 2 }).map((_, index) => (
-                  <div
-                    key={index}
-                    className="h-28 animate-pulse rounded-xl bg-muted/60"
-                  />
-                ))}
-              </div>
-            ) : testimonials.length > 0 ? (
+            {testimonials.length > 0 ? (
               testimonials
                 .slice(0, 3)
                 .map((testimonial) => (

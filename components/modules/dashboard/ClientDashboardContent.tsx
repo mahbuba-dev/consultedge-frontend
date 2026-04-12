@@ -30,7 +30,8 @@ const ClientDashboardContent = () => {
   const { data: clientDashboardResponse, isLoading, isError } = useQuery({
     queryKey: ["client-dashboard-data"],
     queryFn: () => getDashboardData<IClientDashboardStats>(),
-    refetchOnWindowFocus: "always",
+    refetchOnWindowFocus: false,
+    retry: false,
   });
 
   const data = (

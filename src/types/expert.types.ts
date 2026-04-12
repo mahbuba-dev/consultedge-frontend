@@ -65,6 +65,7 @@ export interface IExpertAvailability {
   scheduleId: string;
   consultationId?: string | null;
   isBooked: boolean;
+  isPublished?: boolean;
   isDeleted: boolean;
   deletedAt?: string | null;
   createdAt: string;
@@ -88,17 +89,6 @@ export interface ICreateAvailabilitySlotPayload {
 
 export interface IAssignExpertAvailabilityPayload {
   scheduleIds: string[];
-}
-
-export interface IPublishExpertAvailabilityPayload {
-  scheduleIds: string[];
-  isPublished: boolean;
-}
-
-export interface IPublishExpertAvailabilityResponse {
-  count: number;
-  isPublished: boolean;
-  schedules: IExpertAvailability[];
 }
 
 export interface IUpdateExpertAvailabilityPayload {

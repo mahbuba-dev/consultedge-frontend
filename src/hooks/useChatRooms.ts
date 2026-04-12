@@ -9,15 +9,21 @@ import {
   sortChatRooms,
 } from "@/src/services/chatRoom.service";
 
-export const useChatRooms = (params?: { expertId?: string }) => {
+export const useChatRooms = (params?: {
+  participantId?: string;
+  expertId?: string;
+  clientId?: string;
+}) => {
+  const queryScope = params?.participantId ?? params?.expertId ?? params?.clientId ?? "all";
+
   const roomsQuery = useQuery({
-    queryKey: ["chat-rooms", params?.expertId ?? "all"],
+    queryKey: ["chat-rooms", queryScope],
     queryFn: () => getChatRooms(params),
     staleTime: 30 * 1000,
   });
 
   const ensureRoomMutation = useMutation({
-    mutationFn: (expertId: string) => findOrCreateRoomForExpert(expertId),
+    mutationFn: (participantId: string) => findOrCreateRoomForExpert(participantId),
   });
 
   const rooms = useMemo(() => sortChatRooms(roomsQuery.data ?? []), [roomsQuery.data]);

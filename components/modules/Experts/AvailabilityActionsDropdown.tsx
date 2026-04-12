@@ -23,13 +23,13 @@ export default function AvailabilityActionsDropdown() {
         <DropdownMenuItem asChild>
           <Link href="/expert/dashboard/set-availability" className="cursor-pointer">
             <PlusCircle className="size-4" />
-            Create slots
+            Add time slots
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link href="/expert/dashboard/my-schedules" className="cursor-pointer">
             <Eye className="size-4" />
-            View all published slots
+            View my time slots
           </Link>
         </DropdownMenuItem>
       </DropdownMenuContent>

@@ -3,6 +3,7 @@ import ExpertAnimated from "@/components/modules/HomePage/ExpertAnimated";
 import HomeSection2 from "@/components/modules/HomePage/HomeSection2";
 import HomeSection3 from "@/components/modules/HomePage/HomeSection3";
 import IndustryTicker from "@/components/modules/HomePage/IndustryTicker";
+
 import { getExperts } from "@/src/services/expert.services";
 import { getAllIndustries } from "@/src/services/industry.services";
 import { getAllTestimonials } from "@/src/services/testimonial.services";
@@ -69,12 +70,15 @@ const HomePage = async () => {
       : fallbackTestimonials;
 
   return (
-    <div className="space-y-12 pb-16 md:space-y-16">
+    <div className="overflow-x-hidden pb-16">
       <Banner />
-      <HomeSection2 testimonials={featuredTestimonials} />
-      <IndustryTicker industries={featuredIndustries} />
-      <ExpertAnimated experts={featuredExperts} />
-      <HomeSection3 />
+
+      <div className="mt-12 space-y-12 md:mt-16 md:space-y-16">
+        <HomeSection2 testimonials={featuredTestimonials} />
+        <IndustryTicker industries={featuredIndustries} />
+        <ExpertAnimated experts={featuredExperts} />
+        <HomeSection3 />
+      </div>
     </div>
   );
 };

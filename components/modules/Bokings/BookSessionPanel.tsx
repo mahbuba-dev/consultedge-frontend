@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { format, parseISO } from "date-fns";
 import { CalendarDays, LockKeyhole, Sparkles } from "lucide-react";
@@ -9,13 +9,6 @@ import { toast } from "sonner";
 import AvailabilityCalendar from "./AvailabilityCalendar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { IExpertAvailability } from "@/src/types/expert.types";
 
@@ -27,6 +20,29 @@ type BookSessionPanelProps = {
   availability?: IExpertAvailability[];
   isLoggedIn?: boolean;
   userRole?: string | null;
+  openSignal?: number;
+};
+
+const getSlotStartDateTime = (slot: IExpertAvailability) => {
+  const rawSlot = slot as IExpertAvailability & {
+    startDateTime?: string | null;
+  };
+
+  return slot.schedule?.startDateTime ?? rawSlot.startDateTime ?? "";
+};
+
+const parseDateSafe = (value: string) => {
+  const iso = parseISO(value);
+  if (!Number.isNaN(iso.getTime())) {
+    return iso;
+  }
+
+  const fallback = new Date(value);
+  if (!Number.isNaN(fallback.getTime())) {
+    return fallback;
+  }
+
+  return null;
 };
 
 export default function BookSessionPanel({
@@ -37,16 +53,17 @@ export default function BookSessionPanel({
   availability = [],
   isLoggedIn = false,
   userRole,
+  openSignal = 0,
 }: BookSessionPanelProps) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const [isBookingOpen, setIsBookingOpen] = useState(false);
 
   const nextAvailableSlot = useMemo(() => {
     const upcoming = availability
-      .filter((slot) => !slot.isBooked && !slot.isDeleted && slot.schedule?.startDateTime)
+      .filter((slot) => !slot.isBooked && !slot.isDeleted && Boolean(getSlotStartDateTime(slot)))
       .sort((left, right) => {
-        const leftTime = new Date(left.schedule?.startDateTime || "").getTime();
-        const rightTime = new Date(right.schedule?.startDateTime || "").getTime();
+        const leftTime = parseDateSafe(getSlotStartDateTime(left))?.getTime() ?? 0;
+        const rightTime = parseDateSafe(getSlotStartDateTime(right))?.getTime() ?? 0;
         return leftTime - rightTime;
       });
 
@@ -56,22 +73,39 @@ export default function BookSessionPanel({
   const handleBookNow = () => {
     if (!isLoggedIn) {
       toast.error("Please sign in to continue booking.", {
-        description: "We’ll bring you back to this expert after login.",
+        description: "We'll bring you back to this expert after login.",
       });
       router.push(`/login?redirect=${encodeURIComponent(`/experts/${expertId}#book-session`)}`);
       return;
     }
 
-    if (userRole !== "CLIENT") {
-      toast.error("Please use a client account to book this session.");
+    setIsBookingOpen(true);
+
+    window.setTimeout(() => {
+      document.getElementById("booking-calendar-panel")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 100);
+  };
+
+  useEffect(() => {
+    if (openSignal <= 0) {
       return;
     }
 
-    setOpen(true);
-  };
+    setIsBookingOpen(true);
+
+    window.setTimeout(() => {
+      document.getElementById("booking-calendar-panel")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 100);
+  }, [openSignal]);
 
   return (
-    <>
+    <div className="space-y-4">
       <Card className="scroll-mt-24 border-fuchsia-200/70 shadow-lg shadow-fuchsia-500/5" id="book-session">
         <CardHeader className="space-y-4">
           <div className="flex flex-wrap items-start justify-between gap-4">
@@ -87,7 +121,7 @@ export default function BookSessionPanel({
             </div>
 
             <Button onClick={handleBookNow} className="bg-violet-600 hover:bg-violet-700">
-              Book now
+              {isBookingOpen ? "Select a time below ↓" : "Book now"}
             </Button>
           </div>
         </CardHeader>
@@ -99,14 +133,14 @@ export default function BookSessionPanel({
               <span className="text-xs font-semibold uppercase tracking-wide">Next available</span>
             </div>
             <p className="text-base font-semibold text-foreground">
-              {nextAvailableSlot?.schedule?.startDateTime
-                ? format(parseISO(nextAvailableSlot.schedule.startDateTime), "EEEE, MMM d • h:mm a")
-                : "No time slots published yet"}
+              {nextAvailableSlot && parseDateSafe(getSlotStartDateTime(nextAvailableSlot))
+                ? format(parseDateSafe(getSlotStartDateTime(nextAvailableSlot)) as Date, "EEEE, MMM d • h:mm a")
+                : "No time slots available yet"}
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
               {nextAvailableSlot
                 ? `Choose a time with ${expertName} and continue in seconds.`
-                : "Once the expert publishes availability, booking will open here automatically."}
+                : "Once the expert adds availability, booking will open here automatically."}
             </p>
           </div>
 
@@ -133,26 +167,37 @@ export default function BookSessionPanel({
         </CardContent>
       </Card>
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto border-violet-200 sm:max-w-5xl">
-          <DialogHeader>
-            <DialogTitle>Choose your consultation slot</DialogTitle>
-            <DialogDescription>
+      {isBookingOpen ? (
+        <Card className="border-violet-200/70 shadow-lg" id="booking-calendar-panel">
+          <CardHeader className="border-b bg-muted/30">
+            <CardTitle className="text-xl">Choose your consultation slot</CardTitle>
+            <CardDescription>
               Pick a date and time for your session with {expertName}.
-            </DialogDescription>
-          </DialogHeader>
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-4 md:p-6">
+            <div className="mb-4 flex justify-end">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsBookingOpen(false)}
+              >
+                Close booking
+              </Button>
+            </div>
 
-          <AvailabilityCalendar
-            expertId={expertId}
-            expertName={expertName}
-            expertTitle={expertTitle}
-            consultationFee={consultationFee}
-            availability={availability}
-            isLoggedIn={isLoggedIn}
-            userRole={userRole}
-          />
-        </DialogContent>
-      </Dialog>
-    </>
+            <AvailabilityCalendar
+              expertId={expertId}
+              expertName={expertName}
+              expertTitle={expertTitle}
+              consultationFee={consultationFee}
+              availability={availability}
+              isLoggedIn={isLoggedIn}
+              userRole={userRole}
+            />
+          </CardContent>
+        </Card>
+      ) : null}
+    </div>
   );
 }

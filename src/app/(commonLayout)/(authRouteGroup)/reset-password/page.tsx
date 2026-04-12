@@ -18,14 +18,8 @@ export default async function ResetPasswordPage({
   }
 
   return (
-    <div className="max-w-md mx-auto py-10 space-y-4">
-      {otpSent && (
-        <p className="text-sm text-gray-600 text-center">
-          OTP has been sent to <span className="font-semibold">{email}</span>
-        </p>
-      )}
-
-      <ResetPasswordForm email={email} />
+    <div className="py-10">
+      <ResetPasswordForm email={email} otpSent={otpSent} />
     </div>
   );
 }

@@ -8,6 +8,7 @@ import {
   getRoomMessages,
   mergeUniqueMessages,
   sendRoomMessage,
+  sortChatRooms,
   uploadRoomAttachment,
 } from "@/src/services/chatRoom.service";
 import type { ChatMessage } from "@/src/types/chat.types";
@@ -16,6 +17,7 @@ const updateRoomPreview = (
   current: any,
   roomId: string,
   message: ChatMessage,
+  currentUserId?: string,
 ) => {
   if (!current) {
     return current;
@@ -35,10 +37,12 @@ const updateRoomPreview = (
       ...updatedRooms[roomIndex],
       lastMessage: message,
       updatedAt: message.createdAt,
+      unreadCount: message.senderId === currentUserId ? 0 : updatedRooms[roomIndex].unreadCount ?? 0,
     };
   }
 
-  return Array.isArray(current) ? updatedRooms : { ...current, data: updatedRooms };
+  const sortedRooms = sortChatRooms(updatedRooms);
+  return Array.isArray(current) ? sortedRooms : { ...current, data: sortedRooms };
 };
 
 export const useRoomMessages = (roomId?: string) => {
@@ -86,7 +90,7 @@ export const useRoomMessages = (roomId?: string) => {
       );
 
       queryClient.setQueriesData({ queryKey: ["chat-rooms"] }, (current) =>
-        updateRoomPreview(current, roomId, optimisticMessage),
+        updateRoomPreview(current, roomId, optimisticMessage, currentUser.userId),
       );
 
       return { previousMessages, optimisticId: optimisticMessage.id };
@@ -104,7 +108,7 @@ export const useRoomMessages = (roomId?: string) => {
       );
 
       queryClient.setQueriesData({ queryKey: ["chat-rooms"] }, (current) =>
-        updateRoomPreview(current, roomId, message),
+        updateRoomPreview(current, roomId, message, currentUser?.userId),
       );
 
       emit("send_message", {
@@ -135,7 +139,7 @@ export const useRoomMessages = (roomId?: string) => {
       );
 
       queryClient.setQueriesData({ queryKey: ["chat-rooms"] }, (current) =>
-        updateRoomPreview(current, roomId, message),
+        updateRoomPreview(current, roomId, message, currentUser?.userId),
       );
 
       emit("send_message", {

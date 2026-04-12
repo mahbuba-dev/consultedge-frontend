@@ -78,6 +78,15 @@ const RegisterForm = ({ redirectPath }: RegisterFormProps) => {
 
         // Redirect handled inside registerAction
       } catch (error: any) {
+        // Next.js redirect can throw on the client boundary.
+        // Do not show a false failure message when redirect is intentional.
+        if (
+          (typeof error?.digest === "string" && error.digest.startsWith("NEXT_REDIRECT")) ||
+          String(error?.message || "").includes("NEXT_REDIRECT")
+        ) {
+          return;
+        }
+
         console.log(`Registration failed: ${error.message}`);
         setServerError(`Registration failed: ${error.message}`);
       }

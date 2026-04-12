@@ -5,7 +5,17 @@ import { isTokenExpiringSoon } from "../tokenUtils";
 // ---------------------------------------------
 // Validate API Base URL
 // ---------------------------------------------
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const normalizeApiBaseUrl = (rawValue?: string) => {
+  const value = rawValue?.trim().replace(/\/+$/, "");
+
+  if (!value) {
+    return undefined;
+  }
+
+  return value.endsWith("/api/v1") ? value : `${value}/api/v1`;
+};
+
+const API_BASE_URL = normalizeApiBaseUrl(process.env.NEXT_PUBLIC_API_BASE_URL);
 
 if (!API_BASE_URL) {
   throw new Error(
@@ -68,6 +78,7 @@ async function tryRefreshToken(
 // ---------------------------------------------
 const axiousInstance = async () => {
   let cookieHeader = "";
+  let accessTokenHeader = "";
   const serverContext = await getServerRequestContext();
 
   if (serverContext) {
@@ -79,6 +90,10 @@ const axiousInstance = async () => {
       await tryRefreshToken(accessToken, refreshToken, requestHeaders);
     }
 
+    if (accessToken) {
+      accessTokenHeader = `Bearer ${accessToken}`;
+    }
+
     cookieHeader = cookieStore
       .getAll()
       .map((cookie: any) => `${cookie.name}=${cookie.value}`)
@@ -87,12 +102,13 @@ const axiousInstance = async () => {
 
   const instance = axios.create({
     baseURL: API_BASE_URL,
-    timeout: 30000, // 30 seconds timeout
+    timeout: 30000,
     headers: {
       "Content-Type": "application/json",
       ...(cookieHeader ? { Cookie: cookieHeader } : {}),
+      ...(accessTokenHeader ? { Authorization: accessTokenHeader } : {}),
     },
-    withCredentials: true, // Enable for automatic cookie inclusion in client context
+    withCredentials: true,
   });
 
   return instance;

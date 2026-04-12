@@ -143,7 +143,7 @@ export const clientNavItems: NavSection[] = [
     items: [
       {
         title: "My Consultations",
-        href: "/dashboard/my-bookings",
+        href: "/dashboard/consultations",
         icon: "Calendar",
       },
       {

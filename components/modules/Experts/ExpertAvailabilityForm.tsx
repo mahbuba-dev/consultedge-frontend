@@ -1,330 +1,208 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { format, isAfter, parseISO } from "date-fns";
+import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { differenceInCalendarDays } from "date-fns";
+import { CalendarPlus } from "lucide-react";
 import { toast } from "sonner";
 
-import AvailabilityManagePanel from "@/components/modules/Experts/AvailabilityManagePanel";
-import PublishedAvailabilityPanel, {
-  type DateGroup,
-} from "@/components/modules/Experts/PublishedAvailabilityPanel";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  createScheduleSlot,
-  deleteExpertAvailability,
-  getMyExpertAvailability,
-  getScheduleCatalog,
-  publishExpertAvailability,
-} from "@/src/services/expertAvailability";
-import type { IAvailabilitySlot, IExpertAvailability } from "@/src/types/expert.types";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { createScheduleSlot } from "@/src/services/expertAvailability";
 
-type ExpertAvailabilityFormProps = {
-  mode?: "manage" | "overview";
-};
-
-const formatTimeRange = (startValue?: string | null, endValue?: string | null) => {
-  if (!startValue) return "Time unavailable";
-
-  const start = parseISO(startValue);
-  const end = endValue ? parseISO(endValue) : null;
-
-  return end
-    ? `${format(start, "h:mm a")} - ${format(end, "h:mm a")}`
-    : format(start, "h:mm a");
-};
-
-const groupByDate = <T,>(
-  items: T[],
-  getStartDate: (item: T) => string | null | undefined,
-): DateGroup<T>[] => {
-  const grouped = new Map<string, DateGroup<T>>();
-
-  for (const item of items) {
-    const startValue = getStartDate(item);
-    if (!startValue) continue;
-
-    const parsed = parseISO(startValue);
-    const key = format(parsed, "yyyy-MM-dd");
-    const existing = grouped.get(key);
-
-    if (existing) {
-      existing.items.push(item);
-      continue;
-    }
-
-    grouped.set(key, {
-      key,
-      label: format(parsed, "EEEE, MMM d"),
-      items: [item],
-    });
-  }
-
-  return [...grouped.values()].sort((left, right) => left.key.localeCompare(right.key));
-};
-
-export default function ExpertAvailabilityForm({
-  mode = "manage",
-}: ExpertAvailabilityFormProps) {
+export default function ExpertAvailabilityForm() {
+  const router = useRouter();
   const queryClient = useQueryClient();
-  const [selectedScheduleIds, setSelectedScheduleIds] = useState<string[]>([]);
-  const [customAvailability, setCustomAvailability] = useState({
-    date: "",
+  const [formState, setFormState] = useState({
+    startDate: "",
+    endDate: "",
     startTime: "",
     endTime: "",
   });
 
-  const {
-    data: scheduleCatalogResponse,
-    isLoading: isCatalogLoading,
-    isError: isCatalogError,
-    refetch: refetchCatalog,
-  } = useQuery({
-    queryKey: ["schedule-catalog", "expert-availability"],
-    queryFn: () => getScheduleCatalog({ limit: 300 }),
-    retry: false,
-  });
+  const getExpectedSlotCount = () => {
+    const { startDate, endDate, startTime, endTime } = formState;
 
-  const {
-    data: myAvailabilityResponse,
-    isLoading: isMyAvailabilityLoading,
-    refetch: refetchMyAvailability,
-  } = useQuery({
-    queryKey: ["expert-availability", "my"],
-    queryFn: () => getMyExpertAvailability({ limit: 300 }),
-    retry: false,
-  });
+    if (!startDate || !endDate || !startTime || !endTime) {
+      return null;
+    }
 
-  const rawCatalog = Array.isArray(scheduleCatalogResponse?.data)
-    ? scheduleCatalogResponse.data
-    : [];
-  const myAvailability = Array.isArray(myAvailabilityResponse?.data)
-    ? myAvailabilityResponse.data
-    : [];
-  const availabilityMessage =
-    myAvailabilityResponse && myAvailabilityResponse.success === false
-      ? myAvailabilityResponse.message
-      : null;
+    const startDateValue = new Date(startDate);
+    const endDateValue = new Date(endDate);
 
-  const upcomingCatalog = useMemo(
-    () =>
-      rawCatalog
-        .filter(
-          (slot) =>
-            !slot.isDeleted &&
-            Boolean(slot.startDateTime) &&
-            isAfter(parseISO(slot.startDateTime), new Date()),
-        )
-        .sort(
-          (left, right) =>
-            new Date(left.startDateTime).getTime() - new Date(right.startDateTime).getTime(),
-        ),
-    [rawCatalog],
-  );
+    if (Number.isNaN(startDateValue.getTime()) || Number.isNaN(endDateValue.getTime())) {
+      return null;
+    }
 
-  const publishedScheduleIds = useMemo(
-    () => new Set(myAvailability.map((item) => item.scheduleId)),
-    [myAvailability],
-  );
+    const daySpan = differenceInCalendarDays(endDateValue, startDateValue);
+    if (daySpan < 0) {
+      return null;
+    }
 
-  const catalogGroups = useMemo(
-    () => groupByDate(upcomingCatalog, (slot) => slot.startDateTime),
-    [upcomingCatalog],
-  );
+    const [startHour, startMinute] = startTime.split(":").map(Number);
+    const [endHour, endMinute] = endTime.split(":").map(Number);
 
-  const availabilityGroups = useMemo(
-    () =>
-      groupByDate(myAvailability, (slot) => slot.schedule?.startDateTime).map((group) => ({
-        ...group,
-        items: [...group.items].sort((left, right) => {
-          const leftTime = new Date(left.schedule?.startDateTime || "").getTime();
-          const rightTime = new Date(right.schedule?.startDateTime || "").getTime();
-          return leftTime - rightTime;
-        }),
-      })),
-    [myAvailability],
-  );
+    if (
+      Number.isNaN(startHour) ||
+      Number.isNaN(startMinute) ||
+      Number.isNaN(endHour) ||
+      Number.isNaN(endMinute)
+    ) {
+      return null;
+    }
 
-  const publishMutation = useMutation({
-    mutationFn: (payload: { scheduleIds: string[]; isPublished: boolean }) =>
-      publishExpertAvailability(payload),
-    onSuccess: async (result) => {
-      setSelectedScheduleIds([]);
-      await refetchMyAvailability();
-      await queryClient.invalidateQueries({ queryKey: ["expert-availability"] });
-      toast.success(
-        `${result.count || 0} availability slot${result.count === 1 ? "" : "s"} ${result.isPublished ? "published" : "updated"} successfully.`,
-      );
-    },
-    onError: (error: any) => {
-      toast.error(
-        error?.response?.data?.message ||
-          error?.message ||
-          "Unable to publish expert availability right now.",
-      );
-    },
-  });
+    const startMinutes = startHour * 60 + startMinute;
+    const endMinutes = endHour * 60 + endMinute;
+    const minutesPerDay = endMinutes - startMinutes;
 
-  const createCustomSlotMutation = useMutation({
-    mutationFn: async () => {
-      if (
-        !customAvailability.date ||
-        !customAvailability.startTime ||
-        !customAvailability.endTime
-      ) {
-        throw new Error("Please choose a date, start time, and end time first.");
-      }
+    if (minutesPerDay <= 0) {
+      return null;
+    }
 
-      const start = new Date(
-        `${customAvailability.date}T${customAvailability.startTime}`,
-      );
-      const end = new Date(`${customAvailability.date}T${customAvailability.endTime}`);
+    const slotsPerDay = Math.floor(minutesPerDay / 30);
+    if (slotsPerDay <= 0) {
+      return null;
+    }
 
-      if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
-        throw new Error("Please provide a valid availability time range.");
-      }
-
-      if (end <= start) {
-        throw new Error("End time must be later than start time.");
-      }
-
-      const createdSlots = await createScheduleSlot({
-        startDate: customAvailability.date,
-        endDate: customAvailability.date,
-        startTime: customAvailability.startTime,
-        endTime: customAvailability.endTime,
-      });
-
-      await publishExpertAvailability({
-        scheduleIds: createdSlots.map((slot) => slot.id),
-        isPublished: true,
-      });
-      return createdSlots;
-    },
-    onSuccess: async (createdSlots) => {
-      setCustomAvailability({ date: "", startTime: "", endTime: "" });
-      await refetchMyAvailability();
-      await queryClient.invalidateQueries({ queryKey: ["schedule-catalog"] });
-      await queryClient.invalidateQueries({ queryKey: ["expert-availability"] });
-      toast.success(
-        `${createdSlots.length} availability slot${createdSlots.length === 1 ? "" : "s"} created and published successfully.`,
-      );
-    },
-    onError: (error: any) => {
-      toast.error(
-        error?.response?.data?.message ||
-          error?.message ||
-          "Unable to create a new availability slot right now.",
-      );
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: (scheduleId: string) => deleteExpertAvailability(scheduleId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["expert-availability"] });
-      toast.success("Availability slot removed successfully.");
-    },
-    onError: (error: any) => {
-      toast.error(
-        error?.response?.data?.message ||
-          error?.message ||
-          "Unable to remove this slot right now.",
-      );
-    },
-  });
-
-  const stats = {
-    total: myAvailability.length,
-    open: myAvailability.filter((item) => !item.isBooked).length,
-    booked: myAvailability.filter((item) => item.isBooked).length,
+    const totalDays = daySpan + 1;
+    return slotsPerDay * totalDays;
   };
 
-  const toggleSchedule = (scheduleId: string) => {
-    setSelectedScheduleIds((current) =>
-      current.includes(scheduleId)
-        ? current.filter((id) => id !== scheduleId)
-        : [...current, scheduleId],
-    );
+  const expectedSlotCount = getExpectedSlotCount();
+
+  const createMutation = useMutation({
+    mutationFn: () => createScheduleSlot(formState),
+    onSuccess: (createdSlots) => {
+      toast.success("Schedule slots created successfully.", {
+        description: `${createdSlots.length} slot${createdSlots.length === 1 ? "" : "s"} added to your schedule.`,
+      });
+      void queryClient.invalidateQueries({ queryKey: ["expert-my-schedules"] });
+      router.push("/expert/dashboard/my-schedules");
+      router.refresh();
+    },
+    onError: (error: any) => {
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Unable to create this schedule right now.";
+
+      toast.error(message);
+    },
+  });
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (
+      !formState.startDate ||
+      !formState.endDate ||
+      !formState.startTime ||
+      !formState.endTime
+    ) {
+      toast.error("Please fill in the date and time for your schedule.");
+      return;
+    }
+
+    const start = new Date(`${formState.startDate}T${formState.startTime}`);
+    const end = new Date(`${formState.endDate}T${formState.endTime}`);
+
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end <= start) {
+      toast.error("Please choose a valid time range where the end is after the start.");
+      return;
+    }
+
+    createMutation.mutate();
   };
 
   return (
-    <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card className="border-violet-200/70 bg-linear-to-br from-violet-50 to-white shadow-sm">
-          <CardContent className="p-5">
-            <p className="text-sm text-muted-foreground">Published slots</p>
-            <p className="mt-2 text-3xl font-bold text-foreground">{stats.total}</p>
-          </CardContent>
-        </Card>
+    <Card className="max-w-3xl border-border/70 shadow-sm">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <CalendarPlus className="size-5 text-violet-600" />
+          Create a new availability slot
+        </CardTitle>
+        <CardDescription>
+          Add date and time range. The backend creates 30-minute slots and links them to your expert schedule.
+        </CardDescription>
+      </CardHeader>
 
-        <Card className="border-emerald-200/70 bg-linear-to-br from-emerald-50 to-white shadow-sm">
-          <CardContent className="p-5">
-            <p className="text-sm text-muted-foreground">Open for booking</p>
-            <p className="mt-2 text-3xl font-bold text-foreground">{stats.open}</p>
-          </CardContent>
-        </Card>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="startDate">Start date</Label>
+              <Input
+                id="startDate"
+                type="date"
+                value={formState.startDate}
+                onChange={(event) =>
+                  setFormState((current) => ({ ...current, startDate: event.target.value }))
+                }
+              />
+            </div>
 
-        <Card className="border-sky-200/70 bg-linear-to-br from-sky-50 to-white shadow-sm">
-          <CardContent className="p-5">
-            <p className="text-sm text-muted-foreground">Already booked</p>
-            <p className="mt-2 text-3xl font-bold text-foreground">{stats.booked}</p>
-          </CardContent>
-        </Card>
-      </div>
+            <div className="space-y-2">
+              <Label htmlFor="endDate">End date</Label>
+              <Input
+                id="endDate"
+                type="date"
+                value={formState.endDate}
+                onChange={(event) =>
+                  setFormState((current) => ({ ...current, endDate: event.target.value }))
+                }
+              />
+            </div>
 
-      {mode === "manage" ? (
-        <AvailabilityManagePanel
-          catalogGroups={catalogGroups}
-          availabilityGroups={availabilityGroups}
-          selectedScheduleIds={selectedScheduleIds}
-          publishedScheduleIds={publishedScheduleIds}
-          customAvailability={customAvailability}
-          availabilityMessage={availabilityMessage}
-          isCatalogLoading={isCatalogLoading}
-          isCatalogError={isCatalogError}
-          isPublishing={publishMutation.isPending}
-          isCreating={createCustomSlotMutation.isPending}
-          isMyAvailabilityLoading={isMyAvailabilityLoading}
-          isDeleting={deleteMutation.isPending}
-          onCustomAvailabilityChange={(field, value) =>
-            setCustomAvailability((current) => ({
-              ...current,
-              [field]: value,
-            }))
-          }
-          onRefreshCatalog={() => {
-            void refetchCatalog();
-          }}
-          onToggleSchedule={toggleSchedule}
-          onClearSelection={() => setSelectedScheduleIds([])}
-          onPublishSelected={() =>
-            publishMutation.mutate({
-              scheduleIds: selectedScheduleIds,
-              isPublished: true,
-            })
-          }
-          onCreateCustomSlot={() => createCustomSlotMutation.mutate()}
-          onDeletePublished={(scheduleId) => deleteMutation.mutate(scheduleId)}
-          onRefreshPublished={() => {
-            void refetchMyAvailability();
-          }}
-          formatTimeRange={formatTimeRange}
-        />
-      ) : (
-        <PublishedAvailabilityPanel
-          groups={availabilityGroups}
-          isLoading={isMyAvailabilityLoading}
-          isDeleting={deleteMutation.isPending}
-          availabilityMessage={availabilityMessage}
-          showHeaderCta
-          onDelete={(scheduleId) => deleteMutation.mutate(scheduleId)}
-          onRefresh={() => {
-            void refetchMyAvailability();
-          }}
-          formatTimeRange={formatTimeRange}
-        />
-      )}
-    </div>
+            <div className="space-y-2">
+              <Label htmlFor="startTime">Start time</Label>
+              <Input
+                id="startTime"
+                type="time"
+                value={formState.startTime}
+                onChange={(event) =>
+                  setFormState((current) => ({ ...current, startTime: event.target.value }))
+                }
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="endTime">End time</Label>
+              <Input
+                id="endTime"
+                type="time"
+                value={formState.endTime}
+                onChange={(event) =>
+                  setFormState((current) => ({ ...current, endTime: event.target.value }))
+                }
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <Button type="submit" disabled={createMutation.isPending}>
+              {createMutation.isPending ? "Saving schedule..." : "Create schedule"}
+            </Button>
+
+            <Button asChild type="button" variant="outline">
+              <a href="/expert/dashboard/my-schedules">View my schedules</a>
+            </Button>
+          </div>
+
+          {expectedSlotCount ? (
+            <p className="text-sm text-muted-foreground">
+              This will create approximately {expectedSlotCount} slot
+              {expectedSlotCount === 1 ? "" : "s"} (30 minutes each).
+            </p>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Select a valid date range and time window to preview slot count.
+            </p>
+          )}
+        </form>
+      </CardContent>
+    </Card>
   );
 }

@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 import { UserInfo } from "@/src/types/user.types";
 import { NavSection } from "@/src/types/dashboard.types";
 import DashboardMobileSidebar from "./dashboardMobileSideBar";
+import MessagesInboxButton from "./MessagesInboxButton";
 import NotificationDropdown from "./notificationDropDown";
 import UserDropdown from "./userDropDown";
 
@@ -65,6 +66,8 @@ const DashboardNavbarContent = ({dashboardHome, navItems, userInfo} : DashboardN
 
       {/* Right Side Actions */}
       <div className="flex items-center gap-2">
+          <MessagesInboxButton role={userInfo.role} />
+
           {/* Notification */}
           <NotificationDropdown/>
 

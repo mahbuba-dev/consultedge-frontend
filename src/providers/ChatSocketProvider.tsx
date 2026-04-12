@@ -2,6 +2,7 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -13,10 +14,17 @@ import { toast } from "sonner";
 
 import { getChatSocketClient } from "@/src/lib/chat/socketClient";
 import { getMe } from "@/src/services/auth.services";
+import {
+  getParticipantDisplayName,
+  markChatRoomAsRead,
+  mergeUniqueMessages,
+  normalizeChatMessage,
+  upsertChatRoomActivity,
+} from "@/src/services/chatRoom.service";
 import type { IUserProfile } from "@/src/types/auth.types";
 import type {
   ChatMessage,
-  ChatParticipant,
+  ChatRoom,
   ChatRole,
   PresenceState,
   SocketAuthPayload,
@@ -43,6 +51,9 @@ type ChatSocketContextValue = {
   isConnected: boolean;
   presenceMap: Record<string, PresenceState>;
   typingState: Record<string, TypingState[]>;
+  activeRoomId: string | null;
+  setActiveRoomId: React.Dispatch<React.SetStateAction<string | null>>;
+  markRoomAsRead: (roomId: string) => void;
   incomingCall: IncomingCallPayload | null;
   setIncomingCall: React.Dispatch<React.SetStateAction<IncomingCallPayload | null>>;
   clearIncomingCall: () => void;
@@ -50,76 +61,13 @@ type ChatSocketContextValue = {
 
 const ChatSocketContext = createContext<ChatSocketContextValue | null>(null);
 
-const uniqueMessages = (messages: ChatMessage[]) => {
-  const map = new Map<string, ChatMessage>();
-
-  messages.forEach((message) => {
-    map.set(message.id, message);
-  });
-
-  return [...map.values()].sort(
-    (left, right) => new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime(),
-  );
-};
-
-const normalizeParticipant = (value: any): ChatParticipant | null => {
-  if (!value) {
-    return null;
-  }
-
-  return {
-    id: String(value.id ?? value.userId ?? value.participantId ?? "unknown"),
-    userId: value.userId ? String(value.userId) : undefined,
-    role: (value.role ?? "CLIENT") as ChatRole,
-    fullName: value.fullName ?? value.name ?? value.user?.name,
-    name: value.name ?? value.fullName ?? value.user?.name,
-    title: value.title,
-    email: value.email ?? value.user?.email,
-    profilePhoto: value.profilePhoto ?? value.image ?? value.avatarUrl ?? null,
-    avatarUrl: value.avatarUrl ?? value.profilePhoto ?? value.image ?? null,
-    isOnline: value.isOnline,
-    lastSeen: value.lastSeen ?? null,
-  };
-};
-
-const normalizeMessage = (payload: any): ChatMessage | null => {
-  const value = payload?.message ?? payload?.data ?? payload;
-
-  if (!value) {
-    return null;
-  }
-
-  const sender = normalizeParticipant(value.sender ?? value.user ?? value.author);
-  const attachmentValue = value.attachment ?? value.file ?? value.media;
-
-  return {
-    id: String(value.id ?? `socket-${Date.now()}`),
-    roomId: String(value.roomId ?? payload?.roomId ?? ""),
-    text: value.text ?? value.content ?? "",
-    type: String(value.type ?? (attachmentValue ? "FILE" : "TEXT")),
-    createdAt: value.createdAt ?? new Date().toISOString(),
-    updatedAt: value.updatedAt,
-    senderId: String(value.senderId ?? sender?.userId ?? sender?.id ?? "unknown"),
-    senderRole: (value.senderRole ?? sender?.role ?? "CLIENT") as ChatRole,
-    sender,
-    attachment: attachmentValue
-      ? {
-          id: attachmentValue.id,
-          fileName: attachmentValue.fileName ?? attachmentValue.name ?? "Attachment",
-          url: attachmentValue.url ?? attachmentValue.path ?? attachmentValue.secure_url ?? "",
-          mimeType: attachmentValue.mimeType ?? attachmentValue.type,
-          size: attachmentValue.size,
-        }
-      : null,
-  };
-};
-
 export function ChatSocketProvider({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient();
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [presenceMap, setPresenceMap] = useState<Record<string, PresenceState>>({});
   const [typingState, setTypingState] = useState<Record<string, TypingState[]>>({});
+  const [activeRoomId, setActiveRoomId] = useState<string | null>(null);
   const [incomingCall, setIncomingCall] = useState<IncomingCallPayload | null>(null);
 
   const { data: profile } = useQuery<IUserProfile>({
@@ -146,6 +94,43 @@ export function ChatSocketProvider({ children }: { children: React.ReactNode }) 
     };
   }, [profile]);
 
+  const updateRoomsCache = useCallback(
+    (
+      current: ChatRoom[] | { data?: ChatRoom[] } | undefined,
+      updater: (rooms: ChatRoom[]) => ChatRoom[],
+    ) => {
+      const rooms = Array.isArray(current)
+        ? current
+        : Array.isArray(current?.data)
+          ? current.data
+          : [];
+
+      const updatedRooms = updater(rooms);
+
+      if (Array.isArray(current)) {
+        return updatedRooms;
+      }
+
+      if (current && typeof current === "object") {
+        return { ...current, data: updatedRooms };
+      }
+
+      return updatedRooms;
+    },
+    [],
+  );
+
+  const markRoomAsRead = useCallback(
+    (roomId: string) => {
+      queryClient.setQueriesData({ queryKey: ["chat-rooms"] }, (current) =>
+        updateRoomsCache(current as ChatRoom[] | { data?: ChatRoom[] } | undefined, (rooms) =>
+          markChatRoomAsRead(rooms, roomId),
+        ),
+      );
+    },
+    [queryClient, updateRoomsCache],
+  );
+
   useEffect(() => {
     if (!currentUser) {
       return;
@@ -168,51 +153,46 @@ export function ChatSocketProvider({ children }: { children: React.ReactNode }) 
     const handleDisconnect = () => setIsConnected(false);
 
     const handleReceiveMessage = (payload: any) => {
-      const message = normalizeMessage(payload);
+      const message = normalizeChatMessage(payload);
 
       if (!message?.roomId) {
         return;
       }
 
+      const existingMessages =
+        queryClient.getQueryData<ChatMessage[]>(["chat-room-messages", message.roomId]) ?? [];
+      const isDuplicate = existingMessages.some((entry) => entry.id === message.id);
+      const isOwnMessage = message.senderId === currentUser.userId;
+      const isActiveRoom = activeRoomId === message.roomId;
+
       queryClient.setQueryData<ChatMessage[]>(["chat-room-messages", message.roomId], (current) =>
-        uniqueMessages([...(current ?? []), message]),
+        mergeUniqueMessages([...(current ?? []), message]),
       );
 
-      queryClient.setQueriesData({ queryKey: ["chat-rooms"] }, (current: any) => {
-        if (!current) {
-          return current;
-        }
+      queryClient.setQueriesData({ queryKey: ["chat-rooms"] }, (current) =>
+        updateRoomsCache(current as ChatRoom[] | { data?: ChatRoom[] } | undefined, (rooms) =>
+          upsertChatRoomActivity({
+            rooms,
+            message,
+            currentUserId: currentUser.userId,
+            activeRoomId,
+            roomData: payload?.room ?? payload,
+          }),
+        ),
+      );
 
-        const rooms = Array.isArray(current) ? current : Array.isArray(current?.data) ? current.data : [];
+      if (isActiveRoom) {
+        markRoomAsRead(message.roomId);
+      }
 
-        if (!Array.isArray(rooms)) {
-          return current;
-        }
-
-        const updatedRooms = [...rooms];
-        const roomIndex = updatedRooms.findIndex((room) => room.id === message.roomId);
-
-        if (roomIndex >= 0) {
-          const existingRoom = updatedRooms[roomIndex];
-          updatedRooms[roomIndex] = {
-            ...existingRoom,
-            lastMessage: message,
-            updatedAt: message.createdAt,
-            unreadCount:
-              message.senderId !== currentUser.userId
-                ? (existingRoom.unreadCount ?? 0) + 1
-                : existingRoom.unreadCount ?? 0,
-          };
-        }
-
-        const sortedRooms = updatedRooms.sort(
-          (left, right) =>
-            new Date(right.updatedAt ?? right.lastMessage?.createdAt ?? 0).getTime() -
-            new Date(left.updatedAt ?? left.lastMessage?.createdAt ?? 0).getTime(),
-        );
-
-        return Array.isArray(current) ? sortedRooms : { ...current, data: sortedRooms };
-      });
+      if (!isDuplicate && !isOwnMessage && !isActiveRoom) {
+        const senderName = getParticipantDisplayName(message.sender);
+        toast.message(`New message from ${senderName}`, {
+          description: message.attachment
+            ? `${senderName} sent ${message.attachment.fileName}.`
+            : message.text || "You have a new unread message.",
+        });
+      }
     };
 
     const handlePresenceUpdate = (payload: any) => {
@@ -271,12 +251,56 @@ export function ChatSocketProvider({ children }: { children: React.ReactNode }) 
     };
 
     const handleCallStarted = (payload: any) => {
+      const roomId = String(payload?.roomId ?? "");
+      const callerId = payload?.callerId ? String(payload.callerId) : undefined;
+
+      if (!roomId || callerId === currentUser.userId) {
+        return;
+      }
+
+      const callNotice: ChatMessage = {
+        id: `call-${payload?.callId ?? roomId}-${Date.now()}`,
+        roomId,
+        text: `${payload?.callerName || "A client"} started a call`,
+        type: "SYSTEM",
+        createdAt: new Date().toISOString(),
+        senderId: callerId ?? "system",
+        senderRole: (payload?.callerRole ?? "CLIENT") as ChatRole,
+        sender: callerId
+          ? {
+              id: callerId,
+              userId: callerId,
+              role: (payload?.callerRole ?? "CLIENT") as ChatRole,
+              fullName: payload?.callerName,
+              name: payload?.callerName,
+            }
+          : null,
+      };
+
+      queryClient.setQueriesData({ queryKey: ["chat-rooms"] }, (current) =>
+        updateRoomsCache(current as ChatRoom[] | { data?: ChatRoom[] } | undefined, (rooms) =>
+          upsertChatRoomActivity({
+            rooms,
+            message: callNotice,
+            currentUserId: currentUser.userId,
+            activeRoomId,
+            roomData: payload?.room ?? payload,
+          }),
+        ),
+      );
+
       setIncomingCall({
-        roomId: String(payload?.roomId ?? ""),
+        roomId,
         callId: payload?.callId,
-        callerId: payload?.callerId,
+        callerId,
         callerName: payload?.callerName,
       });
+
+      if (activeRoomId !== roomId) {
+        toast.message(`Incoming call from ${payload?.callerName || "a client"}`, {
+          description: "Open the room to answer the secure consultation call.",
+        });
+      }
     };
 
     const handleCallEnded = () => {
@@ -310,7 +334,7 @@ export function ChatSocketProvider({ children }: { children: React.ReactNode }) 
       client.off("call_ended", handleCallEnded);
       client.off("chat_error", handleChatError);
     };
-  }, [currentUser, queryClient]);
+  }, [activeRoomId, currentUser, markRoomAsRead, queryClient, updateRoomsCache]);
 
   const value = useMemo<ChatSocketContextValue>(
     () => ({
@@ -319,11 +343,23 @@ export function ChatSocketProvider({ children }: { children: React.ReactNode }) 
       isConnected,
       presenceMap,
       typingState,
+      activeRoomId,
+      setActiveRoomId,
+      markRoomAsRead,
       incomingCall,
       setIncomingCall,
       clearIncomingCall: () => setIncomingCall(null),
     }),
-    [socket, currentUser, isConnected, presenceMap, typingState, incomingCall],
+    [
+      socket,
+      currentUser,
+      isConnected,
+      presenceMap,
+      typingState,
+      activeRoomId,
+      markRoomAsRead,
+      incomingCall,
+    ],
   );
 
   return <ChatSocketContext.Provider value={value}>{children}</ChatSocketContext.Provider>;

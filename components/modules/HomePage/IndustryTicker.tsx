@@ -16,7 +16,7 @@ export default function IndustryTicker({ industries }: IndustryTickerProps) {
     <section className="space-y-5">
       <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
         <div>
-          <Badge variant="secondary" className="mb-2 bg-violet-100 text-violet-700">
+          <Badge variant="secondary" className="mb-2 bg-violet-100 text-violet-700 dark:bg-violet-500/10 dark:text-violet-200">
             Industry focus
           </Badge>
           <h2 className="text-2xl font-bold tracking-tight md:text-3xl">Explore top consulting industries</h2>
@@ -26,7 +26,7 @@ export default function IndustryTicker({ industries }: IndustryTickerProps) {
         </div>
 
         <Link href="/industries">
-          <Button variant="outline" className="rounded-full">View all industries</Button>
+          <Button variant="outline" className="rounded-full dark:border-white/10 dark:bg-slate-950/60 dark:text-slate-100">View all industries</Button>
         </Link>
       </div>
 

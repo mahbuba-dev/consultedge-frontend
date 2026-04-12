@@ -14,12 +14,23 @@ type BookingCardProps = {
   onSelect?: (slot: IExpertAvailability) => void;
 };
 
+const getStartDateTime = (slot: IExpertAvailability) => {
+  const rawSlot = slot as IExpertAvailability & { startDateTime?: string | null };
+  return slot.schedule?.startDateTime ?? rawSlot.startDateTime ?? "";
+};
+
+const getEndDateTime = (slot: IExpertAvailability) => {
+  const rawSlot = slot as IExpertAvailability & { endDateTime?: string | null };
+  return slot.schedule?.endDateTime ?? rawSlot.endDateTime ?? null;
+};
+
 const formatSlotTime = (slot: IExpertAvailability) => {
-  const startValue = slot.schedule?.startDateTime;
+  const startValue = getStartDateTime(slot);
   if (!startValue) return "Time unavailable";
 
   const start = parseISO(startValue);
-  const end = slot.schedule?.endDateTime ? parseISO(slot.schedule.endDateTime) : null;
+  const endValue = getEndDateTime(slot);
+  const end = endValue ? parseISO(endValue) : null;
 
   return end
     ? `${format(start, "h:mm a")} - ${format(end, "h:mm a")}`

@@ -30,6 +30,25 @@ type AvailabilityCalendarProps = {
   userRole?: string | null;
 };
 
+const getSlotStartDateTime = (slot: IExpertAvailability) => {
+  const rawSlot = slot as IExpertAvailability & { startDateTime?: string | null };
+  return slot.schedule?.startDateTime ?? rawSlot.startDateTime ?? "";
+};
+
+const parseDateSafe = (value: string) => {
+  const iso = parseISO(value);
+  if (!Number.isNaN(iso.getTime())) {
+    return iso;
+  }
+
+  const fallback = new Date(value);
+  if (!Number.isNaN(fallback.getTime())) {
+    return fallback;
+  }
+
+  return null;
+};
+
 export default function AvailabilityCalendar({
   expertId,
   expertName,
@@ -50,12 +69,12 @@ export default function AvailabilityCalendar({
         (slot) =>
           !slot.isBooked &&
           !slot.isDeleted &&
-          Boolean(slot.schedule?.startDateTime) &&
-          !isBefore(parseISO(slot.schedule!.startDateTime), new Date()),
+          Boolean(getSlotStartDateTime(slot)) &&
+          Boolean(parseDateSafe(getSlotStartDateTime(slot))),
       )
       .sort((left, right) => {
-        const leftTime = new Date(left.schedule?.startDateTime || "").getTime();
-        const rightTime = new Date(right.schedule?.startDateTime || "").getTime();
+        const leftTime = parseDateSafe(getSlotStartDateTime(left))?.getTime() ?? 0;
+        const rightTime = parseDateSafe(getSlotStartDateTime(right))?.getTime() ?? 0;
         return leftTime - rightTime;
       });
   }, [availability]);
@@ -64,7 +83,7 @@ export default function AvailabilityCalendar({
     () =>
       new Set(
         sortedAvailability.map((slot) =>
-          format(parseISO(slot.schedule!.startDateTime), "yyyy-MM-dd"),
+          format(parseDateSafe(getSlotStartDateTime(slot)) as Date, "yyyy-MM-dd"),
         ),
       ),
     [sortedAvailability],
@@ -72,8 +91,8 @@ export default function AvailabilityCalendar({
 
   const nextAvailableSlot = sortedAvailability[0] ?? null;
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
-    nextAvailableSlot?.schedule?.startDateTime
-      ? parseISO(nextAvailableSlot.schedule.startDateTime)
+    nextAvailableSlot && getSlotStartDateTime(nextAvailableSlot)
+      ? (parseDateSafe(getSlotStartDateTime(nextAvailableSlot)) ?? undefined)
       : undefined,
   );
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(
@@ -84,13 +103,13 @@ export default function AvailabilityCalendar({
     if (!selectedDate) return [];
 
     return sortedAvailability.filter((slot) =>
-      isSameDay(parseISO(slot.schedule!.startDateTime), selectedDate),
+      isSameDay(parseDateSafe(getSlotStartDateTime(slot)) as Date, selectedDate),
     );
   }, [selectedDate, sortedAvailability]);
 
   useEffect(() => {
-    if (!selectedDate && nextAvailableSlot?.schedule?.startDateTime) {
-      setSelectedDate(parseISO(nextAvailableSlot.schedule.startDateTime));
+    if (!selectedDate && nextAvailableSlot && getSlotStartDateTime(nextAvailableSlot)) {
+      setSelectedDate(parseDateSafe(getSlotStartDateTime(nextAvailableSlot)) ?? undefined);
     }
 
     if (!selectedSlotId && nextAvailableSlot?.id) {
@@ -156,9 +175,9 @@ export default function AvailabilityCalendar({
         }
 
         toast.success("Consultation booked successfully ✨", {
-          description: "Your session is being added to the dashboard now.",
+          description: "Your session is being added to the consultations dashboard now.",
         });
-        router.push("/dashboard/my-bookings");
+        router.push("/dashboard/consultations");
         router.refresh();
         return;
       }
@@ -169,9 +188,9 @@ export default function AvailabilityCalendar({
       });
 
       toast.success("Slot reserved successfully ✨", {
-        description: "You can review or pay later from your dashboard bookings.",
+        description: "You can review or pay later from your consultations dashboard.",
       });
-      router.push("/dashboard/my-bookings");
+      router.push("/dashboard/consultations");
       router.refresh();
     } catch (error: any) {
       toast.error(
@@ -188,7 +207,7 @@ export default function AvailabilityCalendar({
 
   return (
     <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-      <Card className="border-violet-200/70 shadow-lg shadow-violet-500/5" id="book-session">
+      <Card className="border-violet-200/70 shadow-lg shadow-violet-500/5" id="availability-calendar">
         <CardHeader>
           <Badge className="w-fit bg-violet-100 text-violet-700 hover:bg-violet-100">
             <Sparkles className="mr-1 size-3.5" />
@@ -210,7 +229,7 @@ export default function AvailabilityCalendar({
                   onSelect={(date) => setSelectedDate(date)}
                   disabled={(date) => {
                     const key = format(date, "yyyy-MM-dd");
-                    return isBefore(startOfDay(date), today) || !availableDateKeys.has(key);
+                    return !availableDateKeys.has(key);
                   }}
                   className="mx-auto"
                 />
@@ -229,9 +248,9 @@ export default function AvailabilityCalendar({
                     </p>
                   </div>
 
-                  {nextAvailableSlot?.schedule?.startDateTime ? (
+                  {nextAvailableSlot && getSlotStartDateTime(nextAvailableSlot) ? (
                     <div className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
-                      Next open: {format(parseISO(nextAvailableSlot.schedule.startDateTime), "MMM d, h:mm a")}
+                      Next open: {format(parseDateSafe(getSlotStartDateTime(nextAvailableSlot)) as Date, "MMM d, h:mm a")}
                     </div>
                   ) : null}
                 </div>
@@ -263,7 +282,7 @@ export default function AvailabilityCalendar({
                     </span>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Select from the expert’s published availability and book in a few clicks.
+                    Select from the expert’s available time slots and book in a few clicks.
                   </p>
                 </div>
 
@@ -282,9 +301,9 @@ export default function AvailabilityCalendar({
             </>
           ) : (
             <div className="rounded-3xl border border-dashed bg-muted/20 px-5 py-10 text-center">
-              <p className="text-lg font-semibold text-foreground">No availability published yet</p>
+              <p className="text-lg font-semibold text-foreground">No availability yet</p>
               <p className="mt-2 text-sm text-muted-foreground">
-                Once this expert publishes open time slots, they will appear here for booking.
+                Once this expert adds open time slots, they will appear here for booking.
               </p>
             </div>
           )}

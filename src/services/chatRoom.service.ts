@@ -33,6 +33,9 @@ const toArray = (value: unknown, nestedKeys: string[] = []): any[] => {
 export const getParticipantDisplayName = (participant?: ChatParticipant | null) =>
   participant?.fullName || participant?.name || participant?.email || "Unknown participant";
 
+export const getParticipantKey = (participant?: ChatParticipant | null) =>
+  String(participant?.userId ?? participant?.id ?? "");
+
 const normalizeParticipant = (value: any): ChatParticipant => ({
   id: String(value?.id ?? value?.userId ?? value?.participantId ?? crypto.randomUUID()),
   userId: value?.userId ? String(value.userId) : undefined,
@@ -81,6 +84,9 @@ export const normalizeChatRoom = (value: any): ChatRoom => {
   const participants = toArray(raw?.participants ?? raw?.members ?? raw?.users).map(normalizeParticipant);
   const lastMessage = raw?.lastMessage ? normalizeChatMessage(raw.lastMessage) : null;
 
+  const expertParticipant = participants.find((participant) => participant.role === "EXPERT");
+  const clientParticipant = participants.find((participant) => participant.role === "CLIENT");
+
   return {
     id: String(raw?.id ?? raw?.roomId ?? crypto.randomUUID()),
     name:
@@ -90,12 +96,10 @@ export const normalizeChatRoom = (value: any): ChatRoom => {
         "Conversation"),
     participants,
     lastMessage,
-    unreadCount: Number(raw?.unreadCount ?? raw?.unread ?? 0),
+    unreadCount: Number(raw?.unreadCount ?? raw?.unread ?? raw?.unreadMessagesCount ?? 0),
     updatedAt: raw?.updatedAt ?? lastMessage?.createdAt ?? raw?.createdAt ?? new Date().toISOString(),
-    expertId:
-      raw?.expertId ?? participants.find((participant) => participant.role === "EXPERT")?.id,
-    clientId:
-      raw?.clientId ?? participants.find((participant) => participant.role === "CLIENT")?.id,
+    expertId: raw?.expertId ?? expertParticipant?.userId ?? expertParticipant?.id,
+    clientId: raw?.clientId ?? clientParticipant?.userId ?? clientParticipant?.id,
   };
 };
 
@@ -131,59 +135,193 @@ export const sortChatRooms = (rooms: ChatRoom[]) => {
   );
 };
 
-export const getChatRooms = async (params?: Record<string, unknown>): Promise<ChatRoom[]> => {
-  const response = await httpClient.get<ChatRoom[] | { rooms?: ChatRoom[] }>(
-    `${CHAT_BASE_PATH}/rooms`,
-    {
-      params,
-      silent: true,
-    },
+export const markChatRoomAsRead = (rooms: ChatRoom[], roomId: string) => {
+  return sortChatRooms(
+    rooms.map((room) =>
+      room.id === roomId
+        ? {
+            ...room,
+            unreadCount: 0,
+          }
+        : room,
+    ),
   );
-
-  const rooms = toArray(response.data, ["rooms", "items", "data"]);
-  return sortChatRooms(rooms.map(normalizeChatRoom));
 };
 
-export const findOrCreateRoomForExpert = async (expertId: string): Promise<ChatRoom | null> => {
-  if (!expertId) {
-    return null;
+type UpsertChatRoomActivityOptions = {
+  rooms: ChatRoom[];
+  message: ChatMessage;
+  currentUserId?: string;
+  activeRoomId?: string | null;
+  roomData?: unknown;
+};
+
+export const upsertChatRoomActivity = ({
+  rooms,
+  message,
+  currentUserId,
+  activeRoomId,
+  roomData,
+}: UpsertChatRoomActivityOptions) => {
+  const updatedRooms = [...rooms];
+  const roomIndex = updatedRooms.findIndex((room) => room.id === message.roomId);
+  const normalizedRoom = roomData ? normalizeChatRoom(roomData) : null;
+  const shouldIncrementUnread =
+    Boolean(message.senderId) &&
+    Boolean(currentUserId) &&
+    message.senderId !== currentUserId &&
+    activeRoomId !== message.roomId;
+
+  if (roomIndex >= 0) {
+    const existingRoom = updatedRooms[roomIndex];
+    updatedRooms[roomIndex] = {
+      ...existingRoom,
+      ...normalizedRoom,
+      participants:
+        normalizedRoom?.participants?.length ? normalizedRoom.participants : existingRoom.participants,
+      lastMessage: message,
+      updatedAt: message.createdAt,
+      unreadCount: shouldIncrementUnread
+        ? (existingRoom.unreadCount ?? 0) + 1
+        : activeRoomId === message.roomId
+          ? 0
+          : existingRoom.unreadCount ?? 0,
+    };
+
+    return sortChatRooms(updatedRooms);
   }
 
+  const fallbackParticipants = normalizedRoom?.participants?.length
+    ? normalizedRoom.participants
+    : message.sender
+      ? [message.sender]
+      : [];
+
+  updatedRooms.unshift({
+    id: message.roomId,
+    name:
+      normalizedRoom?.name ||
+      fallbackParticipants.map((participant) => getParticipantDisplayName(participant)).join(", ") ||
+      "Conversation",
+    participants: fallbackParticipants,
+    lastMessage: message,
+    unreadCount: shouldIncrementUnread ? 1 : 0,
+    updatedAt: message.createdAt,
+    expertId:
+      normalizedRoom?.expertId ??
+      fallbackParticipants.find((participant) => participant.role === "EXPERT")?.userId ??
+      fallbackParticipants.find((participant) => participant.role === "EXPERT")?.id,
+    clientId:
+      normalizedRoom?.clientId ??
+      fallbackParticipants.find((participant) => participant.role === "CLIENT")?.userId ??
+      fallbackParticipants.find((participant) => participant.role === "CLIENT")?.id,
+  });
+
+  return sortChatRooms(updatedRooms);
+};
+
+export const getChatRooms = async (params?: Record<string, unknown>): Promise<ChatRoom[]> => {
   try {
-    const response = await httpClient.post<ChatRoom | { room?: ChatRoom }>(
+    const response = await httpClient.get<ChatRoom[] | { rooms?: ChatRoom[] }>(
       `${CHAT_BASE_PATH}/rooms`,
-      { expertId },
-      { silent: true },
+      {
+        params,
+        silent: true,
+      },
     );
 
-    if (response.data) {
-      return normalizeChatRoom(response.data);
+    const rooms = toArray(response.data, ["rooms", "items", "data"]);
+    return sortChatRooms(rooms.map(normalizeChatRoom));
+  } catch (error: any) {
+    if (error?.response?.status === 404) {
+      return [];
     }
-  } catch {
-    // fallback to existing room lookup when POST is not available
+
+    throw error;
   }
+};
 
-  const rooms = await getChatRooms({ expertId });
-
+const findMatchingRoom = (rooms: ChatRoom[], participantId: string) => {
   return (
     rooms.find(
       (room) =>
-        room.expertId === expertId ||
+        room.id === participantId ||
+        room.expertId === participantId ||
+        room.clientId === participantId ||
         room.participants.some(
-          (participant) => participant.id === expertId || participant.userId === expertId,
+          (participant) => participant.id === participantId || participant.userId === participantId,
         ),
     ) ?? null
   );
 };
 
-export const getRoomMessages = async (roomId: string): Promise<ChatMessage[]> => {
-  const response = await httpClient.get<ChatMessage[] | { messages?: ChatMessage[] }>(
-    `${CHAT_BASE_PATH}/rooms/${roomId}/messages`,
-    { silent: true },
-  );
+export const findOrCreateRoomForExpert = async (participantId: string): Promise<ChatRoom | null> => {
+  if (!participantId) {
+    return null;
+  }
 
-  const messages = toArray(response.data, ["messages", "items", "data"]);
-  return mergeUniqueMessages(messages.map(normalizeChatMessage));
+  const createPayloads = [
+    { expertId: participantId },
+    { clientId: participantId },
+    { participantId },
+    { userId: participantId },
+  ];
+
+  for (const payload of createPayloads) {
+    try {
+      const response = await httpClient.post<ChatRoom | { room?: ChatRoom }>(
+        `${CHAT_BASE_PATH}/rooms`,
+        payload,
+        { silent: true },
+      );
+
+      if (response.data) {
+        return normalizeChatRoom(response.data);
+      }
+    } catch {
+      // Try the next supported payload shape.
+    }
+  }
+
+  const queryVariants = [
+    { participantId },
+    { expertId: participantId },
+    { clientId: participantId },
+    { userId: participantId },
+  ];
+
+  for (const params of queryVariants) {
+    try {
+      const rooms = await getChatRooms(params);
+      const matchedRoom = findMatchingRoom(rooms, participantId);
+
+      if (matchedRoom) {
+        return matchedRoom;
+      }
+    } catch {
+      // Keep trying available query shapes.
+    }
+  }
+
+  return null;
+};
+
+export const getRoomMessages = async (roomId: string): Promise<ChatMessage[]> => {
+  try {
+    const response = await httpClient.get<ChatMessage[] | { messages?: ChatMessage[] }>(
+      `${CHAT_BASE_PATH}/rooms/${roomId}/messages`,
+      { silent: true },
+    );
+
+    const messages = toArray(response.data, ["messages", "items", "data"]);
+    return mergeUniqueMessages(messages.map(normalizeChatMessage));
+  } catch (error: any) {
+    if (error?.response?.status === 404) {
+      return [];
+    }
+
+    throw error;
+  }
 };
 
 export const sendRoomMessage = async (
