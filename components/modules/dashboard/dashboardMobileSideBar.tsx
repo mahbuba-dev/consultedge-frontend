@@ -81,7 +81,7 @@ const DashboardMobileSidebar = ({dashboardHome, navItems, userInfo} : DashboardM
                                   className={cn(
                                     "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all",
                                     isChildActive
-                                      ? "bg-violet-600 text-white"
+                                      ? "bg-blue-600 text-white"
                                       : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
                                   )}
                                 >

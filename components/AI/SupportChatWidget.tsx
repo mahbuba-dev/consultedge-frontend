@@ -32,11 +32,25 @@ export default function SupportChatWidget() {
   } = useAiSupportChat("homepage");
 
   const [input, setInput] = useState("");
+  const [showGreeting, setShowGreeting] = useState(false);
   const endRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages, isLoading, isOpen]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setShowGreeting(false);
+      return;
+    }
+    const showTimer = setTimeout(() => setShowGreeting(true), 3000);
+    const hideTimer = setTimeout(() => setShowGreeting(false), 11000);
+    return () => {
+      clearTimeout(showTimer);
+      clearTimeout(hideTimer);
+    };
+  }, [isOpen]);
 
   const handleSend = async () => {
     const trimmed = input.trim();
@@ -66,8 +80,8 @@ export default function SupportChatWidget() {
             : "pointer-events-none translate-y-3 scale-95 opacity-0",
         )}
       >
-        <div className="h-[min(78vh,640px)] w-[min(92vw,420px)] overflow-hidden rounded-[28px] border border-violet-200/70 bg-white/90 shadow-[0_30px_80px_-28px_rgba(109,40,217,0.45)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/90">
-          <div className="border-b border-violet-100 bg-linear-to-r from-violet-600 via-fuchsia-500 to-sky-500 p-4 text-white">
+        <div className="h-[min(78vh,640px)] w-[min(92vw,420px)] overflow-hidden rounded-[28px] border border-blue-200/70 bg-white/90 shadow-[0_30px_80px_-28px_rgba(37,99,235,0.45)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/90">
+          <div className="border-b border-blue-100 bg-linear-to-r from-blue-600 via-cyan-500 to-sky-500 p-4 text-white">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <Badge className="border-white/20 bg-white/15 text-white hover:bg-white/15">
@@ -102,7 +116,7 @@ export default function SupportChatWidget() {
             </div>
           </div>
 
-          <div className="flex h-[calc(100%-96px)] flex-col bg-linear-to-b from-violet-50/50 via-background to-sky-50/40">
+          <div className="flex h-[calc(100%-96px)] flex-col bg-linear-to-b from-blue-50/50 via-background to-sky-50/40">
             <div className="border-b px-3 py-3">
               <div className="flex flex-wrap gap-2">
                 {quickActions.map((action) => (
@@ -111,7 +125,7 @@ export default function SupportChatWidget() {
                     type="button"
                     onClick={() => void sendQuickAction(action)}
                     disabled={isLoading}
-                    className="rounded-full border border-violet-200 bg-white px-3 py-1.5 text-xs font-medium text-violet-700 transition hover:border-violet-300 hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-70"
+                    className="rounded-full border border-blue-200 bg-white px-3 py-1.5 text-xs font-medium text-blue-700 transition hover:border-blue-300 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-70"
                   >
                     {action.label}
                   </button>
@@ -133,8 +147,8 @@ export default function SupportChatWidget() {
                         className={cn(
                           "max-w-[88%] rounded-2xl px-3.5 py-3 text-sm shadow-sm",
                           isUser
-                            ? "bg-violet-600 text-white"
-                            : "border border-violet-100 bg-white/90 text-foreground",
+                            ? "bg-blue-600 text-white"
+                            : "border border-blue-100 bg-white/90 text-foreground",
                           message.isError && !isUser ? "border-amber-200 bg-amber-50" : undefined,
                         )}
                       >
@@ -186,15 +200,15 @@ export default function SupportChatWidget() {
 
                 {isLoading ? (
                   <div className="flex justify-start">
-                    <div className="rounded-2xl border border-violet-100 bg-white/90 px-3.5 py-3 text-sm shadow-sm">
+                    <div className="rounded-2xl border border-blue-100 bg-white/90 px-3.5 py-3 text-sm shadow-sm">
                       <div className="mb-2 flex items-center gap-2 text-[11px] font-medium text-muted-foreground">
                         <Bot className="size-3.5" />
                         Thinking
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <span className="size-2 animate-bounce rounded-full bg-violet-500 [animation-delay:-0.2s]" />
-                        <span className="size-2 animate-bounce rounded-full bg-violet-500 [animation-delay:-0.1s]" />
-                        <span className="size-2 animate-bounce rounded-full bg-violet-500" />
+                        <span className="size-2 animate-bounce rounded-full bg-blue-500 [animation-delay:-0.2s]" />
+                        <span className="size-2 animate-bounce rounded-full bg-blue-500 [animation-delay:-0.1s]" />
+                        <span className="size-2 animate-bounce rounded-full bg-blue-500" />
                       </div>
                     </div>
                   </div>
@@ -226,7 +240,7 @@ export default function SupportChatWidget() {
                 <div className="mt-2 flex items-center justify-end gap-2">
                   <Button
                     type="button"
-                    className="bg-linear-to-r from-violet-600 via-fuchsia-500 to-sky-500 text-white shadow-sm hover:opacity-95"
+                    className="bg-linear-to-r from-blue-600 via-cyan-500 to-sky-500 text-white shadow-sm hover:opacity-95"
                     disabled={isLoading || !input.trim()}
                     onClick={() => void handleSend()}
                   >
@@ -246,10 +260,37 @@ export default function SupportChatWidget() {
         </div>
       </div>
 
+      {showGreeting && !isOpen && (
+        <button
+          type="button"
+          onClick={() => { setShowGreeting(false); setIsOpen(true); }}
+          className="animate-in fade-in slide-in-from-bottom-2 duration-300 flex items-start gap-2.5 rounded-2xl border border-blue-200/80 bg-white px-4 py-3 text-sm text-slate-700 shadow-[0_8px_32px_-8px_rgba(37,99,235,0.35)] backdrop-blur-sm transition hover:border-blue-300 hover:shadow-[0_8px_32px_-4px_rgba(37,99,235,0.45)] dark:border-white/10 dark:bg-slate-900 dark:text-slate-200"
+        >
+          <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-blue-600 to-cyan-500">
+            <Bot className="size-3.5 text-white" />
+          </span>
+          <span>
+            <span className="font-semibold text-blue-700 dark:text-blue-400">AI Assistant</span>
+            <br />
+            <span>How can I help you? 👋</span>
+          </span>
+          <span
+            role="button"
+            aria-label="Dismiss"
+            tabIndex={0}
+            onClick={(e) => { e.stopPropagation(); setShowGreeting(false); }}
+            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.stopPropagation(); setShowGreeting(false); } }}
+            className="ml-1 mt-0.5 cursor-pointer rounded-full p-0.5 text-slate-400 hover:text-slate-600"
+          >
+            <X className="size-3.5" />
+          </span>
+        </button>
+      )}
+
       <Button
         type="button"
-        onClick={() => setIsOpen((current) => !current)}
-        className="h-12 rounded-full bg-linear-to-r from-violet-600 via-fuchsia-500 to-sky-500 px-4 text-white shadow-[0_16px_40px_-16px_rgba(109,40,217,0.7)] transition hover:scale-[1.02] hover:opacity-95"
+        onClick={() => { setShowGreeting(false); setIsOpen((current) => !current); }}
+        className="h-12 rounded-full bg-linear-to-r from-blue-600 via-cyan-500 to-sky-500 px-4 text-white shadow-[0_16px_40px_-16px_rgba(37,99,235,0.7)] transition hover:scale-[1.02] hover:opacity-95"
       >
         <MessageCircleMore className="mr-2 size-5" />
         {isOpen ? "Close" : "Ask AI"}

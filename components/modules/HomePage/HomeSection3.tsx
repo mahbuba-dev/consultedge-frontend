@@ -26,7 +26,7 @@ const engagementOptions = [
     price: "Pay per consultation",
     description: "Perfect for professionals and teams ready to unlock direct expert guidance.",
     features: ["Flexible expert rates", "Secure payment flow", "Consultation tracking"],
-    accent: "from-violet-50 to-white",
+    accent: "from-blue-50 to-white",
     href: "/experts",
     cta: "Start booking",
     featured: true,
@@ -76,7 +76,7 @@ const supportHighlights = [
     title: "Smart dashboards",
     description: "Keep consultations, schedules, and progress in one place.",
     icon: Layers3,
-    tone: "text-violet-700 bg-violet-100",
+    tone: "text-blue-700 bg-blue-100",
   },
   {
     title: "Human support",
@@ -105,18 +105,19 @@ export default function HomeSection3() {
         </div>
 
         <div className="grid gap-5 lg:grid-cols-3">
-          {engagementOptions.map((option) => (
+          {engagementOptions.map((option, index) => (
             <Card
               key={option.name}
-              className={`border-border/60 bg-linear-to-br ${option.accent} shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg dark:border-white/10 dark:from-slate-900 dark:to-slate-950 dark:shadow-black/20 ${
-                option.featured ? "ring-2 ring-violet-200 dark:ring-violet-500/40" : ""
+              style={{ animationDelay: `${90 + index * 90}ms` }}
+              className={`consultedge-reveal--visible consultedge-card-glow border-border/60 bg-linear-to-br ${option.accent} shadow-sm dark:border-white/10 dark:from-slate-900 dark:to-slate-950 dark:shadow-black/20 ${
+                option.featured ? "ring-2 ring-blue-200 dark:ring-blue-500/40" : ""
               }`}
             >
               <CardHeader>
                 <div className="flex items-center justify-between gap-3">
                   <CardTitle>{option.name}</CardTitle>
                   {option.featured ? (
-                    <Badge className="bg-violet-600 text-white hover:bg-violet-600">Popular</Badge>
+                    <Badge className="bg-blue-600 text-white hover:bg-blue-600">Popular</Badge>
                   ) : null}
                 </div>
                 <CardDescription>{option.description}</CardDescription>
@@ -134,7 +135,7 @@ export default function HomeSection3() {
                   <Button
                     className={`mt-2 w-full ${
                       option.featured
-                        ? "bg-violet-600 hover:bg-violet-700"
+                        ? "bg-blue-600 hover:bg-blue-700"
                         : "bg-slate-900 hover:bg-slate-800"
                     }`}
                   >
@@ -148,7 +149,7 @@ export default function HomeSection3() {
         </div>
       </section>
 
-      <section className="grid gap-6 rounded-[2rem] border bg-linear-to-r from-cyan-50 via-white to-violet-50 p-6 shadow-sm dark:border-white/10 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 md:p-8 lg:grid-cols-[0.8fr_1.2fr]">
+      <section className="grid gap-6 rounded-[2rem] border bg-linear-to-r from-cyan-50 via-white to-blue-50 p-6 shadow-sm dark:border-white/10 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 md:p-8 lg:grid-cols-[0.8fr_1.2fr]">
         <div className="space-y-4">
           <div>
             <Badge variant="secondary" className="mb-2 bg-sky-100 text-sky-700">
@@ -195,7 +196,7 @@ export default function HomeSection3() {
         </Accordion>
       </section>
 
-      <section className="relative overflow-hidden rounded-[2rem] border border-slate-900 bg-linear-to-r from-slate-950 via-violet-950 to-cyan-950 p-6 text-white shadow-xl md:p-10">
+      <section className="relative overflow-hidden rounded-[2rem] border border-slate-900 bg-linear-to-r from-slate-950 via-blue-950 to-cyan-950 p-6 text-white shadow-xl md:p-10">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.08),transparent_35%)]" />
 
         <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">

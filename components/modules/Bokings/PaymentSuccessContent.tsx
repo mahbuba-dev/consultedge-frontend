@@ -44,18 +44,62 @@ export default function PaymentSuccessContent() {
   const { consultationId, paymentId, transactionId, amount, status, hasRedirectData } =
     usePaymentRedirectParams();
 
+  const consultationsRedirectHref = useMemo(() => {
+    const params = new URLSearchParams();
+
+    if (consultationId) {
+      params.set("consultationId", consultationId);
+    }
+
+    if (paymentId) {
+      params.set("paymentId", paymentId);
+    }
+
+    if (transactionId) {
+      params.set("transactionId", transactionId);
+    }
+
+    if (amount) {
+      params.set("amount", amount);
+    }
+
+    params.set("status", status || "success");
+
+    const query = params.toString();
+    return query ? `/dashboard/consultations?${query}` : "/dashboard/consultations";
+  }, [amount, consultationId, paymentId, status, transactionId]);
+
   const { data, isLoading, refetch, isFetching } = useQuery({
     queryKey: ["consultations"],
     queryFn: () => getMyBookings({ limit: 50, sortBy: "date", sortOrder: "desc" }),
   });
 
-  const matchedConsultation = useMemo(() => {
-    const bookings = Array.isArray(data?.data) ? data.data : [];
+  const bookings = useMemo(() => (Array.isArray(data?.data) ? data.data : []), [data?.data]);
 
+  const matchedConsultation = useMemo(() => {
     return bookings.find(
       (item) => item.id === consultationId || (paymentId ? item.payment?.id === paymentId : false),
     );
-  }, [consultationId, data?.data, paymentId]);
+  }, [bookings, consultationId, paymentId]);
+
+  const fallbackConsultation = useMemo(() => {
+    if (!bookings.length) {
+      return null;
+    }
+
+    return bookings.find((item) => item.paymentStatus === "PAID" || item.payment?.status === "PAID") || bookings[0];
+  }, [bookings]);
+
+  const selectedConsultation = matchedConsultation || fallbackConsultation;
+  const selectedConsultationId = consultationId || selectedConsultation?.id || null;
+  const selectedPaymentId = paymentId || selectedConsultation?.payment?.id || null;
+  const selectedTransactionId =
+    transactionId || selectedConsultation?.payment?.transactionId || null;
+  const selectedAmount =
+    amount ||
+    (typeof selectedConsultation?.payment?.amount === "number"
+      ? String(selectedConsultation.payment.amount)
+      : null);
 
   useEffect(() => {
     if (status !== "success" || toastShownRef.current) {
@@ -74,9 +118,9 @@ export default function PaymentSuccessContent() {
     router.refresh();
   }, [queryClient, refetch, router, status, transactionId]);
 
-  if (!hasRedirectData) {
+  if (!hasRedirectData && !selectedConsultation) {
     return (
-      <Card className="border-violet-200/70 shadow-sm">
+      <Card className="border-blue-200/70 shadow-sm">
         <CardContent className="py-12 text-center">
           <p className="text-lg font-semibold text-foreground">No payment summary found</p>
           <p className="mt-2 text-sm text-muted-foreground">
@@ -84,7 +128,7 @@ export default function PaymentSuccessContent() {
           </p>
           <div className="mt-4 flex justify-center gap-3">
             <Button asChild>
-              <Link href="/dashboard/consultations">Go to Consultations</Link>
+              <Link href={consultationsRedirectHref}>Go to Consultations</Link>
             </Button>
             <Button asChild variant="outline">
               <Link href="/">Back to Home</Link>
@@ -105,20 +149,24 @@ export default function PaymentSuccessContent() {
           </Badge>
           <CardTitle className="text-2xl">Payment completed</CardTitle>
           <CardDescription>
-            Your booking and payment details are being refreshed from the backend now.
+            {hasRedirectData
+              ? "Your booking and payment details are being refreshed from the backend now."
+              : "Showing your latest consultation summary from the dashboard."}
           </CardDescription>
         </CardHeader>
       </Card>
 
-      <PaymentStatusBanner
-        status="success"
-        consultationId={consultationId}
-        paymentId={paymentId}
-        transactionId={transactionId}
-        amount={amount}
-      />
+      {hasRedirectData ? (
+        <PaymentStatusBanner
+          status="success"
+          consultationId={selectedConsultationId}
+          paymentId={selectedPaymentId}
+          transactionId={selectedTransactionId}
+          amount={selectedAmount}
+        />
+      ) : null}
 
-      <Card className="border-violet-200/70 shadow-sm">
+      <Card className="border-blue-200/70 shadow-sm">
         <CardHeader>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -144,17 +192,17 @@ export default function PaymentSuccessContent() {
                 <div key={index} className="h-24 animate-pulse rounded-2xl bg-muted/40" />
               ))}
             </div>
-          ) : matchedConsultation ? (
+          ) : selectedConsultation ? (
             <div className="grid gap-3 md:grid-cols-3">
-              <div className="rounded-2xl border bg-violet-50/70 p-4">
-                <p className="text-xs font-semibold uppercase tracking-wide text-violet-700">
+              <div className="rounded-2xl border bg-blue-50/70 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">
                   Expert
                 </p>
                 <p className="mt-2 text-sm font-semibold text-foreground">
-                  {matchedConsultation.expert?.fullName || "Consultation booking"}
+                  {selectedConsultation.expert?.fullName || "Consultation booking"}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {matchedConsultation.expert?.title || "Expert consultation"}
+                  {selectedConsultation.expert?.title || "Expert consultation"}
                 </p>
               </div>
 
@@ -163,10 +211,10 @@ export default function PaymentSuccessContent() {
                   Consultation status
                 </p>
                 <p className="mt-2 text-sm font-semibold text-foreground">
-                  {matchedConsultation.status}
+                  {selectedConsultation.status}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Payment: {matchedConsultation.paymentStatus}
+                  Payment: {selectedConsultation.paymentStatus}
                 </p>
               </div>
 
@@ -175,10 +223,10 @@ export default function PaymentSuccessContent() {
                   Amount paid
                 </p>
                 <p className="mt-2 text-sm font-semibold text-foreground">
-                  {formatCurrency(amount)}
+                  {formatCurrency(selectedAmount)}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Transaction saved successfully
+                  {hasRedirectData ? "Transaction saved successfully" : "Latest dashboard summary"}
                 </p>
               </div>
             </div>
@@ -195,18 +243,12 @@ export default function PaymentSuccessContent() {
           )}
 
           <div className="flex flex-wrap gap-3 pt-2">
-            <Button asChild className="bg-violet-600 hover:bg-violet-700">
-              <Link href="/dashboard/consultations">Go to Consultations</Link>
+            <Button asChild className="bg-blue-600 hover:bg-blue-700">
+              <Link href={consultationsRedirectHref}>Go to Consultations</Link>
             </Button>
 
             <Button asChild variant="outline">
-              <Link
-                href={
-                  consultationId
-                    ? `/dashboard/consultations?consultationId=${consultationId}`
-                    : "/dashboard/consultations"
-                }
-              >
+              <Link href={consultationsRedirectHref}>
                 View Booking Details
               </Link>
             </Button>

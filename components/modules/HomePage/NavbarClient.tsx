@@ -86,11 +86,14 @@ const NavbarClient = ({
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-200/70 bg-white/45 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/35">
+    <header
+      className="sticky top-0 z-50 border-b border-slate-200/70 bg-white/45 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/35"
+    >
       <div className="mx-auto w-full max-w-7xl px-4 py-3 md:px-6">
-        <div className="flex items-center justify-between gap-3 rounded-[1.35rem] border border-white/60 bg-white/80 px-3 py-2.5 shadow-[0_20px_45px_-28px_rgba(15,23,42,0.45)] backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/70">
+        <div className="relative flex items-center justify-between gap-3 rounded-[1.35rem] border border-white/60 bg-white/80 px-3 py-2.5 shadow-[0_20px_45px_-28px_rgba(15,23,42,0.45)] backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/70 overflow-hidden">
+          <div className="navbar-gradient-motion" aria-hidden="true" />
           <Link href="/" className="group flex min-w-0 items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br from-violet-600 via-fuchsia-600 to-sky-500 text-white shadow-lg shadow-violet-500/25 transition-transform duration-300 group-hover:scale-105">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br from-blue-600 via-cyan-600 to-sky-500 text-white shadow-lg shadow-blue-500/25 transition-transform duration-200 ease-out group-hover:scale-102 group-hover:drop-shadow-[0_2px_12px_rgba(59,130,246,0.25)]">
               <Sparkles className="size-5" />
             </div>
 
@@ -99,7 +102,7 @@ const NavbarClient = ({
                 <p className="truncate text-base font-semibold tracking-tight text-foreground md:text-lg">
                   ConsultEdge
                 </p>
-                <Badge className="hidden border-violet-200 bg-violet-50 text-violet-700 hover:bg-violet-50 dark:border-violet-500/30 dark:bg-violet-500/10 dark:text-violet-200 md:inline-flex">
+                <Badge className="hidden border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-50 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-200 md:inline-flex">
                   Premium
                 </Badge>
               </div>
@@ -117,13 +120,18 @@ const NavbarClient = ({
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`rounded-full px-3 py-2 text-sm font-medium transition-all ${
-                    isActive
-                      ? "bg-linear-to-r from-violet-600 to-cyan-500 text-white shadow-sm"
-                      : "text-muted-foreground hover:bg-violet-50 hover:text-violet-700 dark:hover:bg-slate-800 dark:hover:text-violet-200"
-                  }`}
+                  className={`relative rounded-full px-3 py-2 text-sm font-medium transition-all
+                    ${isActive
+                      ? "bg-linear-to-r from-blue-600 to-cyan-500 text-white shadow-sm"
+                      : "text-muted-foreground hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-slate-800 dark:hover:text-blue-200"}
+                  group
+                  `}
                 >
-                  {item.label}
+                  <span className="relative z-10">{item.label}</span>
+                  <span
+                    className="pointer-events-none absolute left-4 right-4 -bottom-1 h-[2px] w-[calc(100%-2rem)] origin-left scale-x-0 bg-gradient-to-r from-blue-500 to-cyan-400 opacity-80 transition-transform duration-250 ease-out group-hover:scale-x-100"
+                    aria-hidden="true"
+                  />
                 </Link>
               );
             })}
@@ -139,7 +147,7 @@ const NavbarClient = ({
                     variant="ghost"
                     size="icon"
                     onClick={handleThemeToggle}
-                    className="size-9 rounded-full border border-slate-200/80 bg-white/80 text-slate-600 backdrop-blur hover:bg-violet-50 hover:text-violet-700 dark:border-white/10 dark:bg-slate-900/70 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-violet-300"
+                    className="size-9 rounded-full border border-slate-200/80 bg-white/80 text-slate-600 backdrop-blur hover:bg-blue-50 hover:text-blue-700 dark:border-white/10 dark:bg-slate-900/70 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-blue-300"
                   >
                     {isDarkMode ? <Sun className="size-4" /> : <Moon className="size-4" />}
                   </Button>
@@ -154,7 +162,7 @@ const NavbarClient = ({
                   {/* Avatar chip with name tooltip */}
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div className="flex size-9 cursor-default items-center justify-center rounded-full bg-linear-to-br from-violet-600 to-cyan-500 text-xs font-bold text-white shadow-sm ring-2 ring-violet-200/60 dark:ring-violet-500/20">
+                      <div className="flex size-9 cursor-default items-center justify-center rounded-full bg-linear-to-br from-blue-600 to-cyan-500 text-xs font-bold text-white shadow-sm ring-2 ring-blue-200/60 dark:ring-blue-500/20">
                         {getInitials(userLabel)}
                       </div>
                     </TooltipTrigger>
@@ -175,7 +183,7 @@ const NavbarClient = ({
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="size-9 rounded-full border border-slate-200/80 bg-white/80 text-slate-600 backdrop-blur hover:bg-violet-50 hover:text-violet-700 dark:border-white/10 dark:bg-slate-900/70 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-violet-300"
+                          className="size-9 rounded-full border border-slate-200/80 bg-white/80 text-slate-600 backdrop-blur hover:bg-blue-50 hover:text-blue-700 dark:border-white/10 dark:bg-slate-900/70 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-blue-300"
                         >
                           <LayoutDashboard className="size-4" />
                         </Button>
@@ -208,7 +216,7 @@ const NavbarClient = ({
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="size-9 rounded-full border border-slate-200/80 bg-white/80 text-slate-600 backdrop-blur hover:bg-violet-50 hover:text-violet-700 dark:border-white/10 dark:bg-slate-900/70 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-violet-300"
+                          className="size-9 rounded-full border border-slate-200/80 bg-white/80 text-slate-600 backdrop-blur hover:bg-blue-50 hover:text-blue-700 dark:border-white/10 dark:bg-slate-900/70 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-blue-300"
                         >
                           <LogIn className="size-4" />
                         </Button>
@@ -223,7 +231,7 @@ const NavbarClient = ({
                   <Link href="/register">
                     <Button
                       size="sm"
-                      className="rounded-full bg-linear-to-r from-violet-600 to-cyan-500 px-4 text-xs font-semibold hover:from-violet-700 hover:to-cyan-600"
+                      className="rounded-full bg-linear-to-r from-blue-600 to-cyan-500 px-4 text-xs font-semibold hover:from-blue-700 hover:to-cyan-600"
                     >
                       Get Started
                       <ArrowRight className="ml-1.5 size-3.5" />
@@ -245,9 +253,9 @@ const NavbarClient = ({
 
               <SheetContent side="right" className="flex w-[88vw] flex-col border-slate-200/70 bg-background/95 sm:max-w-sm dark:border-white/10 dark:bg-slate-950/95">
                 <SheetHeader className="px-4 pb-2">
-                  <div className="rounded-2xl border border-slate-200/70 bg-linear-to-br from-violet-50 via-white to-cyan-50 p-4 text-left dark:border-white/10 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900">
+                  <div className="rounded-2xl border border-slate-200/70 bg-linear-to-br from-blue-50 via-white to-cyan-50 p-4 text-left dark:border-white/10 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900">
                     <div className="mb-3 flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-linear-to-br from-violet-600 via-fuchsia-600 to-sky-500 text-white shadow-lg shadow-violet-500/20">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-linear-to-br from-blue-600 via-cyan-600 to-sky-500 text-white shadow-lg shadow-blue-500/20">
                         <Sparkles className="size-5" />
                       </div>
                       <div>
@@ -277,8 +285,8 @@ const NavbarClient = ({
                           href={item.href}
                           className={`rounded-xl border px-4 py-3 text-sm font-medium transition ${
                             isActive
-                              ? "border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-500/30 dark:bg-violet-500/10 dark:text-violet-200"
-                              : "border-border/60 text-foreground hover:bg-violet-50 hover:text-violet-700 dark:hover:bg-slate-800 dark:hover:text-violet-200"
+                              ? "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-200"
+                              : "border-border/60 text-foreground hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-slate-800 dark:hover:text-blue-200"
                           }`}
                         >
                           {item.label}
@@ -313,7 +321,7 @@ const NavbarClient = ({
                       <form action={logoutAction}>
                         <Button
                           type="submit"
-                          className="w-full rounded-full bg-linear-to-r from-violet-600 to-cyan-500 hover:from-violet-700 hover:to-cyan-600"
+                          className="w-full rounded-full bg-linear-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600"
                         >
                           <LogOut className="mr-2 size-4" />
                           Logout
@@ -333,7 +341,7 @@ const NavbarClient = ({
 
                       <SheetClose asChild>
                         <Link href="/register" className="block">
-                          <Button className="w-full rounded-full bg-linear-to-r from-violet-600 to-cyan-500 hover:from-violet-700 hover:to-cyan-600">
+                          <Button className="w-full rounded-full bg-linear-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600">
                             Get Started
                             <ArrowRight className="ml-2 size-4" />
                           </Button>

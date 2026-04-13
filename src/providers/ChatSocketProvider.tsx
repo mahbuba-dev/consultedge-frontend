@@ -6,13 +6,16 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import type { Socket } from "socket.io-client";
 import { toast } from "sonner";
 
-import { getChatSocketClient } from "@/src/lib/chat/socketClient";
+import {
+  type ChatSocketConnectionState,
+  getChatSocketClient,
+} from "@/src/lib/chat/socketClient";
 import { getMe } from "@/src/services/auth.services";
 import {
   getParticipantDisplayName,
@@ -27,7 +30,6 @@ import type {
   ChatRoom,
   ChatRole,
   PresenceState,
-  SocketAuthPayload,
   TypingState,
 } from "@/src/types/chat.types";
 
@@ -45,15 +47,24 @@ type CurrentChatUser = {
   profilePhoto?: string | null;
 };
 
+type ChatEventHandler = (payload: any) => void;
+
 type ChatSocketContextValue = {
-  socket: Socket | null;
   currentUser: CurrentChatUser | null;
+  connectionState: ChatSocketConnectionState;
   isConnected: boolean;
+  isFallbackPolling: boolean;
   presenceMap: Record<string, PresenceState>;
   typingState: Record<string, TypingState[]>;
   activeRoomId: string | null;
+  roomSubscriptions: Record<string, "subscribed" | "unsubscribed">;
   setActiveRoomId: React.Dispatch<React.SetStateAction<string | null>>;
+  subscribeRoom: (roomId: string) => void;
+  unsubscribeRoom: (roomId: string) => void;
   markRoomAsRead: (roomId: string) => void;
+  emit: (event: string, payload?: unknown) => void;
+  onEvent: (event: string, handler: ChatEventHandler) => void;
+  offEvent: (event: string, handler: ChatEventHandler) => void;
   incomingCall: IncomingCallPayload | null;
   setIncomingCall: React.Dispatch<React.SetStateAction<IncomingCallPayload | null>>;
   clearIncomingCall: () => void;
@@ -61,13 +72,20 @@ type ChatSocketContextValue = {
 
 const ChatSocketContext = createContext<ChatSocketContextValue | null>(null);
 
+const isRealtimeConnected = (state: ChatSocketConnectionState) => state === "connected";
+
 export function ChatSocketProvider({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient();
-  const [socket, setSocket] = useState<Socket | null>(null);
-  const [isConnected, setIsConnected] = useState(false);
+  const previousConnectionStateRef = useRef<ChatSocketConnectionState>("disconnected");
+
+  const [connectionState, setConnectionState] =
+    useState<ChatSocketConnectionState>("disconnected");
   const [presenceMap, setPresenceMap] = useState<Record<string, PresenceState>>({});
   const [typingState, setTypingState] = useState<Record<string, TypingState[]>>({});
   const [activeRoomId, setActiveRoomId] = useState<string | null>(null);
+  const [roomSubscriptions, setRoomSubscriptions] = useState<
+    Record<string, "subscribed" | "unsubscribed">
+  >({});
   const [incomingCall, setIncomingCall] = useState<IncomingCallPayload | null>(null);
 
   const { data: profile } = useQuery<IUserProfile>({
@@ -123,34 +141,89 @@ export function ChatSocketProvider({ children }: { children: React.ReactNode }) 
   const markRoomAsRead = useCallback(
     (roomId: string) => {
       queryClient.setQueriesData({ queryKey: ["chat-rooms"] }, (current) =>
-        updateRoomsCache(current as ChatRoom[] | { data?: ChatRoom[] } | undefined, (rooms) =>
-          markChatRoomAsRead(rooms, roomId),
+        updateRoomsCache(
+          current as ChatRoom[] | { data?: ChatRoom[] } | undefined,
+          (rooms) => markChatRoomAsRead(rooms, roomId),
         ),
       );
     },
     [queryClient, updateRoomsCache],
   );
 
-  useEffect(() => {
-    if (!currentUser) {
+  const subscribeRoom = useCallback((roomId: string) => {
+    if (!roomId) {
       return;
     }
 
-    const authPayload: SocketAuthPayload = {
-      userId: currentUser.userId,
-      role: currentUser.role,
-    };
+    const client = getChatSocketClient();
+    client?.subscribeRoom(roomId);
 
-    const client = getChatSocketClient(authPayload);
+    setRoomSubscriptions((current) => ({
+      ...current,
+      [roomId]: "subscribed",
+    }));
+  }, []);
+
+  const unsubscribeRoom = useCallback((roomId: string) => {
+    if (!roomId) {
+      return;
+    }
+
+    const client = getChatSocketClient();
+    client?.unsubscribeRoom(roomId);
+
+    setRoomSubscriptions((current) => ({
+      ...current,
+      [roomId]: "unsubscribed",
+    }));
+  }, []);
+
+  const emit = useCallback((event: string, payload?: unknown) => {
+    const client = getChatSocketClient();
+    client?.emit(event, payload);
+  }, []);
+
+  const onEvent = useCallback((event: string, handler: ChatEventHandler) => {
+    const client = getChatSocketClient();
+    client?.on(event, handler);
+  }, []);
+
+  const offEvent = useCallback((event: string, handler: ChatEventHandler) => {
+    const client = getChatSocketClient();
+    client?.off(event, handler);
+  }, []);
+
+  useEffect(() => {
+    if (!currentUser) {
+      const client = getChatSocketClient();
+      client?.disconnect();
+      setConnectionState("disconnected");
+      return;
+    }
+
+    const client = getChatSocketClient();
 
     if (!client) {
       return;
     }
 
-    setSocket(client);
+    const handleConnectionStateChange = (nextState: ChatSocketConnectionState) => {
+      const previous = previousConnectionStateRef.current;
+      previousConnectionStateRef.current = nextState;
+      setConnectionState(nextState);
 
-    const handleConnect = () => setIsConnected(true);
-    const handleDisconnect = () => setIsConnected(false);
+      if (nextState === "connected" && (previous === "reconnecting" || previous === "disconnected")) {
+        toast.success("Realtime connected", {
+          description: "Live chat updates are active again.",
+        });
+      }
+
+      if (nextState === "reconnecting" && previous !== "reconnecting") {
+        toast.warning("Realtime reconnecting", {
+          description: "Switching to polling fallback until the socket recovers.",
+        });
+      }
+    };
 
     const handleReceiveMessage = (payload: any) => {
       const message = normalizeChatMessage(payload);
@@ -176,7 +249,7 @@ export function ChatSocketProvider({ children }: { children: React.ReactNode }) 
             message,
             currentUserId: currentUser.userId,
             activeRoomId,
-            roomData: payload?.room ?? payload,
+            roomData: payload?.room,
           }),
         ),
       );
@@ -261,7 +334,7 @@ export function ChatSocketProvider({ children }: { children: React.ReactNode }) 
       const callNotice: ChatMessage = {
         id: `call-${payload?.callId ?? roomId}-${Date.now()}`,
         roomId,
-        text: `${payload?.callerName || "A client"} started a call`,
+        text: `${payload?.callerName || "A participant"} started a call`,
         type: "SYSTEM",
         createdAt: new Date().toISOString(),
         senderId: callerId ?? "system",
@@ -284,7 +357,7 @@ export function ChatSocketProvider({ children }: { children: React.ReactNode }) 
             message: callNotice,
             currentUserId: currentUser.userId,
             activeRoomId,
-            roomData: payload?.room ?? payload,
+            roomData: payload?.room,
           }),
         ),
       );
@@ -297,10 +370,14 @@ export function ChatSocketProvider({ children }: { children: React.ReactNode }) 
       });
 
       if (activeRoomId !== roomId) {
-        toast.message(`Incoming call from ${payload?.callerName || "a client"}`, {
+        toast.message(`Incoming call from ${payload?.callerName || "a participant"}`, {
           description: "Open the room to answer the secure consultation call.",
         });
       }
+    };
+
+    const handleCallUpdated = (_payload: any) => {
+      // Call state updates are handled by the call hook and REST responses.
     };
 
     const handleCallEnded = () => {
@@ -308,29 +385,44 @@ export function ChatSocketProvider({ children }: { children: React.ReactNode }) 
     };
 
     const handleChatError = (payload: any) => {
-      toast.error(payload?.message || "A realtime chat error occurred.");
+      const message = String(payload?.message || "A realtime chat error occurred.");
+      const statusCode = Number(payload?.status ?? payload?.code ?? 0);
+
+      if (
+        statusCode === 401 ||
+        /token expired|unauthorized|invalid token/i.test(message)
+      ) {
+        toast.error("Your session expired", {
+          description: "Please log in again to continue realtime chat.",
+        });
+
+        if (typeof window !== "undefined") {
+          window.location.href = "/login";
+        }
+
+        return;
+      }
+
+      toast.error(message);
     };
 
-    client.on("connect", handleConnect);
-    client.on("disconnect", handleDisconnect);
+    client.onStateChange(handleConnectionStateChange);
     client.on("receive_message", handleReceiveMessage);
     client.on("presence_update", handlePresenceUpdate);
     client.on("typing", handleTyping);
     client.on("call_started", handleCallStarted);
+    client.on("call_updated", handleCallUpdated);
     client.on("call_ended", handleCallEnded);
     client.on("chat_error", handleChatError);
-
-    if (!client.connected) {
-      client.connect();
-    }
+    client.connect();
 
     return () => {
-      client.off("connect", handleConnect);
-      client.off("disconnect", handleDisconnect);
+      client.offStateChange(handleConnectionStateChange);
       client.off("receive_message", handleReceiveMessage);
       client.off("presence_update", handlePresenceUpdate);
       client.off("typing", handleTyping);
       client.off("call_started", handleCallStarted);
+      client.off("call_updated", handleCallUpdated);
       client.off("call_ended", handleCallEnded);
       client.off("chat_error", handleChatError);
     };
@@ -338,27 +430,39 @@ export function ChatSocketProvider({ children }: { children: React.ReactNode }) 
 
   const value = useMemo<ChatSocketContextValue>(
     () => ({
-      socket,
       currentUser,
-      isConnected,
+      connectionState,
+      isConnected: isRealtimeConnected(connectionState),
+      isFallbackPolling: connectionState !== "connected",
       presenceMap,
       typingState,
       activeRoomId,
+      roomSubscriptions,
       setActiveRoomId,
+      subscribeRoom,
+      unsubscribeRoom,
       markRoomAsRead,
+      emit,
+      onEvent,
+      offEvent,
       incomingCall,
       setIncomingCall,
       clearIncomingCall: () => setIncomingCall(null),
     }),
     [
-      socket,
-      currentUser,
-      isConnected,
-      presenceMap,
-      typingState,
       activeRoomId,
-      markRoomAsRead,
+      connectionState,
+      currentUser,
+      emit,
       incomingCall,
+      markRoomAsRead,
+      offEvent,
+      onEvent,
+      presenceMap,
+      roomSubscriptions,
+      subscribeRoom,
+      typingState,
+      unsubscribeRoom,
     ],
   );
 

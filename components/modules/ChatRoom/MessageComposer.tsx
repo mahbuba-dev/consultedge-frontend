@@ -73,7 +73,7 @@ export default function MessageComposer({
 
         <Button
           type="button"
-          className="bg-violet-600 hover:bg-violet-700"
+          className="bg-blue-600 hover:bg-blue-700"
           disabled={disabled || isSending || !text.trim()}
           onClick={() => void handleSubmit()}
         >

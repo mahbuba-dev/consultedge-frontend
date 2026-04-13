@@ -1,3 +1,11 @@
+// Delete a message from a chat room
+export const deleteRoomMessage = async (roomId: string, messageId: string) => {
+  const response = await httpClient.delete<{ messageId: string; success: boolean; message: string }>(
+    `/chat/rooms/${roomId}/messages/${messageId}`,
+    { silent: true }
+  );
+  return response.data;
+};
 import { httpClient } from "../lib/axious/httpClient";
 import type {
   ChatAttachment,
@@ -83,12 +91,13 @@ export const normalizeChatRoom = (value: any): ChatRoom => {
   const raw = value?.room ?? value?.data ?? value;
   const participants = toArray(raw?.participants ?? raw?.members ?? raw?.users).map(normalizeParticipant);
   const lastMessage = raw?.lastMessage ? normalizeChatMessage(raw.lastMessage) : null;
+  const resolvedRoomId = raw?.id ?? raw?.roomId ?? raw?.chatRoomId;
 
   const expertParticipant = participants.find((participant) => participant.role === "EXPERT");
   const clientParticipant = participants.find((participant) => participant.role === "CLIENT");
 
   return {
-    id: String(raw?.id ?? raw?.roomId ?? crypto.randomUUID()),
+    id: resolvedRoomId ? String(resolvedRoomId) : "",
     name:
       raw?.name ??
       raw?.title ??
@@ -166,6 +175,7 @@ export const upsertChatRoomActivity = ({
   const updatedRooms = [...rooms];
   const roomIndex = updatedRooms.findIndex((room) => room.id === message.roomId);
   const normalizedRoom = roomData ? normalizeChatRoom(roomData) : null;
+  const safeNormalizedRoom = normalizedRoom?.id ? normalizedRoom : null;
   const shouldIncrementUnread =
     Boolean(message.senderId) &&
     Boolean(currentUserId) &&
@@ -176,9 +186,11 @@ export const upsertChatRoomActivity = ({
     const existingRoom = updatedRooms[roomIndex];
     updatedRooms[roomIndex] = {
       ...existingRoom,
-      ...normalizedRoom,
+      ...(safeNormalizedRoom ?? {}),
       participants:
-        normalizedRoom?.participants?.length ? normalizedRoom.participants : existingRoom.participants,
+        safeNormalizedRoom?.participants?.length
+          ? safeNormalizedRoom.participants
+          : existingRoom.participants,
       lastMessage: message,
       updatedAt: message.createdAt,
       unreadCount: shouldIncrementUnread
@@ -191,8 +203,8 @@ export const upsertChatRoomActivity = ({
     return sortChatRooms(updatedRooms);
   }
 
-  const fallbackParticipants = normalizedRoom?.participants?.length
-    ? normalizedRoom.participants
+  const fallbackParticipants = safeNormalizedRoom?.participants?.length
+    ? safeNormalizedRoom.participants
     : message.sender
       ? [message.sender]
       : [];
@@ -200,7 +212,7 @@ export const upsertChatRoomActivity = ({
   updatedRooms.unshift({
     id: message.roomId,
     name:
-      normalizedRoom?.name ||
+      safeNormalizedRoom?.name ||
       fallbackParticipants.map((participant) => getParticipantDisplayName(participant)).join(", ") ||
       "Conversation",
     participants: fallbackParticipants,
@@ -208,11 +220,11 @@ export const upsertChatRoomActivity = ({
     unreadCount: shouldIncrementUnread ? 1 : 0,
     updatedAt: message.createdAt,
     expertId:
-      normalizedRoom?.expertId ??
+      safeNormalizedRoom?.expertId ??
       fallbackParticipants.find((participant) => participant.role === "EXPERT")?.userId ??
       fallbackParticipants.find((participant) => participant.role === "EXPERT")?.id,
     clientId:
-      normalizedRoom?.clientId ??
+      safeNormalizedRoom?.clientId ??
       fallbackParticipants.find((participant) => participant.role === "CLIENT")?.userId ??
       fallbackParticipants.find((participant) => participant.role === "CLIENT")?.id,
   });
@@ -231,7 +243,11 @@ export const getChatRooms = async (params?: Record<string, unknown>): Promise<Ch
     );
 
     const rooms = toArray(response.data, ["rooms", "items", "data"]);
-    return sortChatRooms(rooms.map(normalizeChatRoom));
+    return sortChatRooms(
+      rooms
+        .map(normalizeChatRoom)
+        .filter((room) => Boolean(room.id)),
+    );
   } catch (error: any) {
     if (error?.response?.status === 404) {
       return [];
@@ -276,7 +292,10 @@ export const findOrCreateRoomForExpert = async (participantId: string): Promise<
       );
 
       if (response.data) {
-        return normalizeChatRoom(response.data);
+        const normalizedRoom = normalizeChatRoom(response.data);
+        if (normalizedRoom.id) {
+          return normalizedRoom;
+        }
       }
     } catch {
       // Try the next supported payload shape.

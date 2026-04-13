@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { IExpert } from "@/src/types/expert.types";
+import { cn } from "@/src/lib/utils";
 
 const getInitials = (name: string) => {
   return name
@@ -40,45 +41,69 @@ export default function ExpertCard({ expert }: { expert: IExpert }) {
       ? `${expert.bio.slice(0, 150)}...`
       : expert.bio
     : "Focused 1:1 guidance for strategy, growth, operations, and decision-making support.";
+  const detailCards = [
+    {
+      label: "Experience",
+      value: `${expert.experience} years`,
+      icon: BriefcaseBusiness,
+      tone: "text-blue-700 bg-blue-50/80 dark:text-blue-300 dark:bg-blue-500/10",
+    },
+    {
+      label: "Session fee",
+      value: formatCurrency(expertPrice),
+      icon: Wallet,
+      tone: "text-cyan-700 bg-cyan-50/80 dark:text-cyan-300 dark:bg-cyan-500/10",
+    },
+    {
+      label: "Profile",
+      value: expert.isVerified ? "Trusted profile" : "Open for consultation",
+      icon: ShieldCheck,
+      tone: "text-sky-700 bg-sky-50/80 dark:text-sky-300 dark:bg-sky-500/10",
+    },
+  ];
 
   return (
-    <Card className="group overflow-hidden border-violet-200/70 bg-white/90 shadow-[0_20px_50px_-24px_rgba(109,40,217,0.35)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_28px_80px_-28px_rgba(109,40,217,0.5)]">
-      <div className="relative overflow-hidden border-b bg-linear-to-br from-slate-950 via-violet-950 to-fuchsia-900 p-4 text-white">
+    <Card className="group flex h-full flex-col overflow-hidden border-blue-200/70 bg-white/92 shadow-[0_20px_50px_-24px_rgba(37,99,235,0.35)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_28px_80px_-28px_rgba(37,99,235,0.5)] dark:border-white/10 dark:bg-slate-900/92 dark:shadow-[0_22px_60px_-30px_rgba(15,23,42,0.9)]">
+      <div className="relative overflow-hidden border-b border-blue-100/70 bg-linear-to-br from-slate-950 via-blue-950 to-cyan-900 p-4 text-white dark:border-white/10">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.16),transparent_0%,transparent_42%)]" />
         <div className="relative space-y-4">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex items-start gap-3">
-              <Avatar size="lg" className="size-16 border-2 border-white/20 ring-2 ring-white/10">
-                {expert.profilePhoto ? (
-                  <AvatarImage src={expert.profilePhoto} alt={expert.fullName} />
-                ) : null}
-                <AvatarFallback className="font-semibold text-slate-900">
-                  {getInitials(expert.fullName)}
-                </AvatarFallback>
-              </Avatar>
 
-              <div className="min-w-0 space-y-2">
-                <div className="flex flex-wrap items-center gap-2">
-                 
-
-                  {expert.isVerified ? (
-                    <Badge className="bg-emerald-500/20 text-white hover:bg-emerald-500/20">
-                      <BadgeCheck className="mr-1 size-3.5" />
-                      Verified
-                    </Badge>
+          <div className="flex items-start gap-3">
+            <div className="relative flex flex-col items-center">
+              <div className="relative">
+                <Avatar size="xl" className="border-2 border-white/20 ring-2 ring-white/10">
+                  {expert.profilePhoto ? (
+                    <AvatarImage src={expert.profilePhoto} alt={expert.fullName} />
                   ) : null}
-                </div>
-
-                <div>
-                  <h2 className="text-xl font-semibold tracking-tight text-white">
-                    {expert.fullName}
-                  </h2>
-                  <p className="text-sm text-white/80">{expert.title}</p>
-                </div>
+                  <AvatarFallback className="font-semibold text-slate-900">
+                    {getInitials(expert.fullName)}
+                  </AvatarFallback>
+                </Avatar>
+                {/* Animated Active icon, attached inside bottom-left of avatar */}
+                <span className="absolute z-20 bottom-1 left-1 flex items-end justify-start">
+                  <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-emerald-900/90 ring-2 ring-white/70 shadow-lg">
+                    <span className="relative flex h-2 w-2">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+                      <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400 shadow" />
+                    </span>
+                  </span>
+                </span>
               </div>
             </div>
-
-            <div className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold text-white backdrop-blur">
+            <div className="min-w-0 space-y-2 flex-1">
+              <div className="flex items-center gap-2">
+                <h2 className="text-xl font-semibold tracking-tight text-white">
+                  {expert.fullName}
+                </h2>
+                {expert.isVerified && (
+                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-emerald-900/60 ring-2 ring-white/20">
+                    <BadgeCheck className="size-5 text-emerald-300" />
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-white/80">{expert.title}</p>
+            </div>
+            <div className="ml-auto rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold text-white backdrop-blur">
               {formatCurrency(expertPrice)}
             </div>
           </div>
@@ -94,52 +119,41 @@ export default function ExpertCard({ expert }: { expert: IExpert }) {
         </div>
       </div>
 
-      <CardContent className="space-y-4 p-5">
-        <p className="min-h-[72px] text-sm leading-6 text-muted-foreground">{shortBio}</p>
+      <CardContent className="flex flex-1 flex-col space-y-4 p-5">
+        <p className="min-h-18 text-sm leading-6 text-muted-foreground dark:text-slate-300/80">{shortBio}</p>
 
         <div className="grid gap-3 sm:grid-cols-3">
-          <div className="rounded-2xl border bg-violet-50/80 p-3">
-            <div className="mb-1 flex items-center gap-2 text-violet-700">
-              <BriefcaseBusiness className="h-4 w-4" />
-              <span className="text-[11px] font-semibold uppercase tracking-wide">
-                Experience
-              </span>
-            </div>
-            <p className="text-sm font-semibold text-foreground">{expert.experience} years</p>
-          </div>
+          {detailCards.map((item) => {
+            const Icon = item.icon;
 
-          <div className="rounded-2xl border bg-fuchsia-50/80 p-3">
-            <div className="mb-1 flex items-center gap-2 text-fuchsia-700">
-              <Wallet className="h-4 w-4" />
-              <span className="text-[11px] font-semibold uppercase tracking-wide">
-                Session fee
-              </span>
-            </div>
-            <p className="text-sm font-semibold text-foreground">{formatCurrency(expertPrice)}</p>
-          </div>
-
-          <div className="rounded-2xl border bg-sky-50/80 p-3">
-            <div className="mb-1 flex items-center gap-2 text-sky-700">
-              <ShieldCheck className="h-4 w-4" />
-              <span className="text-[11px] font-semibold uppercase tracking-wide">
-                Profile
-              </span>
-            </div>
-            <p className="text-sm font-semibold text-foreground">
-              {expert.isVerified ? "Verified expert" : "Open for consultation"}
-            </p>
-          </div>
+            return (
+              <div
+                key={item.label}
+                className="rounded-2xl border border-border/70 bg-background/80 p-3 dark:border-white/10 dark:bg-slate-950/70"
+              >
+                <div className={cn("mb-2 inline-flex rounded-xl p-2", item.tone)}>
+                  <Icon className="h-4 w-4" />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    {item.label}
+                  </p>
+                  <p className="text-sm font-semibold text-foreground">{item.value}</p>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          <Button asChild className="flex-1 bg-violet-600 text-white hover:bg-violet-700">
+        <div className="mt-auto grid gap-2 sm:grid-cols-2">
+          <Button asChild className="w-full bg-blue-600 text-white hover:bg-blue-700">
             <Link href={`/experts/${expert.id}`}>
               View profile
               <ArrowUpRight className="ml-2 size-4" />
             </Link>
           </Button>
 
-          <Button asChild variant="outline" className="flex-1 border-violet-200 text-violet-700 hover:bg-violet-50">
+          <Button asChild variant="outline" className="w-full border-blue-200 text-blue-700 hover:bg-blue-50 dark:border-white/10 dark:bg-slate-950/60 dark:text-blue-200 dark:hover:bg-slate-800/80 dark:hover:text-blue-100">
             <Link href={`/experts/${expert.id}#book-session`} scroll>
               <CalendarDays className="mr-2 size-4" />
               Book now

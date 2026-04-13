@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, parseISO } from "date-fns";
+
+import LocalizedDateTime from "./LocalizedDateTime";
 import { CalendarDays, PencilLine, PlusCircle, RefreshCw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -56,66 +58,21 @@ const getScheduleEnd = (
 };
 
 const parseDateTimeValue = (value: string) => {
-  const parsed = parseISO(value);
+  let parsed = parseISO(value);
   if (!Number.isNaN(parsed.getTime())) {
     return parsed;
   }
-
   const fallback = new Date(value);
   if (!Number.isNaN(fallback.getTime())) {
     return fallback;
   }
-
   return null;
 };
 
-const formatScheduleDate = (
-  item: IExpertAvailability,
-  scheduleLookup?: Map<string, { startDateTime?: string | null; endDateTime?: string | null }>,
-) => {
-  const start = getScheduleStart(item, scheduleLookup);
 
-  if (!start) {
-    return "Date unavailable";
-  }
-
-  const startDate = parseDateTimeValue(start);
-  if (!startDate) {
-    return "Date unavailable";
-  }
-
-  return format(startDate, "EEEE, MMMM d, yyyy");
-};
-
-const formatScheduleTime = (
-  item: IExpertAvailability,
-  scheduleLookup?: Map<string, { startDateTime?: string | null; endDateTime?: string | null }>,
-) => {
-  const start = getScheduleStart(item, scheduleLookup);
-
-  if (!start) {
-    return "Time unavailable";
-  }
-
-  const startDate = parseDateTimeValue(start);
-  if (!startDate) {
-    return "Time unavailable";
-  }
-
-  const startTime = format(startDate, "h:mm a");
-  const end = getScheduleEnd(item, scheduleLookup);
-
-  if (!end) {
-    return startTime;
-  }
-
-  const endDate = parseDateTimeValue(end);
-  if (!endDate) {
-    return startTime;
-  }
-
-  return `${startTime} - ${format(endDate, "h:mm a")}`;
-};
+// Helper to get ISO strings for start/end
+const getScheduleStartISO = (item: IExpertAvailability, scheduleLookup: Map<string, { startDateTime?: string | null; endDateTime?: string | null; }> | undefined) => getScheduleStart(item, scheduleLookup);
+const getScheduleEndISO = (item: IExpertAvailability, scheduleLookup: Map<string, { startDateTime?: string | null; endDateTime?: string | null; }> | undefined) => getScheduleEnd(item, scheduleLookup);
 
 export default function MyScheduleList() {
   const queryClient = useQueryClient();
@@ -259,7 +216,7 @@ export default function MyScheduleList() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-2">
-          <Badge className="bg-violet-100 text-violet-700 hover:bg-violet-100">
+          <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">
             {totalSchedules} total slot{totalSchedules === 1 ? "" : "s"}
           </Badge>
           <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
@@ -292,12 +249,10 @@ export default function MyScheduleList() {
               <CardContent className="space-y-4 p-5">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-base font-semibold text-foreground">
-                      {formatScheduleDate(item, scheduleLookup)}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {formatScheduleTime(item, scheduleLookup)}
-                    </p>
+                    <LocalizedDateTime
+                      start={getScheduleStartISO(item, scheduleLookup)}
+                      end={getScheduleEndISO(item, scheduleLookup)}
+                    />
                   </div>
 
                   <Badge

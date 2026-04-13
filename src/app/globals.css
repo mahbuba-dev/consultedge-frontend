@@ -1,3 +1,25 @@
+@keyframes consultedge-gradient-motion {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.navbar-gradient-motion {
+  background: linear-gradient(90deg, rgba(37,99,235,0.10) 0%, rgba(6,182,212,0.10) 50%, rgba(59,130,246,0.10) 100%);
+  background-size: 200% 200%;
+  animation: consultedge-gradient-motion 28s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -215,6 +237,99 @@
 .consultedge-banner-copy {
   animation: consultedge-banner-copy 650ms cubic-bezier(0.22, 1, 0.36, 1);
   will-change: transform, opacity;
+}
+
+@keyframes consultedge-reveal-up {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 22px, 0) scale(0.985);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes consultedge-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  50% {
+    transform: translate3d(0, -5px, 0);
+  }
+}
+
+.consultedge-reveal {
+  opacity: 0;
+  transform: translate3d(0, 22px, 0) scale(0.985);
+}
+
+.consultedge-reveal--visible {
+  animation: consultedge-reveal-up 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--consultedge-delay, 0ms);
+  will-change: transform, opacity;
+}
+
+.consultedge-card-glow {
+  transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 300ms ease;
+}
+
+.consultedge-card-glow:hover {
+  transform: translate3d(0, -4px, 0);
+  box-shadow: 0 20px 44px -28px rgba(37, 99, 235, 0.35);
+}
+
+.consultedge-float {
+  animation: consultedge-float 7s ease-in-out infinite;
+  will-change: transform;
+}
+
+.consultedge-float--delay {
+  animation-delay: -3.5s;
+}
+
+@keyframes consultedge-route-enter {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+    filter: blur(1.5px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    filter: blur(0);
+  }
+}
+
+.consultedge-route-enter {
+  animation: consultedge-route-enter 420ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform, opacity, filter;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .consultedge-reveal,
+  .consultedge-reveal--visible {
+    animation: none !important;
+    opacity: 1;
+    transform: none;
+  }
+
+  .consultedge-float,
+  .consultedge-float--delay,
+  .consultedge-card-glow {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+
+  .consultedge-route-enter {
+    animation: none !important;
+    filter: none !important;
+  }
 }
 
 @layer base {

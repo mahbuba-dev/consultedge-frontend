@@ -47,7 +47,7 @@ export default function MessagesInboxButton({ role }: MessagesInboxButtonProps) 
       variant={isActive ? "default" : "outline"}
       className={cn(
         "relative gap-2",
-        isActive ? "bg-violet-600 text-white hover:bg-violet-700" : undefined,
+        isActive ? "bg-blue-600 text-white hover:bg-blue-700" : undefined,
       )}
     >
       <Link href={href} aria-label={`Open messages${totalUnread ? ` (${totalUnread} unread)` : ""}`}>

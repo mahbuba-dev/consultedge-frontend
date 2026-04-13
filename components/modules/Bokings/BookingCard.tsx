@@ -52,8 +52,8 @@ export default function BookingCard({
       className={cn(
         "h-auto w-full justify-between rounded-2xl border px-4 py-3 text-left transition-all duration-300",
         isSelected
-          ? "border-violet-500 bg-violet-600 text-white shadow-lg shadow-violet-500/20 hover:bg-violet-600"
-          : "border-violet-200 bg-white/90 hover:border-violet-300 hover:bg-violet-50",
+          ? "border-blue-500 bg-blue-600 text-white shadow-lg shadow-blue-500/20 hover:bg-blue-600"
+          : "border-blue-200 bg-white/90 hover:border-blue-300 hover:bg-blue-50",
       )}
     >
       <span className="flex items-center gap-2 text-sm font-medium">

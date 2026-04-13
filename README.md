@@ -34,3 +34,27 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Realtime Transport
+
+This project uses a hybrid realtime architecture for chat:
+
+- Native WebSocket client to `/ws/chat` for live events.
+- REST API for sending text messages and file attachments.
+- Automatic polling fallback (`4s`) when websocket is disconnected/reconnecting.
+
+### Reliability Design
+
+- Connection states: `connecting`, `connected`, `reconnecting`, `disconnected`.
+- Exponential reconnect backoff: `1s`, `2s`, `4s`, ... capped at `20s`.
+- Heartbeat: client sends `{"type":"ping"}` every `25s` and expects `pong`.
+- Auto-reconnect if pong is missed twice.
+- Per-room subscribe lifecycle using:
+	- `{"type":"subscribe","roomId":"..."}`
+	- `{"type":"unsubscribe","roomId":"..."}`
+
+### Secure Auth Handshake
+
+- Preferred auth is cookie-based browser handshake.
+- Fallback mode appends `?token=<accessToken>` when a browser-accessible token exists.
+- No `userId` or `role` are sent in websocket query parameters.

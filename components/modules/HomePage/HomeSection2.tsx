@@ -1,43 +1,66 @@
 import Link from "next/link";
-import { ArrowRight, CalendarRange, CheckCircle2, Rocket, ShieldCheck } from "lucide-react";
+import {
+  ArrowRight,
+  BookOpen,
+  Briefcase,
+  Building2,
+  Lightbulb,
+  Rocket,
+  ShieldCheck,
+  Star,
+  Users,
+  Zap,
+} from "lucide-react";
 
 import TestimonialCard from "@/components/modules/shared/TestimonialCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import type { ITestimonial } from "@/src/types/testimonial.types";
 
-const featureCards = [
+const audiences = [
   {
-    title: "Verified expert network",
-    description: "Review trusted profiles across strategy, technology, operations, and growth-focused domains.",
-    icon: ShieldCheck,
-    tone: "from-cyan-100 to-sky-100 text-cyan-700",
+    title: "Entrepreneurs",
+    description: "Turn bold ideas into executable strategies with guidance from proven business leaders.",
+    icon: Lightbulb,
+    accent: "text-blue-600 bg-blue-50 dark:bg-blue-950/50",
   },
   {
-    title: "Fast booking experience",
-    description: "Choose a time, confirm securely, and keep your consultation details organized in one place.",
-    icon: CalendarRange,
-    tone: "from-violet-100 to-fuchsia-100 text-violet-700",
+    title: "Small Business Owners",
+    description: "Get practical, actionable advice on operations, growth, and scaling your business.",
+    icon: Building2,
+    accent: "text-sky-600 bg-sky-50 dark:bg-sky-950/50",
   },
   {
-    title: "Built for momentum",
-    description: "A modern platform experience that helps teams move from questions to confident next steps.",
+    title: "Startup Founders",
+    description: "Move faster with investor-ready insights, product strategy, and go-to-market expertise.",
     icon: Rocket,
-    tone: "from-emerald-100 to-cyan-100 text-emerald-700",
+    accent: "text-cyan-600 bg-cyan-50 dark:bg-cyan-950/50",
+  },
+  {
+    title: "Students & Career Seekers",
+    description: "Get mentorship on internships, career pivots, and navigating competitive industries.",
+    icon: BookOpen,
+    accent: "text-indigo-600 bg-indigo-50 dark:bg-indigo-950/50",
+  },
+  {
+    title: "Working Professionals",
+    description: "Access senior experts for quick, high-value answers to complex professional challenges.",
+    icon: Briefcase,
+    accent: "text-blue-700 bg-blue-50 dark:bg-blue-950/50",
+  },
+  {
+    title: "Anyone Seeking Expertise",
+    description: "Whatever your question, find a verified professional who can answer it with clarity.",
+    icon: Zap,
+    accent: "text-sky-700 bg-sky-50 dark:bg-sky-950/50",
   },
 ];
 
-const collaborationHighlights = [
-  "Verified expert profiles and clear specialization",
-  "Secure booking and payment-ready consultation flow",
-  "Simple dashboards for clients, experts, and admins",
+const trustSignals = [
+  { icon: ShieldCheck, label: "Verified experts only", sub: "Every profile is reviewed and credentialed" },
+  { icon: Star, label: "Business-grade quality", sub: "Advice you can act on immediately" },
+  { icon: Users, label: "Built for all professionals", sub: "From students to C-suite executives" },
 ];
 
 type HomeSection2Props = {
@@ -47,105 +70,82 @@ type HomeSection2Props = {
 export default function HomeSection2({ testimonials }: HomeSection2Props) {
   return (
     <>
-      <section className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-        <Card className="overflow-hidden border-slate-900 bg-linear-to-br from-slate-950 via-violet-950 to-cyan-950 text-white shadow-[0_24px_70px_-30px_rgba(124,58,237,0.45)]">
-          <CardContent className="relative space-y-5 p-6 md:p-8">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.08),transparent_40%)]" />
+      <section className="space-y-10">
+        {/* Header */}
+        <div className="mx-auto max-w-2xl space-y-3 text-center">
+          <Badge variant="secondary" className="bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300">
+            Who it's built for
+          </Badge>
+          <h2 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
+            Expert guidance for every professional who moves fast
+          </h2>
+          <p className="text-sm text-muted-foreground md:text-base">
+            ConsultEdge connects you with verified industry professionals across business, technology,
+            finance, marketing, and strategy — so you make smarter decisions, faster.
+          </p>
+        </div>
 
-            <div className="relative space-y-5">
-              <div>
-                <Badge className="mb-3 border-white/15 bg-white/10 text-white hover:bg-white/10">
-                  Platform experience
-                </Badge>
-                <h2 className="text-2xl font-bold tracking-tight md:text-3xl">
-                  Designed for teams that want clarity, speed, and credible advice
-                </h2>
-              </div>
-
-              <p className="text-sm text-slate-200 md:text-base">
-                ConsultEdge blends premium UI, expert discovery, and smooth booking so every
-                consultation feels intentional from the first click.
-              </p>
-
-              <div className="space-y-3">
-                {collaborationHighlights.map((item) => (
-                  <div key={item} className="flex items-start gap-2 rounded-2xl border border-white/10 bg-white/5 p-3">
-                    <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-300" />
-                    <span className="text-sm text-slate-100">{item}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex flex-wrap gap-3">
-                <Link href="/experts">
-                  <Button className="bg-white text-slate-900 hover:bg-white/90">
-                    Explore experts
-                    <ArrowRight className="ml-2 size-4" />
-                  </Button>
-                </Link>
-                <Link href="/register">
-                  <Button
-                    variant="outline"
-                    className="border-white/25 bg-transparent text-white hover:bg-white/10 hover:text-white"
-                  >
-                    Create account
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          {featureCards.map((feature) => {
-            const Icon = feature.icon;
-
+        {/* Audience cards */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {audiences.map((item, index) => {
+            const Icon = item.icon;
             return (
               <Card
-                key={feature.title}
-                className="border-border/60 bg-white/85 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg dark:border-white/10 dark:bg-slate-900/80 dark:shadow-black/20"
+                key={item.title}
+                style={{ animationDelay: `${120 + index * 70}ms` }}
+                className="consultedge-reveal--visible consultedge-card-glow group border-border/60 bg-white/90 shadow-sm dark:border-white/10 dark:bg-slate-900/80"
               >
-                <CardHeader>
-                  <div
-                    className={`mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-linear-to-br ${feature.tone}`}
-                  >
+                <CardContent className="space-y-3 p-5">
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${item.accent}`}>
                     <Icon className="size-5" />
                   </div>
-                  <CardTitle>{feature.title}</CardTitle>
-                  <CardDescription>{feature.description}</CardDescription>
-                </CardHeader>
+                  <p className="font-semibold text-foreground">{item.title}</p>
+                  <p className="text-sm leading-relaxed text-muted-foreground">{item.description}</p>
+                </CardContent>
               </Card>
             );
           })}
+        </div>
 
-          <Card className="border-violet-200/70 bg-linear-to-r from-violet-50 via-white to-cyan-50 shadow-sm sm:col-span-2 dark:border-violet-500/20 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900">
-            <CardContent className="grid gap-4 p-5 md:grid-cols-3 md:p-6">
-              <div>
-                <p className="text-sm font-semibold text-violet-700">Why it feels better</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  A cleaner, smarter consultation journey for modern teams and professionals.
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
-                <p className="text-sm font-semibold text-foreground">Simple discovery</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Find the right expert without friction.
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
-                <p className="text-sm font-semibold text-foreground">Clear next steps</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Keep bookings, payments, and progress easy to follow.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Trust signals + CTA */}
+        <div className="consultedge-reveal--visible rounded-2xl border border-border/60 bg-white/80 shadow-sm dark:border-white/10 dark:bg-slate-900/60 mb-10 md:mb-16 lg:mb-20" style={{ animationDelay: "520ms" }}>
+          <div className="grid gap-6 p-6 md:grid-cols-[1fr_auto] md:items-center md:p-8">
+            <div className="grid gap-5 sm:grid-cols-3">
+              {trustSignals.map((signal) => {
+                const Icon = signal.icon;
+                return (
+                  <div key={signal.label} className="flex items-start gap-3">
+                    <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-950/50">
+                      <Icon className="size-4 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">{signal.label}</p>
+                      <p className="text-xs text-muted-foreground">{signal.sub}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="flex shrink-0 flex-wrap gap-3">
+              <Link
+                href="/experts"
+                className="bg-blue-600 text-white hover:bg-blue-700 inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all"
+              >
+                Browse experts
+                <ArrowRight className="ml-2 size-4" />
+              </Link>
+              <Link
+                href="/register"
+                className="border border-border bg-background hover:bg-muted hover:text-foreground inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all"
+              >
+                Create account
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
 
-      <section className="space-y-6 rounded-[2rem] border bg-linear-to-br from-emerald-50/70 via-white to-cyan-50/60 p-5 shadow-sm dark:border-white/10 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 md:p-6">
+      <section className="space-y-6 rounded-[2rem] border bg-linear-to-br from-emerald-50/70 via-white to-cyan-50/60 p-5 shadow-sm dark:border-white/10 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 md:p-6 mt-10 md:mt-16 lg:mt-20">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
           <div>
             <Badge variant="secondary" className="mb-2 bg-emerald-100 text-emerald-700">
@@ -160,15 +160,15 @@ export default function HomeSection2({ testimonials }: HomeSection2Props) {
           </div>
 
           <div className="grid gap-3 sm:grid-cols-3">
-            <div className="rounded-2xl border border-white/70 bg-white/80 px-4 py-3 text-center">
+            <div className="rounded-2xl border border-border/60 bg-white px-4 py-3 text-center dark:border-white/10 dark:bg-slate-800/70">
               <p className="text-lg font-semibold text-foreground">Real</p>
               <p className="text-xs text-muted-foreground">Client feedback</p>
             </div>
-            <div className="rounded-2xl border border-white/70 bg-white/80 px-4 py-3 text-center">
+            <div className="rounded-2xl border border-border/60 bg-white px-4 py-3 text-center dark:border-white/10 dark:bg-slate-800/70">
               <p className="text-lg font-semibold text-foreground">Fast</p>
               <p className="text-xs text-muted-foreground">Booking experience</p>
             </div>
-            <div className="rounded-2xl border border-white/70 bg-white/80 px-4 py-3 text-center">
+            <div className="rounded-2xl border border-border/60 bg-white px-4 py-3 text-center dark:border-white/10 dark:bg-slate-800/70">
               <p className="text-lg font-semibold text-foreground">Clear</p>
               <p className="text-xs text-muted-foreground">Consultation flow</p>
             </div>

@@ -76,7 +76,7 @@ const AdminDashboardContent = () => {
 
   return (
     <div className="space-y-6">
-      <Card className="overflow-hidden border-0 bg-linear-to-r from-slate-950 via-violet-900 to-indigo-700 text-white shadow-xl">
+      <Card className="overflow-hidden border-0 bg-linear-to-r from-slate-950 via-blue-900 to-indigo-700 text-white shadow-xl">
         <CardContent className="flex flex-col gap-4 p-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="space-y-3">
             <Badge className="border-white/20 bg-white/10 text-white hover:bg-white/10">
@@ -119,7 +119,7 @@ const AdminDashboardContent = () => {
           value={data.expertCount || 0}
           iconName="UserCog"
           description="Registered experts"
-          className="bg-linear-to-br from-violet-50 to-white"
+          className="bg-linear-to-br from-blue-50 to-white"
         />
         <StatsCard
           title="Clients"
@@ -133,7 +133,7 @@ const AdminDashboardContent = () => {
           value={data.consultationCount || 0}
           iconName="CalendarDays"
           description="Booked platform sessions"
-          className="bg-linear-to-br from-fuchsia-50 to-white"
+          className="bg-linear-to-br from-cyan-50 to-white"
         />
         <StatsCard
           title="Revenue"
@@ -183,7 +183,7 @@ const AdminDashboardContent = () => {
 
           <CardContent className="space-y-4">
             <div className="rounded-xl bg-muted/40 p-4">
-              <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-violet-700">
+              <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-blue-700">
                 <TrendingUp className="size-4" />
                 Revenue efficiency
               </div>

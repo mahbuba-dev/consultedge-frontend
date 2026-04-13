@@ -21,12 +21,12 @@ const StatsCard = ({
   return (
     <Card
       className={cn(
-        "relative overflow-hidden rounded-xl border border-border/60 bg-card/90 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg",
+        "relative overflow-hidden rounded-xl border border-border/60 bg-card/90 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg dark:border-white/10 dark:bg-slate-900/80",
         className
       )}
     >
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium text-neutral-700">
+        <CardTitle className="text-sm font-medium text-foreground/85">
           {title}
         </CardTitle>
 
@@ -39,12 +39,12 @@ const StatsCard = ({
       </CardHeader>
 
       <CardContent className="space-y-1">
-        <div className="text-3xl font-bold text-neutral-900 tracking-tight">
+        <div className="text-3xl font-bold tracking-tight text-foreground">
           {value}
         </div>
 
         {description && (
-          <p className="text-xs font-medium text-neutral-600">
+          <p className="text-xs font-medium text-muted-foreground">
             {description}
           </p>
         )}

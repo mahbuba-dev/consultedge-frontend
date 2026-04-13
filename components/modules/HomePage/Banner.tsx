@@ -185,13 +185,13 @@ export default function Banner() {
             </div>
 
             <div className="grid gap-3 md:grid-cols-3">
-              {trustCards.map((item) => {
+              {trustCards.map((item, index) => {
                 const Icon = item.icon;
 
                 return (
                   <div
                     key={item.title}
-                    className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-md"
+                    className={`consultedge-card-glow rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-md ${index % 2 === 0 ? "consultedge-float" : "consultedge-float consultedge-float--delay"}`}
                   >
                     <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-cyan-200">
                       <Icon className="size-4" />

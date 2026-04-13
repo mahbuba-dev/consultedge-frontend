@@ -114,7 +114,7 @@ const ExpertDashboardContent = () => {
 
   return (
     <div className="space-y-6">
-      <Card className="overflow-hidden border-0 bg-linear-to-r from-violet-600 via-indigo-600 to-sky-500 text-white shadow-xl">
+      <Card className="overflow-hidden border-0 bg-linear-to-r from-blue-600 via-indigo-600 to-sky-500 text-white shadow-xl">
         <CardContent className="flex flex-col gap-4 p-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="space-y-3">
             <Badge className="border-white/20 bg-white/10 text-white hover:bg-white/10">
@@ -158,7 +158,7 @@ const ExpertDashboardContent = () => {
           value={data.consultationCount || 0}
           iconName="CalendarDays"
           description="All sessions booked with you"
-          className="bg-linear-to-br from-violet-50 to-white"
+          className="bg-linear-to-br from-blue-50 to-white"
         />
 
         <StatsCard
@@ -282,7 +282,7 @@ const ExpertDashboardContent = () => {
             ) : (
               <div className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
                 <div className="mb-2 flex items-center gap-2 font-medium text-foreground">
-                  <MessageSquareQuote className="size-4 text-violet-600" />
+                  <MessageSquareQuote className="size-4 text-blue-600" />
                   No reviews yet
                 </div>
                 Reviews from completed consultations will appear here automatically.

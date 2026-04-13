@@ -74,7 +74,3 @@ export interface ChatCall {
   startedBy?: string;
 }
 
-export interface SocketAuthPayload {
-  userId: string;
-  role: ChatRole;
-}

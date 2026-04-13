@@ -16,7 +16,7 @@ export default function IndustryTicker({ industries }: IndustryTickerProps) {
     <section className="space-y-5">
       <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
         <div>
-          <Badge variant="secondary" className="mb-2 bg-violet-100 text-violet-700 dark:bg-violet-500/10 dark:text-violet-200">
+          <Badge variant="secondary" className="mb-2 bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-200">
             Industry focus
           </Badge>
           <h2 className="text-2xl font-bold tracking-tight md:text-3xl">Explore top consulting industries</h2>
@@ -31,7 +31,7 @@ export default function IndustryTicker({ industries }: IndustryTickerProps) {
       </div>
 
       {tickerItems.length > 0 ? (
-        <div className="relative overflow-hidden rounded-[2rem] border border-violet-100 bg-linear-to-r from-slate-950 via-violet-950 to-slate-950 px-2 py-3 shadow-lg shadow-violet-500/10 sm:py-4">
+        <div className="relative overflow-hidden rounded-[2rem] border border-blue-100 bg-linear-to-r from-slate-950 via-blue-950 to-slate-950 px-2 py-3 shadow-lg shadow-blue-500/10 sm:py-4">
           <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-linear-to-r from-slate-950 to-transparent sm:w-16" />
           <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-linear-to-l from-slate-950 to-transparent sm:w-16" />
 

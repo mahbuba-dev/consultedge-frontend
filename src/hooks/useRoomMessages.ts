@@ -47,13 +47,15 @@ const updateRoomPreview = (
 
 export const useRoomMessages = (roomId?: string) => {
   const queryClient = useQueryClient();
-  const { currentUser, emit } = useChatSocket(roomId);
+  const { currentUser, emit, isFallbackPolling } = useChatSocket(roomId);
 
   const messagesQuery = useQuery({
     queryKey: ["chat-room-messages", roomId],
     queryFn: () => getRoomMessages(roomId as string),
     enabled: Boolean(roomId),
     staleTime: 10 * 1000,
+    refetchInterval: roomId && isFallbackPolling ? 4000 : false,
+    refetchIntervalInBackground: true,
   });
 
   const sendMessageMutation = useMutation({

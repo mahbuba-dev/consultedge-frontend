@@ -77,7 +77,7 @@ const ClientDashboardContent = () => {
 
   return (
     <div className="space-y-6">
-      <Card className="overflow-hidden border-0 bg-linear-to-r from-cyan-500 via-sky-500 to-indigo-600 text-white shadow-xl">
+      <Card className="overflow-hidden border-0 bg-linear-to-r from-blue-600 via-cyan-600 to-indigo-600 text-white shadow-xl">
         <CardContent className="flex flex-col gap-4 p-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="space-y-3">
             <Badge className="border-white/20 bg-white/10 text-white hover:bg-white/10">
@@ -120,28 +120,28 @@ const ClientDashboardContent = () => {
           value={data.consultationCount || 0}
           iconName="CalendarDays"
           description="All consultations linked to your account"
-          className="bg-linear-to-br from-cyan-50 to-white"
+          className="bg-linear-to-br from-blue-50 to-white dark:from-blue-950/40 dark:to-slate-900"
         />
         <StatsCard
           title="Completed"
           value={completedCount}
           iconName="CheckCircle2"
           description="Sessions successfully finished"
-          className="bg-linear-to-br from-emerald-50 to-white"
+          className="bg-linear-to-br from-emerald-50 to-white dark:from-emerald-950/35 dark:to-slate-900"
         />
         <StatsCard
           title="Pending"
           value={pendingCount}
           iconName="CalendarClock"
           description="Upcoming or awaiting confirmation"
-          className="bg-linear-to-br from-amber-50 to-white"
+          className="bg-linear-to-br from-amber-50 to-white dark:from-amber-950/30 dark:to-slate-900"
         />
         <StatsCard
           title="Ongoing"
           value={activeCount}
           iconName="Activity"
           description="Live consultation progress"
-          className="bg-linear-to-br from-violet-50 to-white"
+          className="bg-linear-to-br from-indigo-50 to-white dark:from-indigo-950/35 dark:to-slate-900"
         />
       </div>
 
@@ -162,8 +162,8 @@ const ClientDashboardContent = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="rounded-xl bg-muted/40 p-4">
-              <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-sky-700">
+            <div className="rounded-xl bg-blue-50/70 p-4 dark:bg-blue-950/35">
+              <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-blue-700 dark:text-blue-300">
                 <Compass className="size-4" />
                 Recommended focus
               </div>
@@ -196,7 +196,7 @@ const ClientDashboardContent = () => {
 
             <div className="space-y-2">
               <Link href="/experts" className="inline-flex w-full">
-                <Button className="w-full justify-between bg-sky-600 hover:bg-sky-700">
+                <Button className="w-full justify-between bg-blue-600 hover:bg-blue-700">
                   Browse experts
                   <ArrowRight className="size-4" />
                 </Button>

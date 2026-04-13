@@ -207,9 +207,9 @@ export default function AvailabilityCalendar({
 
   return (
     <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-      <Card className="border-violet-200/70 shadow-lg shadow-violet-500/5" id="availability-calendar">
+      <Card className="border-blue-200/70 shadow-lg shadow-blue-500/5" id="availability-calendar">
         <CardHeader>
-          <Badge className="w-fit bg-violet-100 text-violet-700 hover:bg-violet-100">
+          <Badge className="w-fit bg-blue-100 text-blue-700 hover:bg-blue-100">
             <Sparkles className="mr-1 size-3.5" />
             Availability Calendar
           </Badge>
@@ -222,7 +222,7 @@ export default function AvailabilityCalendar({
         <CardContent className="space-y-6">
           {sortedAvailability.length > 0 ? (
             <>
-              <div className="rounded-3xl border bg-linear-to-br from-violet-50 via-white to-fuchsia-50 p-3">
+              <div className="rounded-3xl border bg-linear-to-br from-blue-50 via-white to-cyan-50 p-3">
                 <Calendar
                   mode="single"
                   selected={selectedDate}
@@ -274,8 +274,8 @@ export default function AvailabilityCalendar({
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-2xl border bg-violet-50/60 p-4">
-                  <div className="mb-1 flex items-center gap-2 text-violet-700">
+                <div className="rounded-2xl border bg-blue-50/60 p-4">
+                  <div className="mb-1 flex items-center gap-2 text-blue-700">
                     <CalendarDays className="size-4" />
                     <span className="text-xs font-semibold uppercase tracking-wide">
                       Flexible booking

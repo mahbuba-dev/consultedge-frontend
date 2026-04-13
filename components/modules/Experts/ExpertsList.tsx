@@ -109,8 +109,8 @@ const getQuickFilterButtonClass = (isActive: boolean) =>
   cn(
     "rounded-full border px-4 transition-all duration-300 hover:-translate-y-0.5",
     isActive
-      ? "border-violet-600 bg-violet-600 text-white shadow-lg shadow-violet-500/25 hover:bg-violet-600"
-      : "border-violet-200 bg-white/80 text-violet-700 hover:border-violet-300 hover:bg-violet-50",
+      ? "border-blue-600 bg-blue-600 text-white shadow-lg shadow-blue-500/25 hover:bg-blue-600 dark:border-blue-500 dark:bg-blue-500"
+      : "border-blue-200 bg-white/80 text-blue-700 hover:border-blue-300 hover:bg-blue-50 dark:border-white/15 dark:bg-slate-900/85 dark:text-blue-200 dark:hover:border-blue-400/50 dark:hover:bg-slate-800/90",
   );
 
 export default function ExpertsPageClient() {
@@ -392,12 +392,11 @@ export default function ExpertsPageClient() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 py-6">
-      <div className="animate-in slide-in-from-top-2 fade-in-0 rounded-3xl border border-violet-200/70 bg-linear-to-br from-violet-500/10 via-background to-fuchsia-500/10 p-5 shadow-lg shadow-violet-500/5 duration-500 md:p-6">
-        <div className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
-          <div className="space-y-3">
+      <div className="animate-in slide-in-from-top-2 fade-in-0 rounded-3xl border border-blue-200/70 bg-linear-to-br from-blue-500/10 via-background to-cyan-500/10 p-5 shadow-lg shadow-blue-500/5 duration-500 dark:border-white/10 dark:from-slate-950 dark:via-[#071326] dark:to-slate-950 dark:shadow-[0_20px_60px_-28px_rgba(34,211,238,0.28)] md:p-6">
+        <div className="space-y-3">
             <Badge
               variant="secondary"
-              className="w-fit gap-1 bg-violet-100 text-violet-700"
+              className="w-fit gap-1 bg-blue-100 text-blue-700 dark:border-white/10 dark:bg-blue-500/15 dark:text-blue-200"
             >
               <Sparkles className="h-3.5 w-3.5" />
               Expert network
@@ -411,45 +410,6 @@ export default function ExpertsPageClient() {
                 Explore vetted experts by industry, experience, and pricing, then book the right consultant with a polished end-to-end flow.
               </p>
             </div>
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
-            <Card className="border-violet-200/70 bg-white/85 shadow-sm shadow-violet-500/10">
-              <CardContent className="flex items-center gap-3 p-4">
-                <div className="rounded-full bg-violet-100 p-2 text-violet-700">
-                  <Users className="h-4 w-4" />
-                </div>
-                <div>
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Experts</p>
-                  <p className="text-xl font-semibold text-foreground">{totalExperts}</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-sky-200/70 bg-white/85 shadow-sm shadow-sky-500/10">
-              <CardContent className="flex items-center gap-3 p-4">
-                <div className="rounded-full bg-sky-100 p-2 text-sky-700">
-                  <ShieldCheck className="h-4 w-4" />
-                </div>
-                <div>
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Verified</p>
-                  <p className="text-xl font-semibold text-foreground">{verifiedExpertsCount}</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-emerald-200/70 bg-white/85 shadow-sm shadow-emerald-500/10">
-              <CardContent className="flex items-center gap-3 p-4">
-                <div className="rounded-full bg-emerald-100 p-2 text-emerald-700">
-                  <TrendingUp className="h-4 w-4" />
-                </div>
-                <div>
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Avg. experience</p>
-                  <p className="text-xl font-semibold text-foreground">{averageExperience}+ yrs</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
         </div>
 
         <div className="mt-6 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
@@ -470,7 +430,7 @@ export default function ExpertsPageClient() {
                 handleSelectFilterChange("industryId", value)
               }
             >
-              <SelectTrigger className="h-11 min-w-38 rounded-full border-violet-200 bg-white/90 text-violet-950 shadow-sm transition-all duration-200 hover:border-violet-300 focus:ring-2 focus:ring-violet-500/20">
+              <SelectTrigger className="h-11 min-w-38 rounded-full border-blue-200 bg-white/90 text-blue-950 shadow-sm transition-all duration-200 hover:border-blue-300 focus:ring-2 focus:ring-blue-500/20 dark:border-white/15 dark:bg-slate-900/90 dark:text-slate-100 dark:hover:border-blue-400/40 dark:focus:ring-blue-400/30">
                 <SelectValue placeholder="Industry" />
               </SelectTrigger>
               <SelectContent>
@@ -489,7 +449,7 @@ export default function ExpertsPageClient() {
                 handleSelectFilterChange("isVerified", value)
               }
             >
-              <SelectTrigger className="h-11 min-w-36 rounded-full border-violet-200 bg-white/90 text-violet-950 shadow-sm transition-all duration-200 hover:border-violet-300 focus:ring-2 focus:ring-violet-500/20">
+              <SelectTrigger className="h-11 min-w-36 rounded-full border-blue-200 bg-white/90 text-blue-950 shadow-sm transition-all duration-200 hover:border-blue-300 focus:ring-2 focus:ring-blue-500/20 dark:border-white/15 dark:bg-slate-900/90 dark:text-slate-100 dark:hover:border-blue-400/40 dark:focus:ring-blue-400/30">
                 <SelectValue placeholder="Verification" />
               </SelectTrigger>
               <SelectContent>
@@ -499,10 +459,10 @@ export default function ExpertsPageClient() {
               </SelectContent>
             </Select>
 
-            <div className="flex items-center gap-2 rounded-full border border-violet-200 bg-white/90 px-3 py-1.5 shadow-sm shadow-violet-500/10 transition-all duration-200 hover:border-violet-300">
-              <ArrowUpDown className="h-4 w-4 text-violet-600" />
+            <div className="flex items-center gap-2 rounded-full border border-blue-200 bg-white/90 px-3 py-1.5 shadow-sm shadow-blue-500/10 transition-all duration-200 hover:border-blue-300 dark:border-white/15 dark:bg-slate-900/90 dark:shadow-none dark:hover:border-blue-400/40">
+              <ArrowUpDown className="h-4 w-4 text-blue-600 dark:text-blue-300" />
               <Select value={activeSortValue} onValueChange={handleSortChange}>
-                <SelectTrigger className="h-8 w-45 border-0 px-0 text-violet-950 shadow-none focus:ring-0">
+                <SelectTrigger className="h-8 w-45 border-0 px-0 text-blue-950 shadow-none focus:ring-0 dark:text-slate-100">
                   <SelectValue placeholder="Sort experts" />
                 </SelectTrigger>
                 <SelectContent>
@@ -519,7 +479,7 @@ export default function ExpertsPageClient() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-violet-700 hover:bg-violet-50 hover:text-violet-800"
+                className="text-blue-700 hover:bg-blue-50 hover:text-blue-800 dark:text-blue-300 dark:hover:bg-blue-500/15 dark:hover:text-blue-200"
                 onClick={clearAllFilters}
               >
                 Clear all
@@ -552,7 +512,7 @@ export default function ExpertsPageClient() {
                 type="button"
                 size="sm"
                 variant="ghost"
-                className="text-violet-700 hover:bg-violet-50 hover:text-violet-800"
+                className="text-blue-700 hover:bg-blue-50 hover:text-blue-800 dark:text-blue-300 dark:hover:bg-blue-500/15 dark:hover:text-blue-200"
                 onClick={() => handleQuickRange("experience")}
               >
                 Reset
@@ -583,7 +543,7 @@ export default function ExpertsPageClient() {
                 type="button"
                 size="sm"
                 variant="ghost"
-                className="text-violet-700 hover:bg-violet-50 hover:text-violet-800"
+                className="text-blue-700 hover:bg-blue-50 hover:text-blue-800 dark:text-blue-300 dark:hover:bg-blue-500/15 dark:hover:text-blue-200"
                 onClick={() => handleQuickRange("price")}
               >
                 Reset
@@ -634,7 +594,7 @@ export default function ExpertsPageClient() {
             ) : null}
           </div>
 
-          <div className="animate-in fade-in-0 slide-in-from-bottom-2 grid grid-cols-1 gap-4 duration-500 md:grid-cols-2">
+          <div className="animate-in fade-in-0 slide-in-from-bottom-2 grid grid-cols-1 gap-4 duration-500 md:grid-cols-2 xl:grid-cols-3">
             {displayedExperts.map((expert) => (
               <ExpertCard key={expert.id} expert={expert} />
             ))}

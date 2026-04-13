@@ -2,6 +2,7 @@ import Banner from "@/components/modules/HomePage/Banner";
 import ExpertAnimated from "@/components/modules/HomePage/ExpertAnimated";
 import HomeSection2 from "@/components/modules/HomePage/HomeSection2";
 import HomeSection3 from "@/components/modules/HomePage/HomeSection3";
+import InViewReveal from "@/components/modules/HomePage/InViewReveal";
 import IndustryTicker from "@/components/modules/HomePage/IndustryTicker";
 
 import { getExperts } from "@/src/services/expert.services";
@@ -74,10 +75,18 @@ const HomePage = async () => {
       <Banner />
 
       <div className="mt-12 space-y-12 md:mt-16 md:space-y-16">
-        <HomeSection2 testimonials={featuredTestimonials} />
-        <IndustryTicker industries={featuredIndustries} />
-        <ExpertAnimated experts={featuredExperts} />
-        <HomeSection3 />
+        <InViewReveal delay={40}>
+          <IndustryTicker industries={featuredIndustries} />
+        </InViewReveal>
+        <InViewReveal delay={80}>
+          <ExpertAnimated experts={featuredExperts} />
+        </InViewReveal>
+        <InViewReveal delay={120}>
+          <HomeSection2 testimonials={featuredTestimonials} />
+        </InViewReveal>
+        <InViewReveal delay={160}>
+          <HomeSection3 />
+        </InViewReveal>
       </div>
     </div>
   );

@@ -43,7 +43,7 @@ export default function ReviewSummaryCards({ reviews }: ReviewSummaryCardsProps)
       value: totalReviews.toString(),
       hint: "All visible client feedback",
       icon: MessageSquareQuote,
-      accent: "from-violet-50 to-white text-violet-700",
+      accent: "from-blue-50 to-white text-blue-700",
     },
     {
       label: "Average rating",

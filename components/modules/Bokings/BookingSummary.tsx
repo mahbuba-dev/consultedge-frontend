@@ -78,8 +78,8 @@ export default function BookingSummary({
   const isDisabled = Boolean(actionLoading);
 
   return (
-    <Card className="overflow-hidden border-violet-200/70 shadow-xl shadow-violet-500/10">
-      <CardHeader className="bg-linear-to-br from-violet-600 via-fuchsia-600 to-indigo-600 text-white">
+    <Card className="overflow-hidden border-blue-200/70 shadow-xl shadow-blue-500/10">
+      <CardHeader className="bg-linear-to-br from-blue-600 via-cyan-600 to-indigo-600 text-white">
         <div className="flex items-center justify-between gap-3">
           <div>
             <Badge className="mb-2 bg-white/15 text-white hover:bg-white/15">
@@ -95,8 +95,8 @@ export default function BookingSummary({
       </CardHeader>
 
       <CardContent className="space-y-4 p-5">
-        <div className="rounded-2xl border border-violet-100 bg-violet-50/70 p-4">
-          <p className="text-xs uppercase tracking-[0.2em] text-violet-700">Expert</p>
+        <div className="rounded-2xl border border-blue-100 bg-blue-50/70 p-4">
+          <p className="text-xs uppercase tracking-[0.2em] text-blue-700">Expert</p>
           <h3 className="mt-1 text-lg font-semibold text-foreground">{expertName}</h3>
           <p className="text-sm text-muted-foreground">{expertTitle || "Consultation specialist"}</p>
         </div>
@@ -142,7 +142,7 @@ export default function BookingSummary({
             Booking is currently available for <strong>client accounts</strong> only.
           </div>
         ) : (
-          <div className="rounded-2xl border border-violet-100 bg-violet-50/60 px-4 py-3 text-sm text-violet-800">
+          <div className="rounded-2xl border border-blue-100 bg-blue-50/60 px-4 py-3 text-sm text-blue-800">
             Choose <strong>pay now</strong> for Stripe checkout or <strong>pay later</strong>
             to reserve and complete payment from your dashboard.
           </div>
@@ -150,7 +150,7 @@ export default function BookingSummary({
 
         <div className="space-y-2">
           <Button
-            className="w-full bg-violet-600 text-white hover:bg-violet-700"
+            className="w-full bg-blue-600 text-white hover:bg-blue-700"
             disabled={isDisabled}
             type="button"
             onClick={onBookNow}
@@ -170,7 +170,7 @@ export default function BookingSummary({
 
           <Button
             variant="outline"
-            className="w-full border-violet-200 text-violet-700 hover:bg-violet-50"
+            className="w-full border-blue-200 text-blue-700 hover:bg-blue-50"
             disabled={isDisabled}
             type="button"
             onClick={onPayLater}

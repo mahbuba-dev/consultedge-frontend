@@ -56,8 +56,8 @@ export const expertNavItems: NavSection[] = [
         ],
       },
       {
-        title: "My Clients",
-        href: "/expert/dashboard/my-clients",
+        title: "My Sessions",
+        href: "/expert/dashboard/my-sessions",
         icon: "Users",
       },
      
@@ -145,6 +145,11 @@ export const clientNavItems: NavSection[] = [
         title: "My Consultations",
         href: "/dashboard/consultations",
         icon: "Calendar",
+      },
+      {
+        title: "Payment Success",
+        href: "/dashboard/payment/success",
+        icon: "CheckCircle2",
       },
       {
         title: "Messages",

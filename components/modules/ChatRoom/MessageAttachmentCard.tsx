@@ -14,7 +14,7 @@ export default function MessageAttachmentCard({ attachment }: MessageAttachmentC
     <Card className="border-border/60 bg-background/70 shadow-none">
       <CardContent className="flex items-center justify-between gap-3 p-3">
         <div className="flex min-w-0 items-center gap-3">
-          <div className="rounded-xl bg-violet-100 p-2 text-violet-700">
+          <div className="rounded-xl bg-blue-100 p-2 text-blue-700">
             <FileText className="size-4" />
           </div>
 

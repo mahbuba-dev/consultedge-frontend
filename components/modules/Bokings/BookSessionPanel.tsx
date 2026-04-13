@@ -106,11 +106,11 @@ export default function BookSessionPanel({
 
   return (
     <div className="space-y-4">
-      <Card className="scroll-mt-24 border-fuchsia-200/70 shadow-lg shadow-fuchsia-500/5" id="book-session">
+      <Card className="scroll-mt-24 border-cyan-200/70 shadow-lg shadow-cyan-500/5" id="book-session">
         <CardHeader className="space-y-4">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <Badge className="mb-2 bg-fuchsia-100 text-fuchsia-700 hover:bg-fuchsia-100">
+              <Badge className="mb-2 bg-cyan-100 text-cyan-700 hover:bg-cyan-100">
                 <Sparkles className="mr-1 size-3.5" />
                 Smart booking flow
               </Badge>
@@ -120,15 +120,15 @@ export default function BookSessionPanel({
               </CardDescription>
             </div>
 
-            <Button onClick={handleBookNow} className="bg-violet-600 hover:bg-violet-700">
+            <Button onClick={handleBookNow} className="bg-blue-600 hover:bg-blue-700">
               {isBookingOpen ? "Select a time below ↓" : "Book now"}
             </Button>
           </div>
         </CardHeader>
 
         <CardContent className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-2xl border bg-violet-50/70 p-4">
-            <div className="mb-2 flex items-center gap-2 text-violet-700">
+          <div className="rounded-2xl border bg-blue-50/70 p-4">
+            <div className="mb-2 flex items-center gap-2 text-blue-700">
               <CalendarDays className="size-4" />
               <span className="text-xs font-semibold uppercase tracking-wide">Next available</span>
             </div>
@@ -168,7 +168,7 @@ export default function BookSessionPanel({
       </Card>
 
       {isBookingOpen ? (
-        <Card className="border-violet-200/70 shadow-lg" id="booking-calendar-panel">
+        <Card className="border-blue-200/70 shadow-lg" id="booking-calendar-panel">
           <CardHeader className="border-b bg-muted/30">
             <CardTitle className="text-xl">Choose your consultation slot</CardTitle>
             <CardDescription>

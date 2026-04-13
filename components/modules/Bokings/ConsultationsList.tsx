@@ -97,7 +97,8 @@ export default function ConsultationsList({
   redirectTransactionId,
   redirectAmount,
 }: ConsultationsListProps) {
-  const toastShownRef = useRef(false);
+  const cancelToastShownRef = useRef(false);
+  const successToastShownRef = useRef(false);
 
   const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
     queryKey: ["consultations"],
@@ -122,17 +123,43 @@ export default function ConsultationsList({
 
   const bookings = useMemo(() => extractConsultations(data), [data]);
 
+  const bookingsWithRedirectState = useMemo(() => {
+    if (redirectStatus !== "success") {
+      return bookings;
+    }
+
+    return bookings.map((booking) => {
+      const matchesByConsultationId =
+        Boolean(highlightedConsultationId) && booking.id === highlightedConsultationId;
+      const matchesByPaymentId =
+        Boolean(redirectPaymentId) && Boolean(booking.payment?.id) && booking.payment?.id === redirectPaymentId;
+
+      if (!matchesByConsultationId && !matchesByPaymentId) {
+        return booking;
+      }
+
+      return {
+        ...booking,
+        paymentStatus: "PAID" as const,
+      };
+    });
+  }, [bookings, highlightedConsultationId, redirectPaymentId, redirectStatus]);
+
   const stats = useMemo(
     () => ({
-      total: bookings.length,
-      active: bookings.filter((item) => item.status === "CONFIRMED" || item.status === "PENDING").length,
-      unpaid: bookings.filter((item) => item.paymentStatus !== "PAID" && item.status !== "CANCELLED").length,
+      total: bookingsWithRedirectState.length,
+      active: bookingsWithRedirectState.filter(
+        (item) => item.status === "CONFIRMED" || item.status === "PENDING",
+      ).length,
+      unpaid: bookingsWithRedirectState.filter(
+        (item) => item.paymentStatus !== "PAID" && item.status !== "CANCELLED",
+      ).length,
     }),
-    [bookings],
+    [bookingsWithRedirectState],
   );
 
   useEffect(() => {
-    if (redirectStatus !== "cancelled" || toastShownRef.current) {
+    if (redirectStatus !== "cancelled" || cancelToastShownRef.current) {
       return;
     }
 
@@ -140,24 +167,49 @@ export default function ConsultationsList({
       description:
         "Your consultation payment was cancelled. You can review the booking below and pay again anytime.",
     });
-    toastShownRef.current = true;
+    cancelToastShownRef.current = true;
   }, [redirectStatus]);
 
   useEffect(() => {
-    if (!highlightedConsultationId || !bookings.length) {
+    if (redirectStatus !== "success" || successToastShownRef.current) {
+      return;
+    }
+
+    toast.success("Payment successful", {
+      description: "Your booking payment was received. Synchronizing latest status from backend.",
+    });
+    successToastShownRef.current = true;
+
+    void refetch();
+    const intervalId = window.setInterval(() => {
+      void refetch();
+    }, 4000);
+
+    const timeoutId = window.setTimeout(() => {
+      window.clearInterval(intervalId);
+    }, 20000);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.clearTimeout(timeoutId);
+    };
+  }, [redirectStatus, refetch]);
+
+  useEffect(() => {
+    if (!highlightedConsultationId || !bookingsWithRedirectState.length) {
       return;
     }
 
     const element = document.getElementById(`consultation-card-${highlightedConsultationId}`);
     element?.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, [bookings, highlightedConsultationId]);
+  }, [bookingsWithRedirectState.length, highlightedConsultationId]);
 
   return (
     <div className="space-y-6">
-      <Card className="border-violet-200/70 bg-linear-to-r from-violet-50 via-white to-cyan-50 shadow-sm">
+      <Card className="border-blue-200/70 bg-linear-to-r from-blue-50 via-white to-cyan-50 shadow-sm">
         <CardHeader className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <Badge className="mb-2 bg-violet-100 text-violet-700 hover:bg-violet-100">
+            <Badge className="mb-2 bg-blue-100 text-blue-700 hover:bg-blue-100">
               <Sparkles className="mr-1 size-3.5" />
               Client dashboard
             </Badge>
@@ -175,7 +227,7 @@ export default function ConsultationsList({
       </Card>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <Card className="border-violet-200/70 bg-linear-to-br from-violet-50 to-white shadow-sm">
+        <Card className="border-blue-200/70 bg-linear-to-br from-blue-50 to-white shadow-sm">
           <CardContent className="p-5">
             <p className="text-sm text-muted-foreground">Total consultations</p>
             <p className="mt-2 text-3xl font-bold text-foreground">{stats.total}</p>
@@ -197,9 +249,9 @@ export default function ConsultationsList({
         </Card>
       </div>
 
-      {redirectStatus === "cancelled" ? (
+      {redirectStatus ? (
         <PaymentStatusBanner
-          status="cancelled"
+          status={redirectStatus}
           consultationId={highlightedConsultationId}
           paymentId={redirectPaymentId}
           transactionId={redirectTransactionId}
@@ -224,7 +276,7 @@ export default function ConsultationsList({
             <Card key={index} className="h-52 animate-pulse bg-muted/40" />
           ))}
         </div>
-      ) : bookings.length === 0 ? (
+      ) : bookingsWithRedirectState.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
             <div>
@@ -235,13 +287,13 @@ export default function ConsultationsList({
             </div>
 
             <Link href="/experts">
-              <Button className="bg-violet-600 hover:bg-violet-700">Browse experts</Button>
+              <Button className="bg-blue-600 hover:bg-blue-700">Browse experts</Button>
             </Link>
           </CardContent>
         </Card>
       ) : (
         <div className="grid gap-4 xl:grid-cols-2">
-          {bookings.map((booking: IConsultation) => {
+          {bookingsWithRedirectState.map((booking: IConsultation) => {
             const canPayNow =
               booking.paymentStatus !== "PAID" &&
               booking.status !== "CANCELLED" &&

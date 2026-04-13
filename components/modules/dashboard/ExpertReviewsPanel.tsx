@@ -165,7 +165,7 @@ export default function ExpertReviewsPanel() {
   return (
     <>
       <div className="space-y-6">
-        <section className="overflow-hidden rounded-3xl border-0 bg-linear-to-r from-slate-900 via-violet-900 to-fuchsia-800 p-6 text-white shadow-xl">
+        <section className="overflow-hidden rounded-3xl border-0 bg-linear-to-r from-slate-900 via-blue-900 to-cyan-800 p-6 text-white shadow-xl">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="space-y-3">
               <Badge className="w-fit border-white/20 bg-white/10 text-white hover:bg-white/10">
@@ -312,7 +312,7 @@ export default function ExpertReviewsPanel() {
             <Button variant="outline" onClick={closeReplyDialog}>
               Cancel
             </Button>
-            <Button className="bg-violet-600 hover:bg-violet-700" onClick={submitReply}>
+            <Button className="bg-blue-600 hover:bg-blue-700" onClick={submitReply}>
               Save reply
             </Button>
           </DialogFooter>

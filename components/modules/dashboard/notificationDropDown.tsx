@@ -86,7 +86,7 @@ const getNotificationIcon = (type: NotificationType | string) => {
   }
 
   if (normalizedType.includes("SYSTEM")) {
-    return <CheckCircle className="h-4 w-4 text-purple-600" />;
+    return <CheckCircle className="h-4 w-4 text-indigo-600" />;
   }
 
   if (normalizedType.includes("EXPERT") || normalizedType.includes("USER")) {

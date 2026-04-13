@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AlertCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -45,10 +45,18 @@ export default function ChatWorkspace({
   readOnly = false,
 }: ChatWorkspaceProps) {
   const router = useRouter();
+  const [isHydrated, setIsHydrated] = useState(false);
   const attemptedRoomTargetRef = useRef<string | null>(null);
   const roomTargetId = participantId ?? expertId;
 
-  const { isConnected, socket, setActiveRoomId, markRoomAsRead } = useChatSocketContext();
+  const {
+    connectionState,
+    isFallbackPolling,
+    setActiveRoomId,
+    subscribeRoom,
+    unsubscribeRoom,
+    markRoomAsRead,
+  } = useChatSocketContext();
   const { currentUser, getPresence } = usePresence();
   const {
     rooms,
@@ -146,20 +154,26 @@ export default function ChatWorkspace({
   const isReadOnly = readOnly || currentUser?.role === "ADMIN";
 
   useEffect(() => {
-    if (!socket || !activeRoomId) {
+    if (!activeRoomId) {
       setActiveRoomId(null);
       return;
     }
 
     setActiveRoomId(activeRoomId);
-    socket.emit("join_room", activeRoomId);
+    subscribeRoom(activeRoomId);
     markRoomAsRead(activeRoomId);
 
     return () => {
-      socket.emit("leave_room", activeRoomId);
+      unsubscribeRoom(activeRoomId);
       setActiveRoomId((current) => (current === activeRoomId ? null : current));
     };
-  }, [activeRoomId, markRoomAsRead, setActiveRoomId, socket]);
+  }, [
+    activeRoomId,
+    markRoomAsRead,
+    setActiveRoomId,
+    subscribeRoom,
+    unsubscribeRoom,
+  ]);
 
   const {
     messages,
@@ -208,6 +222,37 @@ export default function ChatWorkspace({
 
   const incomingCallerName =
     incomingCall?.callerName || getParticipantDisplayName(otherParticipant) || "ConsultEdge user";
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  if (!isHydrated) {
+    return (
+      <div className="space-y-4">
+        <div className="grid gap-4 xl:grid-cols-[340px_minmax(0,1fr)]">
+          <ChatSidebar
+            rooms={[]}
+            currentUserId={undefined}
+            selectedRoomId={undefined}
+            isLoading
+            isRefreshing={false}
+            title={title}
+            description={description}
+            role={null}
+            onRefresh={() => undefined}
+            onSelectRoom={() => undefined}
+          />
+
+          <div className="flex min-h-[70vh] flex-col rounded-2xl border bg-background shadow-sm">
+            <div className="flex h-full items-center justify-center p-6 text-sm text-muted-foreground">
+              Loading conversation...
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -263,7 +308,8 @@ export default function ChatWorkspace({
               <ChatRoomHeader
                 room={selectedRoom}
                 currentUserId={currentUser?.userId}
-                isConnected={isConnected}
+                connectionState={connectionState}
+                isFallbackPolling={isFallbackPolling}
                 isOnline={otherParticipantPresence?.isOnline ?? otherParticipant?.isOnline ?? false}
                 lastSeen={otherParticipantPresence?.lastSeen ?? otherParticipant?.lastSeen ?? null}
                 readOnly={isReadOnly}
@@ -306,6 +352,7 @@ export default function ChatWorkspace({
                     messages={messages}
                     currentUserId={currentUser?.userId}
                     isLoading={isMessagesLoading}
+                    roomId={activeRoomId}
                   />
                 )}
               </div>
@@ -334,8 +381,7 @@ export default function ChatWorkspace({
         localVideoRef={localVideoRef}
         remoteVideoRef={remoteVideoRef}
         remoteName={incomingCallerName}
-        onEndCall={() => void endCall()}
-      />
+        onEndCall={() => void endCall()} isCaller={false}      />
     </div>
   );
 }

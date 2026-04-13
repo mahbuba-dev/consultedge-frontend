@@ -197,7 +197,7 @@ export default function PaymentResultCard({
   const canRetry = Boolean(paymentDetails.consultationId) && paymentDetails.status !== "success";
 
   return (
-    <Card className="border-violet-200/70 shadow-lg shadow-violet-500/5">
+    <Card className="border-blue-200/70 shadow-lg shadow-blue-500/5">
       <CardHeader className="space-y-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -224,8 +224,8 @@ export default function PaymentResultCard({
         </div>
 
         <div className="grid gap-3 md:grid-cols-3">
-          <div className="rounded-2xl border bg-violet-50/70 p-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-violet-700">
+          <div className="rounded-2xl border bg-blue-50/70 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">
               Consultation
             </p>
             <p className="mt-2 text-sm font-semibold text-foreground">
@@ -253,7 +253,7 @@ export default function PaymentResultCard({
         </div>
 
         <div className="flex flex-wrap gap-3">
-          <Button asChild className="bg-violet-600 hover:bg-violet-700">
+          <Button asChild className="bg-blue-600 hover:bg-blue-700">
             <Link href="/dashboard/consultations">Go to consultations</Link>
           </Button>
 

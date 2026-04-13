@@ -36,7 +36,7 @@ const TestimonialCard = ({ testimonial, compact = false }: TestimonialCardProps)
             <p className="text-xs text-muted-foreground">{reviewDate}</p>
           </div>
 
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-linear-to-br from-violet-100 to-sky-100 text-violet-700 dark:from-violet-500/20 dark:to-cyan-500/20 dark:text-violet-200">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-linear-to-br from-blue-100 to-sky-100 text-blue-700 dark:from-blue-500/20 dark:to-cyan-500/20 dark:text-blue-200">
             <Quote className="size-4" />
           </div>
         </div>
@@ -58,9 +58,9 @@ const TestimonialCard = ({ testimonial, compact = false }: TestimonialCardProps)
         </p>
 
         {testimonial.expertReply ? (
-          <div className="rounded-2xl border border-violet-200/70 bg-violet-50/70 p-3 dark:border-violet-500/20 dark:bg-violet-500/10">
+          <div className="rounded-2xl border border-blue-200/70 bg-blue-50/70 p-3 dark:border-blue-500/20 dark:bg-blue-500/10">
             <div className="flex items-center justify-between gap-2">
-              <p className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-violet-700">
+              <p className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-blue-700">
                 <MessageSquareReply className="size-3.5" />
                 Expert reply
               </p>
@@ -73,7 +73,7 @@ const TestimonialCard = ({ testimonial, compact = false }: TestimonialCardProps)
 
         <div className="flex flex-wrap gap-2">
           {testimonial.expert?.fullName ? (
-            <Badge variant="secondary" className="bg-violet-100 text-violet-700 dark:bg-violet-500/10 dark:text-violet-200">
+            <Badge variant="secondary" className="bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-200">
               For {testimonial.expert.fullName}
             </Badge>
           ) : null}

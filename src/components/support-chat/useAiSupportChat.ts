@@ -28,7 +28,7 @@ const buildApiBaseUrl = (rawValue?: string) => {
 const createWelcomeMessage = (): SupportChatMessage => ({
   id: "support-welcome",
   role: "assistant",
-  content: "Hi — ask about experts, booking, payments, or your account.",
+  content: "Hi there! 👋 How can I help you today? I can assist with finding experts, booking consultations, payments, or your account.",
   createdAt: new Date().toISOString(),
 });
 

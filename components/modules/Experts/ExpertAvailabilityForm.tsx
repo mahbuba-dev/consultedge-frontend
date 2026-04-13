@@ -121,7 +121,7 @@ export default function ExpertAvailabilityForm() {
     <Card className="max-w-3xl border-border/70 shadow-sm">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <CalendarPlus className="size-5 text-violet-600" />
+          <CalendarPlus className="size-5 text-blue-600" />
           Create a new availability slot
         </CardTitle>
         <CardDescription>

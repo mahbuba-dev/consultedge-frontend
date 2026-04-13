@@ -21,6 +21,9 @@ const normalizeConsultations = (payload: ConsultationCollection): IConsultation[
   }));
 };
 
+
+
+
 const requestBookings = async (endpoint: string, params: IConsultationQueryParams = {}) => {
   const response = await httpClient.get<IConsultation[]>(endpoint, {
     params,
@@ -40,7 +43,7 @@ export const getAllBookings = async (
     return await requestBookings("/consultations", params);
   } catch (primaryError) {
     try {
-      return await requestBookings("/consultations/admin", params);
+      return await requestBookings("/consultations", params);
     } catch {
       throw primaryError;
     }

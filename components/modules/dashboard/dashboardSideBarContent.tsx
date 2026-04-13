@@ -82,7 +82,7 @@ const DashboardSidebarContent = ({dashboardHome, navItems, userInfo} : Dashboard
                   className={cn(
                     "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all",
                     isActive
-                      ? "bg-violet-600 text-white"
+                      ? "bg-blue-600 text-white"
                       : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                   )}
                 >
@@ -107,7 +107,7 @@ const DashboardSidebarContent = ({dashboardHome, navItems, userInfo} : Dashboard
       className={cn(
         "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all",
         isActive
-          ? "bg-violet-600 text-white"
+          ? "bg-blue-600 text-white"
           : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
       )}
     >
@@ -131,7 +131,7 @@ const DashboardSidebarContent = ({dashboardHome, navItems, userInfo} : Dashboard
       {/* User Info At Bottom */}
       <div className="border-t px-3 py-4">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-violet-600 flex items-center justify-center shrink-0">
+          <div className="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center shrink-0">
             <span className="text-lg font-bold text-white leading-none">
               {userInfo?.name?.charAt(0)?.toUpperCase() || "?"}
             </span>

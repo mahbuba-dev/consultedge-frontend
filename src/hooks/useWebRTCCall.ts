@@ -19,12 +19,13 @@ type SignalPayload = {
 
 export const useWebRTCCall = (roomId?: string) => {
   const {
-    socket,
     currentUser,
     incomingCall,
     setIncomingCall,
     clearIncomingCall,
     emit,
+    onEvent,
+    offEvent,
   } = useChatSocket(roomId);
 
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
@@ -122,12 +123,6 @@ export const useWebRTCCall = (roomId?: string) => {
       await peer.setLocalDescription(offer);
 
       setCallState("ringing");
-      emit("start_call", {
-        roomId,
-        callId: nextCallId,
-        callerId: currentUser.userId,
-        callerName: currentUser.name,
-      });
       emit("signal", {
         roomId,
         signalData: {
@@ -179,13 +174,6 @@ export const useWebRTCCall = (roomId?: string) => {
   };
 
   const declineCall = async () => {
-    if (roomId) {
-      emit("end_call", {
-        roomId,
-        callId: incomingCall?.callId ?? callId,
-      });
-    }
-
     if (incomingCall?.callId) {
       await updateCallStatus(incomingCall.callId, "DECLINED").catch(() => null);
     }
@@ -194,13 +182,6 @@ export const useWebRTCCall = (roomId?: string) => {
   };
 
   const endCall = async () => {
-    if (roomId) {
-      emit("end_call", {
-        roomId,
-        callId,
-      });
-    }
-
     if (callId) {
       await updateCallStatus(callId, "ENDED").catch(() => null);
     }
@@ -209,7 +190,7 @@ export const useWebRTCCall = (roomId?: string) => {
   };
 
   useEffect(() => {
-    if (!socket || !roomId) {
+    if (!roomId) {
       return;
     }
 
@@ -259,14 +240,14 @@ export const useWebRTCCall = (roomId?: string) => {
       cleanupCall();
     };
 
-    socket.on("signal", handleSignal);
-    socket.on("call_ended", handleCallEnded);
+    onEvent("signal", handleSignal);
+    onEvent("call_ended", handleCallEnded);
 
     return () => {
-      socket.off("signal", handleSignal);
-      socket.off("call_ended", handleCallEnded);
+      offEvent("signal", handleSignal);
+      offEvent("call_ended", handleCallEnded);
     };
-  }, [socket, roomId, currentUser?.userId]);
+  }, [roomId, currentUser?.userId, offEvent, onEvent]);
 
   useEffect(() => {
     return () => {

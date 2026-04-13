@@ -25,8 +25,8 @@ const steps = [
   {
     number: "01",
     icon: Search,
-    color: "from-violet-500 to-violet-600",
-    glow: "shadow-[0_8px_32px_-8px_rgba(139,92,246,0.55)]",
+    color: "from-blue-500 to-blue-600",
+    glow: "shadow-[0_8px_32px_-8px_rgba(59,130,246,0.55)]",
     title: "Browse & Discover",
     description:
       "Search our curated directory of verified specialists. Filter by expertise, industry, price range, and availability to find the perfect match for your challenge.",
@@ -35,7 +35,7 @@ const steps = [
   {
     number: "02",
     icon: CalendarCheck,
-    color: "from-fuchsia-500 to-pink-500",
+    color: "from-cyan-500 to-pink-500",
     glow: "shadow-[0_8px_32px_-8px_rgba(217,70,239,0.55)]",
     title: "Book a Session",
     description:
@@ -69,15 +69,15 @@ const whyCards = [
     icon: BadgeCheck,
     label: "Vetted experts",
     desc: "Every specialist goes through identity, credentials, and experience verification before appearing on the platform.",
-    color: "text-violet-600 dark:text-violet-400",
-    bg: "from-violet-50 to-violet-100/60 dark:from-violet-950/40 dark:to-violet-900/20",
+    color: "text-blue-600 dark:text-blue-400",
+    bg: "from-blue-50 to-blue-100/60 dark:from-blue-950/40 dark:to-blue-900/20",
   },
   {
     icon: CreditCard,
     label: "Secure payments",
     desc: "Payments are processed through an encrypted, PCI-compliant gateway. You're charged only after your booking is confirmed.",
-    color: "text-fuchsia-600 dark:text-fuchsia-400",
-    bg: "from-fuchsia-50 to-fuchsia-100/60 dark:from-fuchsia-950/40 dark:to-fuchsia-900/20",
+    color: "text-cyan-600 dark:text-cyan-400",
+    bg: "from-cyan-50 to-cyan-100/60 dark:from-cyan-950/40 dark:to-cyan-900/20",
   },
   {
     icon: Zap,
@@ -121,13 +121,13 @@ export default function HowItWorksPage() {
     <div className="space-y-20 pb-16">
       {/* ── Page header ─────────────────────────────────────────────── */}
       <section className="space-y-5 text-center">
-        <Badge className="border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-800 dark:bg-violet-950/50 dark:text-violet-300">
+        <Badge className="border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950/50 dark:text-blue-300">
           <Sparkles className="mr-1.5 size-3.5" />
           Simple by design
         </Badge>
         <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white md:text-5xl">
           How{" "}
-          <span className="bg-linear-to-r from-violet-600 via-fuchsia-500 to-sky-500 bg-clip-text text-transparent">
+          <span className="bg-linear-to-r from-blue-600 via-cyan-500 to-sky-500 bg-clip-text text-transparent">
             ConsultEdge
           </span>{" "}
           works
@@ -145,7 +145,7 @@ export default function HowItWorksPage() {
             key={label}
             className="rounded-2xl border border-slate-100 bg-white py-6 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900"
           >
-            <p className="bg-linear-to-r from-violet-600 via-fuchsia-500 to-sky-500 bg-clip-text text-3xl font-extrabold text-transparent md:text-4xl">
+            <p className="bg-linear-to-r from-blue-600 via-cyan-500 to-sky-500 bg-clip-text text-3xl font-extrabold text-transparent md:text-4xl">
               {value}
             </p>
             <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">{label}</p>
@@ -156,7 +156,7 @@ export default function HowItWorksPage() {
       {/* ── Steps ───────────────────────────────────────────────────── */}
       <section className="space-y-6">
         <div className="text-center">
-          <p className="text-sm font-semibold uppercase tracking-widest text-violet-500 dark:text-violet-400">
+          <p className="text-sm font-semibold uppercase tracking-widest text-blue-500 dark:text-blue-400">
             The journey
           </p>
           <h2 className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
@@ -171,7 +171,7 @@ export default function HowItWorksPage() {
               className="group relative overflow-hidden rounded-[24px] border border-slate-100 bg-white p-7 shadow-sm transition-shadow hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
             >
               {/* soft bg tint on hover */}
-              <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-[radial-gradient(ellipse_at_top_left,rgba(139,92,246,0.04),transparent_60%)]" />
+              <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-[radial-gradient(ellipse_at_top_left,rgba(59,130,246,0.04),transparent_60%)]" />
 
               <div className="relative space-y-4">
                 <div className="flex items-center gap-4">
@@ -195,7 +195,7 @@ export default function HowItWorksPage() {
                 <ul className="space-y-1.5">
                   {highlights.map((h) => (
                     <li key={h} className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
-                      <CheckCircle2 className="size-3.5 shrink-0 text-violet-500" />
+                      <CheckCircle2 className="size-3.5 shrink-0 text-blue-500" />
                       {h}
                     </li>
                   ))}
@@ -209,7 +209,7 @@ export default function HowItWorksPage() {
       {/* ── Why ConsultEdge ─────────────────────────────────────────── */}
       <section className="space-y-8">
         <div className="text-center">
-          <p className="text-sm font-semibold uppercase tracking-widest text-violet-500 dark:text-violet-400">
+          <p className="text-sm font-semibold uppercase tracking-widest text-blue-500 dark:text-blue-400">
             Built right
           </p>
           <h2 className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
@@ -238,18 +238,18 @@ export default function HowItWorksPage() {
       </section>
 
       {/* ── CTA banner ──────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden rounded-[28px] bg-slate-950 px-8 py-14 shadow-[0_40px_100px_-24px_rgba(139,92,246,0.4)] md:py-20">
+      <section className="relative overflow-hidden rounded-[28px] bg-slate-950 px-8 py-14 shadow-[0_40px_100px_-24px_rgba(59,130,246,0.4)] md:py-20">
         {/* gradient orbs */}
-        <div className="pointer-events-none absolute -left-24 -top-24 size-96 rounded-full bg-violet-600/30 blur-[90px]" />
+        <div className="pointer-events-none absolute -left-24 -top-24 size-96 rounded-full bg-blue-600/30 blur-[90px]" />
         <div className="pointer-events-none absolute -bottom-20 right-0 size-80 rounded-full bg-sky-500/25 blur-[80px]" />
-        <div className="pointer-events-none absolute left-1/2 top-1/2 size-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-fuchsia-500/20 blur-[70px]" />
+        <div className="pointer-events-none absolute left-1/2 top-1/2 size-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-500/20 blur-[70px]" />
 
         {/* grid texture */}
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-size-[40px_40px]" />
 
         <div className="relative flex flex-col items-center gap-8 text-center">
           {/* badge */}
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-violet-500/30 bg-violet-500/10 px-3.5 py-1.5 text-xs font-semibold tracking-wide text-violet-300">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-500/30 bg-blue-500/10 px-3.5 py-1.5 text-xs font-semibold tracking-wide text-blue-300">
             <Sparkles className="size-3" />
             Start in under 2 minutes
           </span>
@@ -257,7 +257,7 @@ export default function HowItWorksPage() {
           <div className="space-y-4">
             <h2 className="text-4xl font-black leading-tight tracking-tight text-white md:text-5xl">
               The right expert is{" "}
-              <span className="bg-linear-to-r from-violet-400 via-fuchsia-400 to-sky-400 bg-clip-text text-transparent">
+              <span className="bg-linear-to-r from-blue-400 via-cyan-400 to-sky-400 bg-clip-text text-transparent">
                 waiting for you.
               </span>
             </h2>
@@ -271,7 +271,7 @@ export default function HowItWorksPage() {
             <Button
               asChild
               size="lg"
-              className="rounded-xl bg-linear-to-r from-violet-500 via-fuchsia-500 to-sky-500 px-7 font-semibold text-white shadow-[0_8px_32px_-8px_rgba(139,92,246,0.7)] hover:opacity-90"
+              className="rounded-xl bg-linear-to-r from-blue-500 via-cyan-500 to-sky-500 px-7 font-semibold text-white shadow-[0_8px_32px_-8px_rgba(59,130,246,0.7)] hover:opacity-90"
             >
               <Link href="/experts">
                 Browse experts
@@ -294,11 +294,11 @@ export default function HowItWorksPage() {
           {/* social proof strip */}
           <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs text-slate-500">
             <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="size-3.5 text-violet-400" />
+              <CheckCircle2 className="size-3.5 text-blue-400" />
               No credit card required
             </span>
             <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="size-3.5 text-fuchsia-400" />
+              <CheckCircle2 className="size-3.5 text-cyan-400" />
               500+ verified experts
             </span>
             <span className="flex items-center gap-1.5">

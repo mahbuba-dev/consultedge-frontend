@@ -38,23 +38,21 @@ export default function ExpertAnimated({ experts }: ExpertAnimatedProps) {
     : 0;
 
   return (
-    <section className="space-y-5">
-      <div className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
-        <div className="space-y-3">
-          <Badge variant="secondary" className="mb-2 gap-1 bg-cyan-100 text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-200">
-            <Sparkles className="size-3.5" />
-            Featured experts
-          </Badge>
-          <h2 className="text-2xl font-bold tracking-tight md:text-3xl lg:text-4xl">
-            Meet standout professionals ready for high-impact consulting
-          </h2>
-          <p className="max-w-2xl text-muted-foreground md:text-base">
-            Explore trusted specialists in a premium expert showcase, compare profiles quickly, and open the right consultation flow in one click.
-          </p>
-        </div>
-
-        <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
-          <Card className="border-cyan-200/70 bg-white/85 shadow-sm dark:border-white/10 dark:bg-slate-900/80">
+    <section className="space-y-10 md:space-y-16 lg:space-y-20">
+      <div className="space-y-3">
+        <Badge variant="secondary" className="mb-2 gap-1 bg-cyan-100 text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-200">
+          <Sparkles className="size-3.5" />
+          Featured experts
+        </Badge>
+        <h2 className="text-2xl font-bold tracking-tight md:text-3xl lg:text-4xl">
+          Meet standout professionals ready for high-impact consulting
+        </h2>
+        <p className="max-w-2xl text-muted-foreground md:text-base">
+          Explore trusted specialists in a premium expert showcase, compare profiles quickly, and open the right consultation flow in one click.
+        </p>
+        {/* Stats cards row below description */}
+        <div className="mt-6 grid gap-3 sm:grid-cols-3">
+          <Card className="consultedge-reveal--visible consultedge-card-glow border-cyan-200/70 bg-white/85 shadow-sm dark:border-white/10 dark:bg-slate-900/80" style={{ animationDelay: "110ms" }}>
             <CardContent className="flex items-center gap-3 p-4">
               <div className="rounded-full bg-cyan-100 p-2 text-cyan-700">
                 <TrendingUp className="size-4" />
@@ -65,10 +63,9 @@ export default function ExpertAnimated({ experts }: ExpertAnimatedProps) {
               </div>
             </CardContent>
           </Card>
-
-          <Card className="border-violet-200/70 bg-white/85 shadow-sm dark:border-white/10 dark:bg-slate-900/80">
+          <Card className="consultedge-reveal--visible consultedge-card-glow border-blue-200/70 bg-white/85 shadow-sm dark:border-white/10 dark:bg-slate-900/80" style={{ animationDelay: "180ms" }}>
             <CardContent className="flex items-center gap-3 p-4">
-              <div className="rounded-full bg-violet-100 p-2 text-violet-700">
+              <div className="rounded-full bg-blue-100 p-2 text-blue-700">
                 <ShieldCheck className="size-4" />
               </div>
               <div>
@@ -77,8 +74,7 @@ export default function ExpertAnimated({ experts }: ExpertAnimatedProps) {
               </div>
             </CardContent>
           </Card>
-
-          <Card className="border-emerald-200/70 bg-white/85 shadow-sm dark:border-white/10 dark:bg-slate-900/80">
+          <Card className="consultedge-reveal--visible consultedge-card-glow border-emerald-200/70 bg-white/85 shadow-sm dark:border-white/10 dark:bg-slate-900/80" style={{ animationDelay: "250ms" }}>
             <CardContent className="flex items-center gap-3 p-4">
               <div className="rounded-full bg-emerald-100 p-2 text-emerald-700">
                 <BriefcaseBusiness className="size-4" />
@@ -92,16 +88,11 @@ export default function ExpertAnimated({ experts }: ExpertAnimatedProps) {
         </div>
       </div>
 
-      <div className="flex justify-end">
-        <Link href="/experts">
-          <Button variant="outline" className="rounded-full border-cyan-200 text-cyan-700 hover:bg-cyan-50 dark:border-cyan-400/30 dark:text-cyan-200 dark:hover:bg-cyan-950/30">
-            Browse experts
-          </Button>
-        </Link>
-      </div>
+      {/* Browse experts button removed as requested */}
 
       {tickerExperts.length > 0 ? (
-        <div className="relative overflow-hidden rounded-[2rem] border border-cyan-100 bg-linear-to-r from-slate-950 via-violet-950 to-cyan-950 px-2 py-4 shadow-[0_24px_70px_-26px_rgba(34,211,238,0.35)]">
+        <div className="relative overflow-hidden rounded-[2rem] border border-cyan-100 bg-linear-to-r from-slate-950 via-blue-950 to-cyan-950 px-2 py-4 shadow-[0_24px_70px_-26px_rgba(34,211,238,0.35)]">
+          <div className="navbar-gradient-motion" aria-hidden="true" />
           <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-linear-to-r from-slate-950 to-transparent" />
           <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-linear-to-l from-cyan-950 to-transparent" />
 
@@ -120,35 +111,40 @@ export default function ExpertAnimated({ experts }: ExpertAnimatedProps) {
                 >
                   <Card className="h-full border-white/10 bg-white/10 text-white backdrop-blur transition duration-300 hover:-translate-y-1 hover:border-cyan-300/70 hover:bg-white/15 hover:shadow-[0_24px_60px_-28px_rgba(34,211,238,0.45)]">
                     <CardContent className="space-y-4 p-4">
-                      <div className="flex items-start gap-3">
-                        <Avatar size="lg" className="size-14 border border-white/20 ring-2 ring-white/10">
-                          {expert.profilePhoto ? (
-                            <AvatarImage src={expert.profilePhoto} alt={expert.fullName} />
-                          ) : null}
-                          <AvatarFallback className="text-slate-900">
-                            {getInitials(expert.fullName)}
-                          </AvatarFallback>
-                        </Avatar>
-
-                        <div className="min-w-0 flex-1 space-y-2">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-500/15 px-2 py-1 text-[10px] font-semibold text-sky-100">
-                              <span className="relative flex h-2 w-2">
-                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-300 opacity-75" />
-                                <span className="relative inline-flex h-2 w-2 rounded-full bg-sky-300" />
-                              </span>
-                              Active
-                            </span>
-
-                            {expert.isVerified ? (
-                              <Badge className="bg-emerald-500/20 text-white hover:bg-emerald-500/20">
-                                <BadgeCheck className="mr-1 size-3" />
-                                Verified
-                              </Badge>
+                      <div className="flex items-center gap-4">
+                        <div className="relative flex items-center justify-center">
+                          <Avatar size="xl" className="size-20 border-2 border-white/20 ring-2 ring-white/10">
+                            {expert.profilePhoto ? (
+                              <AvatarImage src={expert.profilePhoto} alt={expert.fullName} />
                             ) : null}
+                            <AvatarFallback className="text-slate-900">
+                              {getInitials(expert.fullName)}
+                            </AvatarFallback>
+                          </Avatar>
+                          {(
+                            <span className="absolute bottom-1 left-1 z-20 flex items-end justify-start">
+                              <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-emerald-900/90 ring-2 ring-white/70 shadow-lg">
+                                <span className="relative flex h-2 w-2">
+                                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+                                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400 shadow" />
+                                </span>
+                              </span>
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="min-w-0 flex-1 space-y-2 flex flex-col justify-center">
+                          <div className="flex flex-wrap items-center gap-2">
                           </div>
 
-                          <h3 className="line-clamp-1 text-base font-semibold">{expert.fullName}</h3>
+                          <h3 className="line-clamp-1 flex items-center gap-1 text-base font-semibold">
+                            {expert.fullName}
+                            {expert.isVerified && (
+                              <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-900/60 ring-2 ring-white/20">
+                                <BadgeCheck className="size-4 text-emerald-300" />
+                              </span>
+                            )}
+                          </h3>
 
                           <p className="line-clamp-1 text-sm text-white/75">{expert.title}</p>
                           {expert.industry?.name ? (

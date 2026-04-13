@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useMemo } from "react";
@@ -11,11 +12,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getMyExpertBookings } from "@/src/services/bookings";
 
-export default function MyConsultationsPage() {
+export default function MySessionPage() {
   const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
     queryKey: ["expert-consultations"],
     queryFn: () => getMyExpertBookings({ limit: 50, sortBy: "date", sortOrder: "desc" }),
+    
   });
+  console.log(data);
 
   const consultations = useMemo(
     () => (Array.isArray(data?.data) ? data.data : []),
@@ -33,7 +36,7 @@ export default function MyConsultationsPage() {
 
   return (
     <div className="space-y-6 px-4 py-6 md:px-6">
-      <section className="overflow-hidden rounded-3xl border-0 bg-linear-to-r from-slate-900 via-violet-900 to-fuchsia-800 p-6 text-white shadow-xl">
+      <section className="overflow-hidden rounded-3xl border-0 bg-linear-to-r from-slate-900 via-blue-900 to-cyan-800 p-6 text-white shadow-xl">
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
             <p className="mb-2 text-sm font-medium text-white/80">Expert Dashboard</p>
@@ -51,7 +54,7 @@ export default function MyConsultationsPage() {
       </section>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <Card className="border-violet-200/70 bg-linear-to-br from-violet-50 to-white shadow-sm">
+        <Card className="border-blue-200/70 bg-linear-to-br from-blue-50 to-white shadow-sm">
           <CardContent className="p-5">
             <p className="text-sm text-muted-foreground">Total consultations</p>
             <p className="mt-2 text-3xl font-bold text-foreground">{stats.total}</p>
@@ -73,9 +76,9 @@ export default function MyConsultationsPage() {
         </Card>
       </div>
 
-      <Card className="border-violet-200/70 bg-linear-to-r from-violet-50 via-white to-cyan-50 shadow-sm">
+      <Card className="border-blue-200/70 bg-linear-to-r from-blue-50 via-white to-cyan-50 shadow-sm">
         <CardHeader>
-          <Badge className="mb-2 w-fit bg-violet-100 text-violet-700 hover:bg-violet-100">
+          <Badge className="mb-2 w-fit bg-blue-100 text-blue-700 hover:bg-blue-100">
             <Sparkles className="mr-1 size-3.5" />
             Expert consultations
           </Badge>

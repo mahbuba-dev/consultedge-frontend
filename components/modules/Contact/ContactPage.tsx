@@ -104,7 +104,7 @@ export default function ContactPage() {
         {/* Contact info */}
         <div className="space-y-5">
           <div className="space-y-1">
-            <p className="text-sm font-semibold uppercase tracking-widest text-violet-500 dark:text-violet-400">
+            <p className="text-sm font-semibold uppercase tracking-widest text-blue-500 dark:text-blue-400">
               Contact details
             </p>
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
@@ -121,7 +121,7 @@ export default function ContactPage() {
                 key={label}
                 className="group flex items-start gap-4 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm transition-shadow hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
               >
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-violet-100 to-fuchsia-100 text-violet-600 dark:from-violet-900/40 dark:to-fuchsia-900/40 dark:text-violet-400">
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-blue-100 to-cyan-100 text-blue-600 dark:from-blue-900/40 dark:to-cyan-900/40 dark:text-blue-400">
                   <Icon className="size-4.5" />
                 </span>
                 <div className="min-w-0 flex-1">
@@ -133,7 +133,7 @@ export default function ContactPage() {
                       href={href}
                       target={href.startsWith("http") ? "_blank" : undefined}
                       rel="noreferrer"
-                      className="block truncate text-sm font-semibold text-slate-800 transition-colors hover:text-violet-600 dark:text-slate-100 dark:hover:text-violet-400"
+                      className="block truncate text-sm font-semibold text-slate-800 transition-colors hover:text-blue-600 dark:text-slate-100 dark:hover:text-blue-400"
                     >
                       {value}
                     </a>
@@ -149,8 +149,8 @@ export default function ContactPage() {
           </div>
 
           {/* Sparkle CTA block */}
-          <div className="rounded-2xl border border-violet-100 bg-linear-to-br from-violet-50 to-fuchsia-50 p-5 dark:border-violet-900/40 dark:from-violet-950/40 dark:to-fuchsia-950/40">
-            <div className="flex items-center gap-2 text-violet-700 dark:text-violet-300">
+          <div className="rounded-2xl border border-blue-100 bg-linear-to-br from-blue-50 to-cyan-50 p-5 dark:border-blue-900/40 dark:from-blue-950/40 dark:to-cyan-950/40">
+            <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
               <Sparkles className="size-4" />
               <span className="text-sm font-semibold">Looking for an expert?</span>
             </div>
@@ -160,7 +160,7 @@ export default function ContactPage() {
             <Button
               asChild
               size="sm"
-              className="mt-3 rounded-xl bg-linear-to-r from-violet-600 to-fuchsia-500 text-white hover:opacity-90"
+              className="mt-3 rounded-xl bg-linear-to-r from-blue-600 to-cyan-500 text-white hover:opacity-90"
             >
               <a href="/experts">
                 Browse experts
@@ -213,7 +213,7 @@ export default function ContactPage() {
                     placeholder="Jane Smith"
                     value={form.name}
                     onChange={(e) => handleChange("name", e.target.value)}
-                    className="rounded-xl border-slate-200 bg-slate-50 focus-visible:ring-violet-500 dark:border-slate-700 dark:bg-slate-800"
+                    className="rounded-xl border-slate-200 bg-slate-50 focus-visible:ring-blue-500 dark:border-slate-700 dark:bg-slate-800"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -226,7 +226,7 @@ export default function ContactPage() {
                     placeholder="jane@example.com"
                     value={form.email}
                     onChange={(e) => handleChange("email", e.target.value)}
-                    className="rounded-xl border-slate-200 bg-slate-50 focus-visible:ring-violet-500 dark:border-slate-700 dark:bg-slate-800"
+                    className="rounded-xl border-slate-200 bg-slate-50 focus-visible:ring-blue-500 dark:border-slate-700 dark:bg-slate-800"
                   />
                 </div>
               </div>
@@ -240,7 +240,7 @@ export default function ContactPage() {
                   placeholder="How can we help?"
                   value={form.subject}
                   onChange={(e) => handleChange("subject", e.target.value)}
-                  className="rounded-xl border-slate-200 bg-slate-50 focus-visible:ring-violet-500 dark:border-slate-700 dark:bg-slate-800"
+                  className="rounded-xl border-slate-200 bg-slate-50 focus-visible:ring-blue-500 dark:border-slate-700 dark:bg-slate-800"
                 />
               </div>
 
@@ -254,14 +254,14 @@ export default function ContactPage() {
                   rows={5}
                   value={form.message}
                   onChange={(e) => handleChange("message", e.target.value)}
-                  className="resize-none rounded-xl border-slate-200 bg-slate-50 focus-visible:ring-violet-500 dark:border-slate-700 dark:bg-slate-800"
+                  className="resize-none rounded-xl border-slate-200 bg-slate-50 focus-visible:ring-blue-500 dark:border-slate-700 dark:bg-slate-800"
                 />
               </div>
 
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full rounded-xl bg-linear-to-r from-violet-600 via-fuchsia-500 to-sky-500 py-5 text-sm font-semibold text-white shadow-md transition-opacity hover:opacity-90 disabled:opacity-60"
+                className="w-full rounded-xl bg-linear-to-r from-blue-600 via-cyan-500 to-sky-500 py-5 text-sm font-semibold text-white shadow-md transition-opacity hover:opacity-90 disabled:opacity-60"
               >
                 {loading ? (
                   "Sending…"
@@ -280,7 +280,7 @@ export default function ContactPage() {
       {/* ── FAQ ──────────────────────────────────────────────────────── */}
       <section className="space-y-8">
         <div className="space-y-1 text-center">
-          <p className="text-sm font-semibold uppercase tracking-widest text-violet-500 dark:text-violet-400">
+          <p className="text-sm font-semibold uppercase tracking-widest text-blue-500 dark:text-blue-400">
             FAQ
           </p>
           <h2 className="text-2xl font-bold text-slate-900 dark:text-white">

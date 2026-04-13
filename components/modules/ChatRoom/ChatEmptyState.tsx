@@ -46,9 +46,9 @@ export default function ChatEmptyState({
       : { href: "/experts", label: "Explore experts" };
 
   return (
-    <Card className="flex h-full items-center justify-center border-dashed bg-linear-to-br from-violet-50/70 via-background to-sky-50/70 shadow-sm">
+    <Card className="flex h-full items-center justify-center border-dashed bg-linear-to-br from-blue-50/70 via-background to-sky-50/70 shadow-sm">
       <CardContent className="max-w-xl space-y-4 py-14 text-center">
-        <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-violet-100 text-violet-700">
+        <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-blue-100 text-blue-700">
           <MessageCircleMore className="size-7" />
         </div>
 
@@ -62,7 +62,7 @@ export default function ChatEmptyState({
         </div>
 
         <div className="flex flex-wrap items-center justify-center gap-3">
-          <Button asChild className="bg-violet-600 hover:bg-violet-700">
+          <Button asChild className="bg-blue-600 hover:bg-blue-700">
             <Link href={primaryAction.href}>
               <Sparkles className="mr-2 size-4" />
               {primaryAction.label}

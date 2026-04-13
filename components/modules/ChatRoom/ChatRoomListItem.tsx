@@ -27,10 +27,13 @@ export default function ChatRoomListItem({
   );
 
   const primaryParticipant = otherParticipants[0] ?? room.participants[0];
-  const roomTitle =
-    room.name ||
-    otherParticipants.map((participant) => getParticipantDisplayName(participant)).join(", ") ||
-    "Conversation";
+  const otherParticipantsLabel = otherParticipants
+    .map((participant) => getParticipantDisplayName(participant))
+    .join(", ");
+  const isDirectConversation = room.participants.length <= 2 && otherParticipants.length === 1;
+  const roomTitle = isDirectConversation
+    ? otherParticipantsLabel || room.name || "Conversation"
+    : room.name || otherParticipantsLabel || "Conversation";
 
   const previewText = room.lastMessage?.attachment
     ? room.lastMessage.attachment.fileName
@@ -46,8 +49,8 @@ export default function ChatRoomListItem({
       className={cn(
         "flex w-full items-start gap-3 rounded-2xl border px-3 py-3 text-left transition-all duration-200",
         isActive
-          ? "border-violet-300 bg-violet-50 shadow-sm"
-          : "border-transparent bg-transparent hover:border-violet-200 hover:bg-violet-50/60",
+          ? "border-blue-300 bg-blue-50 shadow-sm"
+          : "border-transparent bg-transparent hover:border-blue-200 hover:bg-blue-50/60",
       )}
     >
       <Avatar className="size-10 border bg-background">
@@ -79,7 +82,7 @@ export default function ChatRoomListItem({
       </div>
 
       {room.unreadCount ? (
-        <Badge className="bg-violet-600 hover:bg-violet-600">{room.unreadCount}</Badge>
+        <Badge className="bg-blue-600 hover:bg-blue-600">{room.unreadCount}</Badge>
       ) : null}
     </button>
   );

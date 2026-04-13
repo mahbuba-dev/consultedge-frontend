@@ -77,7 +77,7 @@ export default function ResetPasswordForm({ email, otpSent = false }: { email: s
 
       <CardContent>
         {otpSent ? (
-          <Alert className="mb-4 border-violet-200 bg-violet-50 text-violet-800">
+          <Alert className="mb-4 border-blue-200 bg-blue-50 text-blue-800">
             <AlertDescription>
               OTP has been sent successfully. Check your email and complete the reset below.
             </AlertDescription>
