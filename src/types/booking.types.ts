@@ -7,7 +7,7 @@ export type ConsultationStatus =
   | "COMPLETED"
   | "CANCELLED"
   | "ONGOING";
-
+ 
 export type PaymentStatus = "UNPAID" | "PAID" | "FAILED" | "REFUNDED";
 
 export interface IScheduleSlot {

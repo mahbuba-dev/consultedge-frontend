@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Loader2, RefreshCw, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
 
 import ConsultationCard from "@/components/modules/Bokings/ConsultationCard";
 import PaymentStatusBanner from "@/components/modules/Bokings/PaymentStatusBanner";
@@ -16,7 +17,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import type { IConsultation } from "@/src/types/booking.types";
 import { getMyBookings, initiateConsultationPayment } from "@/src/services/bookings.service";
 
-type ConsultationsListProps = {
+export type ConsultationsListProps = {
+   consultations?: IConsultation[]; 
   highlightedConsultationId?: string | null;
   redirectStatus?: "success" | "cancelled" | "pending" | null;
   redirectPaymentId?: string | null;
@@ -44,6 +46,9 @@ const getErrorMessage = (error: unknown, fallback: string) => {
 
   return fallback;
 };
+
+
+
 
 const extractConsultations = (payload: unknown): IConsultation[] => {
   if (Array.isArray(payload)) {
@@ -91,7 +96,12 @@ const extractConsultations = (payload: unknown): IConsultation[] => {
   return [];
 };
 
+
+
+
+
 export default function ConsultationsList({
+  consultations = [],
   highlightedConsultationId,
   redirectStatus,
   redirectPaymentId,
@@ -122,7 +132,9 @@ export default function ConsultationsList({
     },
   });
 
-  const bookings = useMemo(() => extractConsultations(data), [data]);
+  const extracted = useMemo(() => extractConsultations(data), [data]);
+
+const bookings = consultations.length > 0 ? consultations : extracted;
 
   const bookingsWithRedirectState = useMemo(() => {
     if (redirectStatus !== "success") {
@@ -145,6 +157,14 @@ export default function ConsultationsList({
       };
     });
   }, [bookings, highlightedConsultationId, redirectPaymentId, redirectStatus]);
+
+
+
+ 
+
+
+
+
 
   const stats = useMemo(
     () => ({
