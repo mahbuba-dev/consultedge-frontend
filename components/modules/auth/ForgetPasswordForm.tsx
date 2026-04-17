@@ -141,7 +141,7 @@ export default function ForgetPasswordForm({
 
 // const ForgotPasswordForm = () => {
 //   const [serverError, setServerError] = useState<string | null>(null);
-//   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+//   const [successMessage, setsuccessMessage] = useState<string | null>(null);
 
 //   const { mutateAsync, isPending } = useMutation({
 //     mutationFn: (payload: IForgotPasswordPayload) => forgotPasswordAction(payload),
@@ -154,7 +154,7 @@ export default function ForgetPasswordForm({
 
 //     onSubmit: async ({ value }) => {
 //       setServerError(null);
-//       setSuccessMessage(null);
+//       setsuccessMessage(null);
 
 //       try {
 //         const result = (await mutateAsync(value)) as any;
@@ -164,7 +164,7 @@ export default function ForgetPasswordForm({
 //           return;
 //         }
 
-//         setSuccessMessage(result.message);
+//         setsuccessMessage(result.message);
 //       } catch (error: any) {
 //         setServerError(error.message);
 //       }

@@ -64,7 +64,7 @@ export default function ExpertReviewsPanel({ profile }: Props) {
       reply: string;
     }) => replyToTestimonial(id, { expertReply: reply }),
 
-    onSuccess: () => {
+    onsuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["testimonials", expertId],
       });

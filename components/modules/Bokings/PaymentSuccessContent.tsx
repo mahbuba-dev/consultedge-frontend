@@ -18,7 +18,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import usePaymentRedirectParams from "@/src/hooks/usePaymentRedirectParams";
-import { getMyBookings } from "@/src/services/bookings";
+import { getMyBookings } from "@/src/services/bookings.service";
 
 const formatCurrency = (amount?: string | null) => {
   if (!amount) {
@@ -243,16 +243,25 @@ export default function PaymentSuccessContent() {
           )}
 
           <div className="flex flex-wrap gap-3 pt-2">
-            <Button asChild className="bg-blue-600 hover:bg-blue-700">
+            {/* <Button asChild className="bg-blue-600 hover:bg-blue-700">
               <Link href={consultationsRedirectHref}>Go to Consultations</Link>
-            </Button>
+            </Button> */}
+            <Button asChild>
+  <Link href="/dashboard/consultations">
+    Go to Consultations
+  </Link>
+</Button>
 
-            <Button asChild variant="outline">
+            {/* <Button asChild variant="outline">
               <Link href={consultationsRedirectHref}>
                 View Booking Details
               </Link>
-            </Button>
-
+            </Button> */}
+  <Button asChild>
+  <Link href="/dashboard/consultations">
+    View Booking Details
+  </Link>
+</Button>
             <Button asChild variant="ghost">
               <Link href="/">
                 <Home className="mr-2 size-4" />

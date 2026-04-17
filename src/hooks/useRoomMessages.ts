@@ -97,7 +97,7 @@ export const useRoomMessages = (roomId?: string) => {
 
       return { previousMessages, optimisticId: optimisticMessage.id };
     },
-    onSuccess: (message, _payload, context) => {
+    onsuccess: (message, _payload, context) => {
       if (!roomId) {
         return;
       }
@@ -131,7 +131,7 @@ export const useRoomMessages = (roomId?: string) => {
 
   const uploadAttachmentMutation = useMutation({
     mutationFn: async (file: File) => uploadRoomAttachment(roomId as string, file),
-    onSuccess: (message) => {
+    onsuccess: (message) => {
       if (!roomId) {
         return;
       }

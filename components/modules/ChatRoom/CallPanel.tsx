@@ -1,3 +1,4 @@
+"use client";
 import { PhoneOff, Video } from "lucide-react";
 
 import { Button } from "@/components/ui/button";

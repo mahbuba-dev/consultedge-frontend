@@ -208,7 +208,7 @@ export default function BookingsManageTable() {
   const updateMutation = useMutation({
     mutationFn: ({ consultationId, status }: { consultationId: string; status: ConsultationStatus }) =>
       updateBookingStatusAction(consultationId, status),
-    onSuccess: (_, variables) => {
+    onsuccess: (_, variables) => {
       toast.success(`Booking marked as ${variables.status.toLowerCase()}.`);
       void refetch();
     },
@@ -219,7 +219,7 @@ export default function BookingsManageTable() {
 
   const cancelUnpaidMutation = useMutation({
     mutationFn: cancelUnpaidBookingsAction,
-    onSuccess: () => {
+    onsuccess: () => {
       toast.success("Unpaid consultations were cancelled successfully.");
       void refetch();
     },

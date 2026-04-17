@@ -265,3 +265,235 @@ export const httpClient = {
   patch: httpPatch,
   delete: httpDelete,
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import axios from "axios";
+// import { isTokenExpiringSoon } from "../tokenUtils";
+
+// // ---------------------------------------------
+// // Validate API Base URL
+// // ---------------------------------------------
+// const normalizeApiBaseUrl = (rawValue?: string) => {
+//   const value = rawValue?.trim().replace(/\/+$/, "");
+
+//   if (!value) return undefined;
+
+//   return value.endsWith("/api/v1") ? value : `${value}/api/v1`;
+// };
+
+// const API_BASE_URL = normalizeApiBaseUrl(process.env.NEXT_PUBLIC_API_BASE_URL);
+
+// if (!API_BASE_URL) {
+//   throw new Error("NEXT_PUBLIC_API_BASE_URL is not defined");
+// };
+
+// // ---------------------------------------------
+// // Server Context (SSR support)
+// // ---------------------------------------------
+// type ServerRequestContext = {
+//   cookieStore: any;
+//   requestHeaders: Headers;
+// };
+
+// const getServerRequestContext = async (): Promise<ServerRequestContext | null> => {
+//   if (typeof window !== "undefined") return null;
+
+//   try {
+//     const { cookies, headers } = await import("next/headers");
+//     return {
+//       cookieStore: await cookies(),
+//       requestHeaders: await headers(),
+//     };
+//   } catch {
+//     return null;
+//   }
+// };
+
+// // ---------------------------------------------
+// // Token refresh (safe best-effort)
+// // ---------------------------------------------
+// async function tryRefreshToken(
+//   accessToken: string,
+//   refreshToken: string,
+//   requestHeaders?: Headers
+// ) {
+//   if (!requestHeaders) return;
+
+//   const expiring = await isTokenExpiringSoon(accessToken);
+//   if (!expiring) return;
+
+//   if (requestHeaders.get("x-token-refreshed") === "1") return;
+
+//   try {
+//     const { getNewTokensWithRefreshToken } = await import(
+//       "@/src/services/auth.services"
+//     );
+
+//     await getNewTokensWithRefreshToken(refreshToken);
+//   } catch (error) {
+//     console.error("Token refresh failed:", error);
+//   }
+// }
+
+// // ---------------------------------------------
+// // Axios factory
+// // ---------------------------------------------
+// const createAxiosInstance = async () => {
+//   let cookieHeader = "";
+//   let accessTokenHeader = "";
+
+//   const serverContext = await getServerRequestContext();
+
+//   if (serverContext) {
+//     const { cookieStore, requestHeaders } = serverContext;
+
+//     const accessToken = cookieStore.get("accessToken")?.value;
+//     const refreshToken = cookieStore.get("refreshToken")?.value;
+
+//     if (accessToken && refreshToken) {
+//       await tryRefreshToken(accessToken, refreshToken, requestHeaders);
+//     }
+
+//     if (accessToken) {
+//       accessTokenHeader = `Bearer ${accessToken}`;
+//     }
+
+//     cookieHeader = cookieStore
+//       .getAll()
+//       .map((c: any) => `${c.name}=${c.value}`)
+//       .join("; ");
+//   }
+
+//   return axios.create({
+//     baseURL: API_BASE_URL,
+//     timeout: 30000,
+//     withCredentials: true,
+//     headers: {
+//       "Content-Type": "application/json",
+//       ...(cookieHeader ? { Cookie: cookieHeader } : {}),
+//       ...(accessTokenHeader ? { Authorization: accessTokenHeader } : {}),
+//     },
+//   });
+// };
+
+// // ---------------------------------------------
+// // Request options
+// // ---------------------------------------------
+// export interface ApiRequestOptions {
+//   params?: Record<string, unknown>;
+//   headers?: Record<string, string>;
+//   silent?: boolean;
+// }
+
+// // ---------------------------------------------
+// // HTTP METHODS
+// // ---------------------------------------------
+// const get = async <T>(
+//   endpoint: string,
+//   options?: ApiRequestOptions
+// ): Promise<T> => {
+//   try {
+//     const instance = await createAxiosInstance();
+
+//     const res = await instance.get<T>(endpoint, {
+//       params: options?.params,
+//       headers: options?.headers,
+//     });
+
+//     return res.data;
+//   } catch (err) {
+//     if (!options?.silent) {
+//       console.error("GET error:", endpoint, err);
+//     }
+//     throw err;
+//   }
+// };
+
+// const post = async <T>(
+//   endpoint: string,
+//   data?: any,
+//   options?: ApiRequestOptions
+// ): Promise<T> => {
+//   try {
+//     const instance = await createAxiosInstance();
+
+//     const res = await instance.post<T>(endpoint, data, {
+//       params: options?.params,
+//       headers: options?.headers,
+//     });
+
+//     return res.data;
+//   } catch (err) {
+//     if (!options?.silent) {
+//       console.error("POST error:", endpoint, err);
+//     }
+//     throw err;
+//   }
+// };
+
+// const put = async <T>(
+//   endpoint: string,
+//   data?: any,
+//   options?: ApiRequestOptions
+// ): Promise<T> => {
+//   const instance = await createAxiosInstance();
+
+//   const res = await instance.put<T>(endpoint, data, {
+//     params: options?.params,
+//     headers: options?.headers,
+//   });
+
+//   return res.data;
+// };
+
+// const patch = async <T>(
+//   endpoint: string,
+//   data?: any,
+//   options?: ApiRequestOptions
+// ): Promise<T> => {
+//   const instance = await createAxiosInstance();
+
+//   const res = await instance.patch<T>(endpoint, data, {
+//     params: options?.params,
+//     headers: options?.headers,
+//   });
+
+//   return res.data;
+// };
+
+// const del = async <T>(
+//   endpoint: string,
+//   options?: ApiRequestOptions
+// ): Promise<T> => {
+//   const instance = await createAxiosInstance();
+
+//   const res = await instance.delete<T>(endpoint, {
+//     params: options?.params,
+//     headers: options?.headers,
+//   });
+
+//   return res.data;
+// };
+
+// export const httpClient = {
+//   get,
+//   post,
+//   put,
+//   patch,
+//   delete: del,
+// };

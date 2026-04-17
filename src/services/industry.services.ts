@@ -22,7 +22,8 @@ export const getAllIndustries = async () => {
 
 export const getIndustries = async (): Promise<IIndustry[]> => {
   const res = await getAllIndustries();
-  return Array.isArray(res?.data) ? res.data : [];
+  console.log("industries:", res.data);
+  return Array.isArray(res.data) ? res.data : [];
 };
 
 // CREATE

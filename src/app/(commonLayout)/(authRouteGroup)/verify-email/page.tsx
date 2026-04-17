@@ -17,7 +17,7 @@ export default function VerifyEmailPage() {
   const email = searchParams.get("email");
 
   const [serverError, setServerError] = useState<string | null>(null);
-  const [serverSuccess, setServerSuccess] = useState<string | null>(null);
+  const [serversuccess, setServersuccess] = useState<string | null>(null);
 
   const [timer, setTimer] = useState(120);
   const [canResend, setCanResend] = useState(false);
@@ -45,8 +45,8 @@ export default function VerifyEmailPage() {
     mutationFn: async () => {
       return httpClient.post("/auth/resend-otp", { email });
     },
-    onSuccess: () => {
-      setServerSuccess("A new OTP has been sent to your email.");
+    onsuccess: () => {
+      setServersuccess("A new OTP has been sent to your email.");
       setTimer(120);
       setCanResend(false);
     },
@@ -58,7 +58,7 @@ export default function VerifyEmailPage() {
 
     onSubmit: async ({ value }) => {
       setServerError(null);
-      setServerSuccess(null);
+      setServersuccess(null);
 
       try {
         const res = await verifyMutation.mutateAsync({
@@ -66,7 +66,7 @@ export default function VerifyEmailPage() {
           otp: value.otp,
         });
 
-        setServerSuccess("Email verified successfully!");
+        setServersuccess("Email verified successfully!");
 
         setTimeout(() => {
           window.location.href = "/login";
@@ -110,10 +110,10 @@ export default function VerifyEmailPage() {
           </Alert>
         )}
 
-        {/* Success */}
-        {serverSuccess && (
+        {/* success */}
+        {serversuccess && (
           <Alert className="border-green-500 text-green-700">
-            <AlertDescription>{serverSuccess}</AlertDescription>
+            <AlertDescription>{serversuccess}</AlertDescription>
           </Alert>
         )}
 

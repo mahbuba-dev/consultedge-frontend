@@ -90,13 +90,13 @@ export default function ExpertDetails({
         Back to experts
       </Link>
 
-      <section className="relative overflow-hidden rounded-[32px] border border-blue-200/60 bg-linear-to-br from-slate-950 via-blue-950 to-cyan-900 text-white shadow-[0_30px_80px_-28px_rgba(91,33,182,0.55)]">
-        <div className="navbar-gradient-motion" aria-hidden="true" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.18),transparent_0%,transparent_42%)]" />
-        <div className="absolute -left-20 top-10 size-56 rounded-full bg-cyan-500/15 blur-3xl" />
-        <div className="absolute bottom-0 right-0 size-64 rounded-full bg-cyan-400/10 blur-3xl" />
+      <section className="relative overflow-visible rounded-[32px] border border-blue-200/60 bg-linear-to-br from-slate-950 via-blue-950 to-cyan-900 text-white shadow-[0_30px_80px_-28px_rgba(91,33,182,0.55)]">
+        <div className="navbar-gradient-motion pointer-events-none"  aria-hidden="true" />
+        <div className="absolute pointer-events-none inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.18),transparent_0%,transparent_42%)]" />
+        <div className="absolute -left-20 top-10 size-56 rounded-full bg-cyan-500/15 blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 right-0 size-64 rounded-full bg-cyan-400/10 blur-3xl pointer-events-none" />
 
-        <div className="relative grid gap-6 p-6 lg:grid-cols-[1.2fr_0.8fr] lg:p-8">
+        <div className="relative pointer-events-auto grid gap-6 p-6 lg:grid-cols-[1.2fr_0.8fr] lg:p-8">
           <div className="space-y-5">
             <div className="flex flex-wrap items-center gap-2">
               <Badge className="bg-white/10 text-white hover:bg-white/10">
@@ -115,7 +115,7 @@ export default function ExpertDetails({
             <div className="flex items-start gap-4">
               <div className="relative flex flex-col items-center">
                 <div className="relative">
-                  <Avatar size="xl" className="size-28 border-4 border-white/20 shadow-2xl md:size-36">
+                  <Avatar  className="size-28 border-4 border-white/20 shadow-2xl md:size-36">
                     {expert.profilePhoto ? (
                       <AvatarImage src={expert.profilePhoto} alt={expert.fullName} />
                     ) : null}
@@ -124,8 +124,8 @@ export default function ExpertDetails({
                     </AvatarFallback>
                   </Avatar>
                   {/* Animated Active icon, attached inside bottom-left of avatar */}
-                  <span className="absolute z-20 bottom-1 left-1 flex items-end justify-start">
-                    <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-emerald-900/90 ring-2 ring-white/70 shadow-lg">
+                  <span className="absolute z-20 bottom-1 left-5 flex items-end justify-start">
+                    <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-900/90 ring-2 ring-white/70 shadow-lg">
                       <span className="relative flex h-2 w-2">
                         <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
                         <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400 shadow" />

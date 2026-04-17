@@ -85,7 +85,7 @@ const LoginForm = ({ redirectPath, passwordReset = false }: LoginFormProps) => {
           return;
         }
 
-        // Success case handled inside loginAction (redirect)
+        // success case handled inside loginAction (redirect)
       } catch (error: any) {
         // Next.js server redirect can surface as an exception on the client.
         // In that case, do not show a false "Login failed" message.

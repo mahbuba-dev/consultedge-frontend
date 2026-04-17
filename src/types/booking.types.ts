@@ -1,10 +1,12 @@
 import type { IExpert } from "./expert.types";
+import { ITestimonial } from "./testimonial.types";
 
 export type ConsultationStatus =
   | "PENDING"
   | "CONFIRMED"
   | "COMPLETED"
-  | "CANCELLED";
+  | "CANCELLED"
+  | "ONGOING";
 
 export type PaymentStatus = "UNPAID" | "PAID" | "FAILED" | "REFUNDED";
 
@@ -37,6 +39,21 @@ export interface IClientBasicInfo {
   phone?: string | null;
 }
 
+// export interface IConsultation {
+//   id: string;
+//   videoCallId: string;
+//   status: ConsultationStatus;
+//   paymentStatus: PaymentStatus;
+//   date: string;
+//   clientId: string;
+//   expertId?: string | null;
+//   expertScheduleId: string;
+//   client?: IClientBasicInfo | null;
+//   expert?: IExpert | null;
+//   payment?: IPayment | null;
+//   createdAt: string;
+//   updatedAt: string;
+// }
 export interface IConsultation {
   id: string;
   videoCallId: string;
@@ -49,6 +66,7 @@ export interface IConsultation {
   client?: IClientBasicInfo | null;
   expert?: IExpert | null;
   payment?: IPayment | null;
+  testimonial?: ITestimonial | null;   // ✅ ADD THIS
   createdAt: string;
   updatedAt: string;
 }

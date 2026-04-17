@@ -4,7 +4,7 @@ export const deleteRoomMessage = async (roomId: string, messageId: string) => {
     `/chat/rooms/${roomId}/messages/${messageId}`,
     { silent: true }
   );
-  return response.data;
+  return response;
 };
 import { httpClient } from "../lib/axious/httpClient";
 import type {
@@ -242,7 +242,7 @@ export const getChatRooms = async (params?: Record<string, unknown>): Promise<Ch
       },
     );
 
-    const rooms = toArray(response.data, ["rooms", "items", "data"]);
+    const rooms = toArray(response, ["rooms", "items", "data"]);
     return sortChatRooms(
       rooms
         .map(normalizeChatRoom)
@@ -291,8 +291,8 @@ export const findOrCreateRoomForExpert = async (participantId: string): Promise<
         { silent: true },
       );
 
-      if (response.data) {
-        const normalizedRoom = normalizeChatRoom(response.data);
+      if (response) {
+        const normalizedRoom = normalizeChatRoom(response);
         if (normalizedRoom.id) {
           return normalizedRoom;
         }
@@ -332,7 +332,7 @@ export const getRoomMessages = async (roomId: string): Promise<ChatMessage[]> =>
       { silent: true },
     );
 
-    const messages = toArray(response.data, ["messages", "items", "data"]);
+    const messages = toArray(response, ["messages", "items", "data"]);
     return mergeUniqueMessages(messages.map(normalizeChatMessage));
   } catch (error: any) {
     if (error?.response?.status === 404) {
@@ -353,7 +353,7 @@ export const sendRoomMessage = async (
     { silent: true },
   );
 
-  return normalizeChatMessage(response.data);
+  return normalizeChatMessage(response);
 };
 
 export const uploadRoomAttachment = async (
@@ -374,7 +374,7 @@ export const uploadRoomAttachment = async (
     },
   );
 
-  return normalizeChatMessage(response.data);
+  return normalizeChatMessage(response);
 };
 
 export const startRoomCall = async (roomId: string): Promise<ChatCall> => {
@@ -384,7 +384,7 @@ export const startRoomCall = async (roomId: string): Promise<ChatCall> => {
     { silent: true },
   );
 
-  return normalizeChatCall(response.data);
+  return normalizeChatCall(response);
 };
 
 export const updateCallStatus = async (
@@ -397,5 +397,5 @@ export const updateCallStatus = async (
     { silent: true },
   );
 
-  return normalizeChatCall(response.data);
+  return normalizeChatCall(response);
 };

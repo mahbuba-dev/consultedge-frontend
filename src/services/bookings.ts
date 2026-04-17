@@ -1,131 +1,131 @@
-import { httpClient } from "../lib/axious/httpClient";
-import type { ApiResponse } from "../types/api.types";
-import type {
-  IBookConsultationPayload,
-  IBookConsultationResult,
-  IConsultation,
-  IConsultationQueryParams,
-  IInitiateConsultationPaymentResult,
-} from "../types/booking.types";
+// import { httpClient } from "../lib/axious/httpClient";
+// import type { ApiResponse } from "../types/api.types";
+// import type {
+//   IBookConsultationPayload,
+//   IBookConsultationResult,
+//   IConsultation,
+//   IConsultationQueryParams,
+//   IInitiateConsultationPaymentResult,
+// } from "../types/booking.types";
 
-const isNotFoundError = (error: unknown) => {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "response" in error &&
-    (error as { response?: { status?: number } }).response?.status === 404
-  );
-};
+// const isNotFoundError = (error: unknown) => {
+//   return (
+//     typeof error === "object" &&
+//     error !== null &&
+//     "response" in error &&
+//     (error as { response?: { status?: number } }).response?.status === 404
+//   );
+// };
 
-const emptyBookingsResponse = (): ApiResponse<IConsultation[]> => ({
-  success: true,
-  message: "No consultations found.",
-  data: [],
-} as unknown as ApiResponse<IConsultation[]>);
+// const emptyBookingsResponse = (): ApiResponse<IConsultation[]> => ({
+//   success: true,
+//   message: "No consultations found.",
+//   data: [],
+// } as unknown as ApiResponse<IConsultation[]>);
 
-export const bookConsultation = async (
-  payload: IBookConsultationPayload,
-): Promise<IBookConsultationResult> => {
-  const response = await httpClient.post<IBookConsultationResult>(
-    "/consultations/book",
-    payload,
-  );
+// export const bookConsultation = async (
+//   payload: IBookConsultationPayload,
+// ): Promise<IBookConsultationResult> => {
+//   const response = await httpClient.post<IBookConsultationResult>(
+//     "/consultations/book",
+//     payload,
+//   );
 
-  return response.data;
-};
+//   return response.data;
+// };
 
-export const bookConsultationWithPayLater = async (
-  payload: IBookConsultationPayload,
-): Promise<IBookConsultationResult> => {
-  const response = await httpClient.post<IBookConsultationResult>(
-    "/consultations/book/pay-later",
-    payload,
-  );
+// export const bookConsultationWithPayLater = async (
+//   payload: IBookConsultationPayload,
+// ): Promise<IBookConsultationResult> => {
+//   const response = await httpClient.post<IBookConsultationResult>(
+//     "/consultations/book/pay-later",
+//     payload,
+//   );
 
-  return response.data;
-};
+//   return response.data;
+// };
 
-export const initiateConsultationPayment = async (
-  consultationId: string,
-): Promise<IInitiateConsultationPaymentResult> => {
-  const response = await httpClient.post<IInitiateConsultationPaymentResult>(
-    `/consultations/${consultationId}/initiate-payment`,
-  );
+// export const initiateConsultationPayment = async (
+//   consultationId: string,
+// ): Promise<IInitiateConsultationPaymentResult> => {
+//   const response = await httpClient.post<IInitiateConsultationPaymentResult>(
+//     `/consultations/${consultationId}/initiate-payment`,
+//   );
 
-  return response.data;
-};
+//   return response.data;
+// };
 
-export const getMyBookings = async (params?: IConsultationQueryParams) => {
-  try {
-    return await httpClient.get<IConsultation[]>("/consultations/me", {
-      params,
-      silent: true,
-    });
-  } catch (error) {
-    if (!isNotFoundError(error)) {
-      throw error;
-    }
+// export const getMyBookings = async (params?: IConsultationQueryParams) => {
+//   try {
+//     return await httpClient.get<IConsultation[]>("/consultations/me", {
+//       params,
+//       silent: true,
+//     });
+//   } catch (error) {
+//     if (!isNotFoundError(error)) {
+//       throw error;
+//     }
 
-    try {
-      return await httpClient.get<IConsultation[]>("/consultations/client/me", {
-        params,
-        silent: true,
-      });
-    } catch (fallbackError) {
-      if (!isNotFoundError(fallbackError)) {
-        throw fallbackError;
-      }
+//     try {
+//       return await httpClient.get<IConsultation[]>("/consultations/client/me", {
+//         params,
+//         silent: true,
+//       });
+//     } catch (fallbackError) {
+//       if (!isNotFoundError(fallbackError)) {
+//         throw fallbackError;
+//       }
 
-      try {
-        return await httpClient.get<IConsultation[]>("/consultations", {
-          params,
-          silent: true,
-        });
-      } catch (finalError) {
-        if (isNotFoundError(finalError)) {
-          return emptyBookingsResponse();
-        }
+//       try {
+//         return await httpClient.get<IConsultation[]>("/consultations", {
+//           params,
+//           silent: true,
+//         });
+//       } catch (finalError) {
+//         if (isNotFoundError(finalError)) {
+//           return emptyBookingsResponse();
+//         }
 
-        throw finalError;
-      }
-    }
-  }
-};
+//         throw finalError;
+//       }
+//     }
+//   }
+// };
 
-export const getMyExpertBookings = async (params?: IConsultationQueryParams) => {
-  try {
-    return await httpClient.get<IConsultation[]>("/consultations/expert/me", {
-      params,
-      silent: true,
-    });
-  } catch (error) {
-    if (!isNotFoundError(error)) {
-      throw error;
-    }
+// export const getMyExpertBookings = async (params?: IConsultationQueryParams) => {
+//   try {
+//     return await httpClient.get<IConsultation[]>("/consultations/expert/me", {
+//       params,
+//       silent: true,
+//     });
+//   } catch (error) {
+//     if (!isNotFoundError(error)) {
+//       throw error;
+//     }
 
-    try {
-      return await httpClient.get<IConsultation[]>("/consultations", {
-        params,
-        silent: true,
-      });
-    } catch (fallbackError) {
-      if (isNotFoundError(fallbackError)) {
-        return emptyBookingsResponse();
-      }
+//     try {
+//       return await httpClient.get<IConsultation[]>("/consultations", {
+//         params,
+//         silent: true,
+//       });
+//     } catch (fallbackError) {
+//       if (isNotFoundError(fallbackError)) {
+//         return emptyBookingsResponse();
+//       }
 
-      throw fallbackError;
-    }
-  }
-};
+//       throw fallbackError;
+//     }
+//   }
+// };
 
-export const updateConsultationStatus = async (
-  consultationId: string,
-  status: string,
-) => {
-  const response = await httpClient.patch<IConsultation>(
-    `/consultations/${consultationId}/status`,
-    { status },
-  );
+// export const updateConsultationStatus = async (
+//   consultationId: string,
+//   status: string,
+// ) => {
+//   const response = await httpClient.patch<IConsultation>(
+//     `/consultations/${consultationId}/status`,
+//     { status },
+//   );
 
-  return response.data;
-};
+//   return response.data;
+// };

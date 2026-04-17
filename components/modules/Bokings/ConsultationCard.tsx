@@ -1,4 +1,4 @@
-
+"use client";
 import Link from "next/link";
 import { useState } from "react";
 import {
@@ -21,6 +21,18 @@ import JoinSessionModal from "../Session/JoinSessionModal";
 import EndSessionModal from "../Session/EndSessionModel";
 import ReviewModal from "../Review/ReviewModal";
 import CallPanel from "../ChatRoom/CallPanel";
+import { updateConsultationStatus } from "@/src/services/bookings.service";
+import { Router } from "next/router";
+import { useRouter } from "next/navigation";
+
+
+const isPastSession = (date?: string) => {
+  if (!date) return false;
+  return new Date(date) < new Date();
+};
+
+
+
 
 type ConsultationCardProps = {
   booking: IConsultation;
@@ -113,6 +125,8 @@ export default function ConsultationCard({
     .slice(0, 2)
     .toUpperCase();
 
+const router = useRouter();
+
   // Session flow state
   const [joinOpen, setJoinOpen] = useState(false);
   const [callOpen, setCallOpen] = useState(false);
@@ -123,7 +137,7 @@ export default function ConsultationCard({
   // Session status logic
   const isCompleted = booking.status === "COMPLETED";
   const isConfirmed = booking.status === "CONFIRMED" && booking.paymentStatus === "PAID";
-
+  const isPast = isPastSession(booking.date);
   // Handlers
   const handleJoin = () => {
     setLoading(true);
@@ -139,12 +153,34 @@ export default function ConsultationCard({
     setEndOpen(true);
   };
 
-  const handleConfirmEnd = () => {
-    setEndOpen(false);
-    setReviewOpen(true);
-    // Here, trigger backend session completion
-  };
+  // const handleConfirmEnd = () => {
+  //   setEndOpen(false);
+  //   setReviewOpen(true);
+  //   // Here, trigger backend session completion
+  // };
+const handleConfirmEnd = async () => {
+  try {
+    setLoading(true);
 
+    // 1. Update backend
+    await updateConsultationStatus(booking.id, "COMPLETED");
+
+    // 2. Update UI instantly
+    booking.status = "COMPLETED";
+
+    // 3. Close modals
+    setEndOpen(false);
+    setCallOpen(false);
+
+    // 4. Open review modal
+    setReviewOpen(true);
+
+  } catch (error) {
+    console.error("Error ending session:", error);
+  } finally {
+    setLoading(false);
+  }
+};
   const handleSubmitReview = (rating: number, comment: string) => {
     setLoading(true);
     setTimeout(() => {
@@ -153,6 +189,10 @@ export default function ConsultationCard({
       // Here, trigger backend review submission
     }, 1200);
   };
+
+  const hasReview = Boolean(booking.testimonial);
+
+
 
   return (
     <>
@@ -182,9 +222,13 @@ export default function ConsultationCard({
                 </div>
                 <p className="text-sm text-muted-foreground">{expertTitle}</p>
                 <div className="mt-2 flex flex-wrap gap-2">
-                  {getStatusBadge(booking.status)}
-                  {getPaymentBadge(booking.paymentStatus)}
-                </div>
+  {getStatusBadge(booking.status)}
+  {getPaymentBadge(booking.paymentStatus)}
+
+  {isConfirmed && !isCompleted && isPast && (
+    <Badge className="bg-red-100 text-red-700">Missed</Badge>
+  )}
+</div>
               </div>
             </div>
 
@@ -264,25 +308,55 @@ export default function ConsultationCard({
                 View details
               </Link>
             </Button>
+{/* Completed → Review Session */}
+{/* If completed and NOT reviewed → show Review button */}
+{isCompleted && !hasReview && (
+  <Button
+    variant="secondary"
+    className="bg-emerald-600 text-white hover:bg-emerald-700"
+    onClick={() => setReviewOpen(true)}
+  >
+    Review Session
+  </Button>
+)}
 
-            {isConfirmed && !isCompleted && (
-              <Button
-                variant="default"
-                className="bg-blue-600 text-white hover:bg-blue-700"
-                onClick={() => setJoinOpen(true)}
-              >
-                Join Session
-              </Button>
-            )}
-            {isCompleted && (
-              <Button
-                variant="secondary"
-                className="bg-emerald-600 text-white hover:bg-emerald-700"
-                onClick={() => setReviewOpen(true)}
-              >
-                Review Session
-              </Button>
-            )}
+{/* If completed AND reviewed → show Reviewed badge */}
+{isCompleted && hasReview && (
+  <Badge className="bg-emerald-100 text-emerald-700 text-sm font-semi-bold p-2">
+    Feedback Submitted
+  </Badge>
+)}
+
+{/* Confirmed, paid, not completed */}
+{isConfirmed && !isCompleted && (
+  <>
+    {isPast ? (
+      <>
+      
+        <Button
+          variant="outline"
+          className="border-red-300 text-red-700 hover:bg-red-50"
+          onClick={() =>
+            router.push(`/dashboard/reschedule?consultationId=${booking.id}`)
+          }
+        >
+          Reschedule
+        </Button>
+      </>
+    ) : (
+      <Button
+        variant="default"
+        className="bg-blue-600 text-white hover:bg-blue-700"
+        onClick={() => setJoinOpen(true)}
+      >
+        Join Session
+      </Button>
+    )}
+  </>
+)}
+
+
+         
 
             {canPayNow ? (
               <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => onPayNow(booking.id)}>

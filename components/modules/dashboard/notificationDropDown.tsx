@@ -147,7 +147,7 @@ const NotificationDropdown = () => {
 
   const markAllMutation = useMutation({
     mutationFn: markAllNotificationsAsRead,
-    onSuccess: () => {
+    onsuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["my-notifications"] });
       toast.success("All notifications marked as read.");
     },
@@ -155,14 +155,14 @@ const NotificationDropdown = () => {
 
   const markOneMutation = useMutation({
     mutationFn: (id: string) => markNotificationAsRead(id),
-    onSuccess: () => {
+    onsuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["my-notifications"] });
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteNotification(id),
-    onSuccess: () => {
+    onsuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["my-notifications"] });
       toast.success("Notification deleted.");
     },

@@ -43,28 +43,28 @@ export default function PaymentStatusBanner({
   transactionId,
   amount,
 }: PaymentStatusBannerProps) {
-  const isSuccess = status === "success";
+  const issuccess = status === "success";
   const isCancelled = status === "cancelled";
 
-  const title = isSuccess
+  const title = issuccess
     ? "Payment completed successfully"
     : isCancelled
       ? "Payment was cancelled"
       : "Payment status received";
 
-  const description = isSuccess
+  const description = issuccess
     ? "Your consultation payment is confirmed and your booking data is being refreshed."
     : isCancelled
       ? "No payment was taken. You can review the consultation below and try again whenever you are ready."
       : "We received a payment update from the gateway and saved the related details below.";
 
-  const Icon = isSuccess ? CheckCircle2 : isCancelled ? AlertTriangle : ReceiptText;
+  const Icon = issuccess ? CheckCircle2 : isCancelled ? AlertTriangle : ReceiptText;
 
   return (
     <Card
       className={cn(
         "shadow-sm",
-        isSuccess
+        issuccess
           ? "border-emerald-200 bg-emerald-50/60"
           : isCancelled
             ? "border-amber-200 bg-amber-50/60"
@@ -77,7 +77,7 @@ export default function PaymentStatusBanner({
             <Badge
               className={cn(
                 "mb-2",
-                isSuccess
+                issuccess
                   ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100"
                   : isCancelled
                     ? "bg-amber-100 text-amber-800 hover:bg-amber-100"
@@ -85,7 +85,7 @@ export default function PaymentStatusBanner({
               )}
             >
               <Icon className="mr-1 size-3.5" />
-              {isSuccess ? "Payment success" : isCancelled ? "Payment cancelled" : "Payment update"}
+              {issuccess ? "Payment success" : isCancelled ? "Payment cancelled" : "Payment update"}
             </Badge>
             <CardTitle className="text-xl">{title}</CardTitle>
             <CardDescription>{description}</CardDescription>

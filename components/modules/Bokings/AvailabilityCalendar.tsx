@@ -17,8 +17,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { bookConsultation, bookConsultationWithPayLater } from "@/src/services/bookings";
+// import { bookConsultation, bookConsultationWithPayLater } from "@/src/services/bookings";
 import type { IExpertAvailability } from "@/src/types/expert.types";
+import { bookConsultation, bookConsultationWithPayLater } from "@/src/services/bookings.service";
 
 type AvailabilityCalendarProps = {
   expertId: string;

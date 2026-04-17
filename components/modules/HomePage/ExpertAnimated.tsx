@@ -93,8 +93,8 @@ export default function ExpertAnimated({ experts }: ExpertAnimatedProps) {
       {tickerExperts.length > 0 ? (
         <div className="relative overflow-hidden rounded-[2rem] border border-cyan-100 bg-linear-to-r from-slate-950 via-blue-950 to-cyan-950 px-2 py-4 shadow-[0_24px_70px_-26px_rgba(34,211,238,0.35)]">
           <div className="navbar-gradient-motion" aria-hidden="true" />
-          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-linear-to-r from-slate-950 to-transparent" />
-          <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-linear-to-l from-cyan-950 to-transparent" />
+          <div className=" absolute inset-y-0 left-0 z-10 w-16 bg-linear-to-r from-slate-950 to-transparent" />
+          <div className=" absolute inset-y-0 right-0 z-10 w-16 bg-linear-to-l from-cyan-950 to-transparent" />
 
           <div
             className="industry-marquee-track flex w-max items-stretch gap-4 py-1"
@@ -113,7 +113,7 @@ export default function ExpertAnimated({ experts }: ExpertAnimatedProps) {
                     <CardContent className="space-y-4 p-4">
                       <div className="flex items-center gap-4">
                         <div className="relative flex items-center justify-center">
-                          <Avatar size="xl" className="size-20 border-2 border-white/20 ring-2 ring-white/10">
+                          <Avatar size="lg" className="size-20 border-2 border-white/20 ring-2 ring-white/10">
                             {expert.profilePhoto ? (
                               <AvatarImage src={expert.profilePhoto} alt={expert.fullName} />
                             ) : null}
@@ -123,7 +123,7 @@ export default function ExpertAnimated({ experts }: ExpertAnimatedProps) {
                           </Avatar>
                           {(
                             <span className="absolute bottom-1 left-1 z-20 flex items-end justify-start">
-                              <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-emerald-900/90 ring-2 ring-white/70 shadow-lg">
+                              <span className="inline-flex h-1 w-1 items-center justify-center rounded-full bg-emerald-900/90 ring-2 ring-white/70 shadow-lg">
                                 <span className="relative flex h-2 w-2">
                                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
                                   <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400 shadow" />

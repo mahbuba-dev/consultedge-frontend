@@ -24,7 +24,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { initiateConsultationPayment } from "@/src/services/bookings";
+import { initiateConsultationPayment } from "@/src/services/bookings.service";
 
 type PaymentResultCardProps = {
   mode?: "success" | "failed" | "cancelled" | "pending";

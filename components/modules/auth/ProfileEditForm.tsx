@@ -25,7 +25,7 @@ export default function EditProfile() {
   // Mutation
   const mutation = useMutation({
     mutationFn: updateProfile,
-    onSuccess: () => toast.success("Profile updated successfully"),
+    onsuccess: () => toast.success("Profile updated successfully"),
     onError: () => toast.error("Failed to update profile"),
   });
 

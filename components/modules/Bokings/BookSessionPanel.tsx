@@ -9,8 +9,16 @@ import { toast } from "sonner";
 import AvailabilityCalendar from "./AvailabilityCalendar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import type { IExpertAvailability } from "@/src/types/expert.types";
+import Portal from "./BookingPortal";
+import BookConsultationButton from "../Experts/BookConsultationButton";
 
 type BookSessionPanelProps = {
   expertId: string;
@@ -33,14 +41,10 @@ const getSlotStartDateTime = (slot: IExpertAvailability) => {
 
 const parseDateSafe = (value: string) => {
   const iso = parseISO(value);
-  if (!Number.isNaN(iso.getTime())) {
-    return iso;
-  }
+  if (!Number.isNaN(iso.getTime())) return iso;
 
   const fallback = new Date(value);
-  if (!Number.isNaN(fallback.getTime())) {
-    return fallback;
-  }
+  if (!Number.isNaN(fallback.getTime())) return fallback;
 
   return null;
 };
@@ -58,146 +62,182 @@ export default function BookSessionPanel({
   const router = useRouter();
   const [isBookingOpen, setIsBookingOpen] = useState(false);
 
+  // ✅ Find next available slot
   const nextAvailableSlot = useMemo(() => {
     const upcoming = availability
-      .filter((slot) => !slot.isBooked && !slot.isDeleted && Boolean(getSlotStartDateTime(slot)))
-      .sort((left, right) => {
-        const leftTime = parseDateSafe(getSlotStartDateTime(left))?.getTime() ?? 0;
-        const rightTime = parseDateSafe(getSlotStartDateTime(right))?.getTime() ?? 0;
-        return leftTime - rightTime;
+      .filter(
+        (slot) =>
+          !slot.isBooked &&
+          !slot.isDeleted &&
+          Boolean(getSlotStartDateTime(slot))
+      )
+      .sort((a, b) => {
+        const aTime =
+          parseDateSafe(getSlotStartDateTime(a))?.getTime() ?? 0;
+        const bTime =
+          parseDateSafe(getSlotStartDateTime(b))?.getTime() ?? 0;
+        return aTime - bTime;
       });
 
     return upcoming[0] ?? null;
   }, [availability]);
 
+  // ✅ FIXED: Book now works
   const handleBookNow = () => {
     if (!isLoggedIn) {
       toast.error("Please sign in to continue booking.", {
-        description: "We'll bring you back to this expert after login.",
+        description: "We'll bring you back after login.",
       });
-      router.push(`/login?redirect=${encodeURIComponent(`/experts/${expertId}#book-session`)}`);
+
+      router.push(
+        `/login?redirect=${encodeURIComponent(
+          `/experts/${expertId}#book-session`
+        )}`
+      );
       return;
     }
 
     setIsBookingOpen(true);
 
-    window.setTimeout(() => {
-      document.getElementById("booking-calendar-panel")?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
+    setTimeout(() => {
+      document
+        .getElementById("booking-calendar-panel")
+        ?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
     }, 100);
   };
 
+  // ✅ FIXED: Prevent unwanted reopen loop
   useEffect(() => {
-    if (openSignal <= 0) {
-      return;
-    }
+    if (openSignal <= 0) return;
 
-    setIsBookingOpen(true);
+    setIsBookingOpen((prev) => (prev ? prev : true));
 
-    window.setTimeout(() => {
-      document.getElementById("booking-calendar-panel")?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
+    setTimeout(() => {
+      document
+        .getElementById("booking-calendar-panel")
+        ?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
     }, 100);
   }, [openSignal]);
 
   return (
-    <div className="space-y-4">
-      <Card className="scroll-mt-24 border-cyan-200/70 shadow-lg shadow-cyan-500/5" id="book-session">
-        <CardHeader className="space-y-4">
-          <div className="flex flex-wrap items-start justify-between gap-4">
+   
+    <div className="z-9999 space-y-4 relative pointer-events-auto">
+      
+      {/* TOP CARD */}
+      <Card
+        className=" z-9999 scroll-mt-24 border-cyan-200/70 shadow-lg shadow-cyan-500/5"
+        id="book-session"
+      >
+        <CardHeader className="z-9999 space-y-4 ">
+          <div className="z-9999 flex flex-wrap items-start justify-between gap-4">
             <div>
-              <Badge className="mb-2 bg-cyan-100 text-cyan-700 hover:bg-cyan-100">
+              <Badge className="mb-2 bg-cyan-100 text-cyan-700">
                 <Sparkles className="mr-1 size-3.5" />
                 Smart booking flow
               </Badge>
-              <CardTitle className="text-2xl">Book this expert now</CardTitle>
+              <CardTitle className="text-2xl">
+                Book this expert now
+              </CardTitle>
               <CardDescription>
-                Select the best available date and time in a polished booking pop-up.
+                Select the best available date and time.
               </CardDescription>
             </div>
 
-            <Button onClick={handleBookNow} className="bg-blue-600 hover:bg-blue-700">
+            {/* <Button
+              onClick={handleBookNow}
+              className=" z-9999 bg-blue-600 hover:bg-blue-700 "
+            >
               {isBookingOpen ? "Select a time below ↓" : "Book now"}
-            </Button>
+            </Button> */}
+            {/* <Button
+  className="relative z-99999  pointer-events-auto"
+  onClick={() => console.log("BOOK NOW CLICKED")}
+>
+  Book now
+</Button> */}
+
           </div>
         </CardHeader>
 
         <CardContent className="grid gap-4 md:grid-cols-2">
+          {/* NEXT SLOT */}
           <div className="rounded-2xl border bg-blue-50/70 p-4">
             <div className="mb-2 flex items-center gap-2 text-blue-700">
               <CalendarDays className="size-4" />
-              <span className="text-xs font-semibold uppercase tracking-wide">Next available</span>
+              <span className="text-xs font-semibold uppercase">
+                Next available
+              </span>
             </div>
-            <p className="text-base font-semibold text-foreground">
-              {nextAvailableSlot && parseDateSafe(getSlotStartDateTime(nextAvailableSlot))
-                ? format(parseDateSafe(getSlotStartDateTime(nextAvailableSlot)) as Date, "EEEE, MMM d • h:mm a")
-                : "No time slots available yet"}
-            </p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {nextAvailableSlot
-                ? `Choose a time with ${expertName} and continue in seconds.`
-                : "Once the expert adds availability, booking will open here automatically."}
+
+            <p className="text-base font-semibold">
+              {nextAvailableSlot &&
+              parseDateSafe(getSlotStartDateTime(nextAvailableSlot))
+                ? format(
+                    parseDateSafe(
+                      getSlotStartDateTime(nextAvailableSlot)
+                    ) as Date,
+                    "EEEE, MMM d • h:mm a"
+                  )
+                : "No time slots available"}
             </p>
           </div>
 
+          {/* ACCESS */}
           <div className="rounded-2xl border bg-cyan-50/70 p-4">
             <div className="mb-2 flex items-center gap-2 text-cyan-700">
               <LockKeyhole className="size-4" />
-              <span className="text-xs font-semibold uppercase tracking-wide">Access</span>
+              <span className="text-xs font-semibold uppercase">
+                Access
+              </span>
             </div>
-            <p className="text-base font-semibold text-foreground">
+
+            <p className="text-base font-semibold">
               {!isLoggedIn
                 ? "Sign in required"
                 : userRole === "CLIENT"
-                  ? "Client booking enabled"
-                  : "Client account needed"}
-            </p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {!isLoggedIn
-                ? "You’ll be redirected to login first, then return to this expert."
-                : userRole === "CLIENT"
-                  ? "Open the booking pop-up to pick your date and time."
-                  : "Switch to a client account to complete the booking flow."}
+                ? "Client booking enabled"
+                : "Client account needed"}
             </p>
           </div>
         </CardContent>
       </Card>
 
-      {isBookingOpen ? (
-        <Card className="border-blue-200/70 shadow-lg" id="booking-calendar-panel">
-          <CardHeader className="border-b bg-muted/30">
-            <CardTitle className="text-xl">Choose your consultation slot</CardTitle>
-            <CardDescription>
-              Pick a date and time for your session with {expertName}.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="p-4 md:p-6">
-            <div className="mb-4 flex justify-end">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsBookingOpen(false)}
-              >
-                Close booking
-              </Button>
-            </div>
+      {/* BOOKING PANEL */}
+    {isBookingOpen && (
+  <Portal>
+    <Card
+      id="booking-calendar-panel"
+      className="mx-auto mt-20 w-full max-w-3xl rounded-xl bg-white p-6 shadow-xl"
+    >
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => setIsBookingOpen(false)}
+      >
+        Close booking
+      </Button>
 
-            <AvailabilityCalendar
-              expertId={expertId}
-              expertName={expertName}
-              expertTitle={expertTitle}
-              consultationFee={consultationFee}
-              availability={availability}
-              isLoggedIn={isLoggedIn}
-              userRole={userRole}
-            />
-          </CardContent>
-        </Card>
-      ) : null}
+      <AvailabilityCalendar
+        expertId={expertId}
+        expertName={expertName}
+        expertTitle={expertTitle}
+        consultationFee={consultationFee}
+        availability={availability}
+        isLoggedIn={isLoggedIn}
+        userRole={userRole}
+      />
+    </Card>
+  </Portal>
+)}
+
     </div>
+   
+
   );
 }

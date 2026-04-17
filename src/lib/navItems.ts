@@ -147,7 +147,7 @@ export const clientNavItems: NavSection[] = [
         icon: "Calendar",
       },
       {
-        title: "Payment Success",
+        title: "Payment success",
         href: "/dashboard/payment/success",
         icon: "CheckCircle2",
       },

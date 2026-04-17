@@ -90,7 +90,7 @@ const supportHighlights = [
 export default function HomeSection3() {
   return (
     <>
-      <section className="space-y-6">
+      <section className="space-y-6 my-8">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <Badge variant="secondary" className="mb-2 bg-amber-100 text-amber-700">
@@ -214,7 +214,7 @@ export default function HomeSection3() {
         </Accordion>
       </section>
 
-      <section className="relative overflow-hidden rounded-[2rem] border border-slate-900 bg-linear-to-r from-slate-950 via-blue-950 to-cyan-950 p-6 text-white shadow-xl md:p-10">
+      <section className=" mt-8 relative overflow-hidden rounded-[2rem] border border-slate-900 bg-linear-to-r from-slate-950 via-blue-950 to-cyan-950 p-6 text-white shadow-xl md:p-10">
         <div className=" bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.08),transparent_35%)]" />
 
         <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">

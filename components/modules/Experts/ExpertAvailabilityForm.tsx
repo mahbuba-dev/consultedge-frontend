@@ -16,6 +16,7 @@ import { createScheduleSlot } from "@/src/services/expertAvailability";
 export default function ExpertAvailabilityForm() {
   const router = useRouter();
   const queryClient = useQueryClient();
+
   const [formState, setFormState] = useState({
     startDate: "",
     endDate: "",
@@ -23,49 +24,40 @@ export default function ExpertAvailabilityForm() {
     endTime: "",
   });
 
+  // ⭐ SAFE LOCAL DATETIME BUILDER (NO UTC SHIFT)
+  const buildLocalDateTime = (dateStr: string, timeStr: string) => {
+    const [y, m, d] = dateStr.split("-").map(Number);
+    const [hh, mm] = timeStr.split(":").map(Number);
+    return new Date(y, m - 1, d, hh, mm, 0, 0);
+  };
+
+  // ⭐ SLOT COUNT CALCULATION
   const getExpectedSlotCount = () => {
     const { startDate, endDate, startTime, endTime } = formState;
 
-    if (!startDate || !endDate || !startTime || !endTime) {
-      return null;
-    }
+    if (!startDate || !endDate || !startTime || !endTime) return null;
 
-    const startDateValue = new Date(startDate);
-    const endDateValue = new Date(endDate);
+    const startDateValue = buildLocalDateTime(startDate, startTime);
+    const endDateValue = buildLocalDateTime(endDate, endTime);
 
     if (Number.isNaN(startDateValue.getTime()) || Number.isNaN(endDateValue.getTime())) {
       return null;
     }
 
     const daySpan = differenceInCalendarDays(endDateValue, startDateValue);
-    if (daySpan < 0) {
-      return null;
-    }
+    if (daySpan < 0) return null;
 
     const [startHour, startMinute] = startTime.split(":").map(Number);
     const [endHour, endMinute] = endTime.split(":").map(Number);
-
-    if (
-      Number.isNaN(startHour) ||
-      Number.isNaN(startMinute) ||
-      Number.isNaN(endHour) ||
-      Number.isNaN(endMinute)
-    ) {
-      return null;
-    }
 
     const startMinutes = startHour * 60 + startMinute;
     const endMinutes = endHour * 60 + endMinute;
     const minutesPerDay = endMinutes - startMinutes;
 
-    if (minutesPerDay <= 0) {
-      return null;
-    }
+    if (minutesPerDay <= 0) return null;
 
     const slotsPerDay = Math.floor(minutesPerDay / 30);
-    if (slotsPerDay <= 0) {
-      return null;
-    }
+    if (slotsPerDay <= 0) return null;
 
     const totalDays = daySpan + 1;
     return slotsPerDay * totalDays;
@@ -73,16 +65,27 @@ export default function ExpertAvailabilityForm() {
 
   const expectedSlotCount = getExpectedSlotCount();
 
+  // ---------------- MUTATION ----------------
+
   const createMutation = useMutation({
     mutationFn: () => createScheduleSlot(formState),
-    onSuccess: (createdSlots) => {
+
+    onSuccess: async (createdSlots) => {
       toast.success("Schedule slots created successfully.", {
-        description: `${createdSlots.length} slot${createdSlots.length === 1 ? "" : "s"} added to your schedule.`,
+        description: `${createdSlots.length} slot${
+          createdSlots.length === 1 ? "" : "s"
+        } added to your schedule.`,
       });
-      void queryClient.invalidateQueries({ queryKey: ["expert-my-schedules"] });
+
+      // ✅ IMPORTANT: wait for cache invalidation
+      await queryClient.invalidateQueries({
+        queryKey: ["expert-my-schedules"],
+      });
+
+      // ✅ navigate AFTER cache is refreshed
       router.push("/expert/dashboard/my-schedules");
-      router.refresh();
     },
+
     onError: (error: any) => {
       const message =
         error?.response?.data?.message ||
@@ -93,21 +96,20 @@ export default function ExpertAvailabilityForm() {
     },
   });
 
+  // ---------------- SUBMIT ----------------
+
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (
-      !formState.startDate ||
-      !formState.endDate ||
-      !formState.startTime ||
-      !formState.endTime
-    ) {
+    const { startDate, endDate, startTime, endTime } = formState;
+
+    if (!startDate || !endDate || !startTime || !endTime) {
       toast.error("Please fill in the date and time for your schedule.");
       return;
     }
 
-    const start = new Date(`${formState.startDate}T${formState.startTime}`);
-    const end = new Date(`${formState.endDate}T${formState.endTime}`);
+    const start = buildLocalDateTime(startDate, startTime);
+    const end = buildLocalDateTime(endDate, endTime);
 
     if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end <= start) {
       toast.error("Please choose a valid time range where the end is after the start.");
@@ -116,6 +118,8 @@ export default function ExpertAvailabilityForm() {
 
     createMutation.mutate();
   };
+
+  // ---------------- UI ----------------
 
   return (
     <Card className="max-w-3xl border-border/70 shadow-sm">
@@ -138,8 +142,8 @@ export default function ExpertAvailabilityForm() {
                 id="startDate"
                 type="date"
                 value={formState.startDate}
-                onChange={(event) =>
-                  setFormState((current) => ({ ...current, startDate: event.target.value }))
+                onChange={(e) =>
+                  setFormState((p) => ({ ...p, startDate: e.target.value }))
                 }
               />
             </div>
@@ -150,8 +154,8 @@ export default function ExpertAvailabilityForm() {
                 id="endDate"
                 type="date"
                 value={formState.endDate}
-                onChange={(event) =>
-                  setFormState((current) => ({ ...current, endDate: event.target.value }))
+                onChange={(e) =>
+                  setFormState((p) => ({ ...p, endDate: e.target.value }))
                 }
               />
             </div>
@@ -162,8 +166,8 @@ export default function ExpertAvailabilityForm() {
                 id="startTime"
                 type="time"
                 value={formState.startTime}
-                onChange={(event) =>
-                  setFormState((current) => ({ ...current, startTime: event.target.value }))
+                onChange={(e) =>
+                  setFormState((p) => ({ ...p, startTime: e.target.value }))
                 }
               />
             </div>
@@ -174,8 +178,8 @@ export default function ExpertAvailabilityForm() {
                 id="endTime"
                 type="time"
                 value={formState.endTime}
-                onChange={(event) =>
-                  setFormState((current) => ({ ...current, endTime: event.target.value }))
+                onChange={(e) =>
+                  setFormState((p) => ({ ...p, endTime: e.target.value }))
                 }
               />
             </div>

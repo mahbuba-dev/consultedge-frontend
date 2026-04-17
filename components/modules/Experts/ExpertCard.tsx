@@ -63,15 +63,15 @@ export default function ExpertCard({ expert }: { expert: IExpert }) {
   ];
 
   return (
-    <Card className="group flex h-full flex-col overflow-hidden border-blue-200/70 bg-white/92 shadow-[0_20px_50px_-24px_rgba(37,99,235,0.35)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_28px_80px_-28px_rgba(37,99,235,0.5)] dark:border-white/10 dark:bg-slate-900/92 dark:shadow-[0_22px_60px_-30px_rgba(15,23,42,0.9)]">
-      <div className="relative overflow-hidden border-b border-blue-100/70 bg-linear-to-br from-slate-950 via-blue-950 to-cyan-900 p-4 text-white dark:border-white/10">
+    <Card className="group flex h-full flex-col overflow-visible border-blue-200/70 bg-white/92 shadow-[0_20px_50px_-24px_rgba(37,99,235,0.35)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_28px_80px_-28px_rgba(37,99,235,0.5)] dark:border-white/10 dark:bg-slate-900/92 dark:shadow-[0_22px_60px_-30px_rgba(15,23,42,0.9)]">
+      <div className="relative overflow-visible border-b border-blue-100/70 bg-linear-to-br from-slate-950 via-blue-950 to-cyan-900 p-4 text-white dark:border-white/10">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.16),transparent_0%,transparent_42%)]" />
         <div className="relative space-y-4">
 
           <div className="flex items-start gap-3">
             <div className="relative flex flex-col items-center">
               <div className="relative">
-                <Avatar size="xl" className="border-2 border-white/20 ring-2 ring-white/10">
+                <Avatar size="lg" className="border-2 border-white/20 ring-2 ring-white/10">
                   {expert.profilePhoto ? (
                     <AvatarImage src={expert.profilePhoto} alt={expert.fullName} />
                   ) : null}
@@ -80,8 +80,8 @@ export default function ExpertCard({ expert }: { expert: IExpert }) {
                   </AvatarFallback>
                 </Avatar>
                 {/* Animated Active icon, attached inside bottom-left of avatar */}
-                <span className="absolute z-20 bottom-1 left-1 flex items-end justify-start">
-                  <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-emerald-900/90 ring-2 ring-white/70 shadow-lg">
+                <span className="absolute z-20 bottom-0 left-1 flex items-end justify-start">
+                  <span className="inline-flex h-3 w-3 items-center justify-center rounded-full bg-emerald-900/90 ring-2 ring-white/70 shadow-lg">
                     <span className="relative flex h-2 w-2">
                       <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
                       <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400 shadow" />

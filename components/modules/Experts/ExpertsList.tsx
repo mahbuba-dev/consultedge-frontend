@@ -433,7 +433,7 @@ export default function ExpertsPageClient() {
               <SelectTrigger className="h-11 min-w-38 rounded-full border-blue-200 bg-white/90 text-blue-950 shadow-sm transition-all duration-200 hover:border-blue-300 focus:ring-2 focus:ring-blue-500/20 dark:border-white/15 dark:bg-slate-900/90 dark:text-slate-100 dark:hover:border-blue-400/40 dark:focus:ring-blue-400/30">
                 <SelectValue placeholder="Industry" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="z-9999">
                 <SelectItem value="all">All industries</SelectItem>
                 {industries.map((industry: IIndustry) => (
                   <SelectItem key={industry.id} value={industry.id}>

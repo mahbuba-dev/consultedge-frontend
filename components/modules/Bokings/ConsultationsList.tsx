@@ -12,8 +12,9 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { getMyBookings, initiateConsultationPayment } from "@/src/services/bookings";
+// import { getMyBookings, initiateConsultationPayment } from "@/src/services/bookings";
 import type { IConsultation } from "@/src/types/booking.types";
+import { getMyBookings, initiateConsultationPayment } from "@/src/services/bookings.service";
 
 type ConsultationsListProps = {
   highlightedConsultationId?: string | null;

@@ -1,3 +1,4 @@
+
 import { notFound } from "next/navigation";
 
 import ExpertDetails from "@/components/modules/Experts/ExpertDetails";
@@ -72,6 +73,7 @@ const ExpertDetailsPage = async ({
         testimonials={testimonials}
         isLoggedIn={Boolean(currentUser)}
         userRole={currentUser?.role ?? null}
+        
       />
     );
   } catch {

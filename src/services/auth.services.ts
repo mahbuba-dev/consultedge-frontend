@@ -233,14 +233,14 @@ export async function changePasswordService(payload: ChangePasswordPayload) {
     });
 
     const result = await response.json().catch(() => ({}));
-    const isSuccess = response.ok && result?.success === true;
+    const issuccess = response.ok && result?.success === true;
 
     const responseData = result?.data;
     const nextAccessToken = responseData?.accessToken;
     const nextRefreshToken = responseData?.refreshToken;
     const nextSessionToken = responseData?.token;
 
-    if (isSuccess) {
+    if (issuccess) {
       if (nextAccessToken) {
         await setTokenInCookies("accessToken", nextAccessToken, 7 * 24 * 60 * 60);
       }
@@ -256,8 +256,8 @@ export async function changePasswordService(payload: ChangePasswordPayload) {
 
     return {
       ...result,
-      success: isSuccess,
-      message: result?.message || (isSuccess ? "Password changed successfully" : "Failed to change password"),
+      success: issuccess,
+      message: result?.message || (issuccess ? "Password changed successfully" : "Failed to change password"),
     };
   } catch (error: any) {
     return {
