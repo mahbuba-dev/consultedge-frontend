@@ -3,6 +3,20 @@ import { ApiResponse } from "../types/api.types";
 
 import type { ITestimonial } from "../types/testimonial.types";
 
+type ApiPayload<TData> = ApiResponse<TData> | { data?: TData } | TData;
+
+// ------------------------------
+// ADMIN UPDATE REVIEW STATUS
+// ------------------------------
+export const updateTestimonialStatus = async (
+  testimonialId: string,
+  status: "APPROVED" | "HIDDEN"
+) => {
+  if (!testimonialId) throw new Error("A valid review ID is required.");
+  const response = await httpClient.patch<ITestimonial>(`/testimonials/${testimonialId}/status`, { status });
+  return extractData(response) ?? response;
+};
+
 // ------------------------------
 // HELPERS
 // ------------------------------
@@ -10,7 +24,27 @@ const normalizeTestimonials = (payload: ITestimonial[] | undefined) =>
   Array.isArray(payload) ? payload : [];
 
 // Extract actual data from backend response
-const extractData = (response: any) => response?.data?.data;
+const extractData = <TData>(response: ApiPayload<TData> | undefined): TData | undefined => {
+  if (!response) {
+    return undefined;
+  }
+
+  if (typeof response === "object" && response !== null && "data" in response) {
+    const payload = response as { data?: TData | { data?: TData } };
+
+    if (
+      typeof payload.data === "object" &&
+      payload.data !== null &&
+      "data" in payload.data
+    ) {
+      return (payload.data as { data?: TData }).data;
+    }
+
+    return payload.data as TData | undefined;
+  }
+
+  return response as TData;
+};
 
 // ------------------------------
 // GENERIC REQUEST HANDLER
@@ -19,12 +53,12 @@ const requestTestimonials = async (
   endpoint: string,
   params?: Record<string, unknown>
 ): Promise<ITestimonial[]> => {
-  const response = await httpClient.get(endpoint, {
+  const response = await httpClient.get<ITestimonial[]>(endpoint, {
     params,
     silent: true,
   });
 
-  return normalizeTestimonials(extractData(response));
+  return normalizeTestimonials(extractData<ITestimonial[]>(response));
 };
 
 // ------------------------------
@@ -35,9 +69,15 @@ export const createTestimonial = async (payload: {
   comment: string;
   consultationId: string;
 }): Promise<ITestimonial> => {
-  const response = await httpClient.post("/testimonials", payload);
+  const response = await httpClient.post<ITestimonial>("/testimonials", payload);
 
-  return extractData(response);
+  const testimonial = extractData<ITestimonial>(response);
+
+  if (!testimonial) {
+    throw new Error("Invalid testimonial response from the server.");
+  }
+
+  return testimonial;
 };
 
 // ------------------------------
@@ -69,6 +109,19 @@ export const getAllTestimonials = async (
   }
 };
 
+export const getAllTestimonialsForAdmin = async (
+  limit = 100
+): Promise<ITestimonial[]> => {
+  const params = {
+    limit,
+    sortBy: "createdAt",
+    sortOrder: "desc",
+  };
+const res=  await requestTestimonials("/testimonials/admin", params);
+console.log(res);
+return res;
+};
+
 // ------------------------------
 // GET TESTIMONIALS BY EXPERT
 // ------------------------------
@@ -96,17 +149,11 @@ export const getAllTestimonials = async (
 export const getTestimonialsByExpert = async (
   expertId: string
 ): Promise<ITestimonial[]> => {
-  const res = await httpClient.get<any>(
+  const response = await httpClient.get<ITestimonial[]>(
     `/testimonials/expert/${expertId}`
   );
 
-  console.log("FINAL RES:", res);
-
-  // 🔥 handle all cases safely
-  const data =
-    res?.data?.data ??
-    res?.data ??
-    res;
+  const data = extractData<ITestimonial[]>(response);
 
   return Array.isArray(data) ? data : [];
 };
@@ -123,12 +170,12 @@ export const replyToTestimonial = async (
     throw new Error("Testimonial ID is required.");
   }
 
-  const response = await httpClient.patch<ApiResponse<ITestimonial>>(
+  const response = await httpClient.patch<ITestimonial>(
     `/testimonials/${testimonialId}/reply`,
     payload
   );
 
-  return response.data;
+  return response;
 };
 
 
@@ -140,47 +187,3 @@ export const replyToTestimonial = async (
 
 
 
-// ------------------------------
-// DELETE TESTIMONIAL
-// ------------------------------
-export const deleteTestimonialAction = async (
-  testimonialId: string
-) => {
-  if (!testimonialId) {
-    throw new Error("A valid review ID is required.");
-  }
-
-  try {
-    const response = await httpClient.delete(`/testimonials/${testimonialId}`, {
-      silent: true,
-    });
-
-    return response?.data ?? { success: true };
-  } catch (error: any) {
-    if (error?.response?.status === 404) {
-      try {
-        const fallbackResponse = await httpClient.delete(
-          `/testimonials/${testimonialId}`,
-          { silent: true }
-        );
-
-        return fallbackResponse?.data ?? { success: true };
-      } catch (fallbackError: any) {
-        if ([404, 405].includes(fallbackError?.response?.status)) {
-          throw new Error(
-            "Review deletion is not available from the server yet."
-          );
-        }
-        throw fallbackError;
-      }
-    }
-
-    if (error?.response?.status === 405) {
-      throw new Error(
-        "Review deletion is not available from the server yet."
-      );
-    }
-
-    throw error;
-  }
-};

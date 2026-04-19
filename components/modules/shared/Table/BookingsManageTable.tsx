@@ -40,16 +40,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  cancelUnpaidBookingsAction,
-  getAllBookings,
-  updateBookingStatusAction,
-} from "@/src/services/bookings.service";
+
 import type {
   ConsultationStatus,
   IConsultation,
   PaymentStatus,
 } from "@/src/types/booking.types";
+import { cancelUnpaidBookingsAction, getAllBookings, updateConsultationStatus } from "@/src/services/bookings.service";
 
 const getErrorMessage = (error: unknown, fallback: string) => {
   if (typeof error === "object" && error !== null) {
@@ -207,8 +204,8 @@ export default function BookingsManageTable() {
 
   const updateMutation = useMutation({
     mutationFn: ({ consultationId, status }: { consultationId: string; status: ConsultationStatus }) =>
-      updateBookingStatusAction(consultationId, status),
-    onsuccess: (_, variables) => {
+      updateConsultationStatus(consultationId, status),
+    onSuccess: (_, variables) => {
       toast.success(`Booking marked as ${variables.status.toLowerCase()}.`);
       void refetch();
     },
@@ -219,7 +216,7 @@ export default function BookingsManageTable() {
 
   const cancelUnpaidMutation = useMutation({
     mutationFn: cancelUnpaidBookingsAction,
-    onsuccess: () => {
+    onSuccess: () => {
       toast.success("Unpaid consultations were cancelled successfully.");
       void refetch();
     },

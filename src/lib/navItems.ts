@@ -128,9 +128,14 @@ export const adminNavItems: NavSection[] = [
         icon: "Star",
       },
       {
-        title: "Messages",
-        href: "/admin/dashboard/messages",
-        icon: "MessageCircleMore",
+       title: "Messages",
+       href: "/admin/dashboard/messages",
+       icon: "MessageCircleMore",
+      },
+      {
+       title: "Conversation Hub",
+       href: "/admin/dashboard/messages",
+       icon: "MessagesSquare",
       },
     ],
   },
@@ -148,7 +153,7 @@ export const clientNavItems: NavSection[] = [
       },
       {
         title: "Payment success",
-        href: "/dashboard/payment/success",
+        href: "/dashboard/payment/consultation-success",
         icon: "CheckCircle2",
       },
       {

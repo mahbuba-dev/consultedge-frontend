@@ -1,131 +1,235 @@
+// // import { httpClient } from "../lib/axious/httpClient";
+// // import type { ApiResponse } from "../types/api.types";
+// // import type {
+// //   IBookConsultationPayload,
+// //   IBookConsultationResult,
+// //   IConsultation,
+// //   IConsultationQueryParams,
+// //   IInitiateConsultationPaymentResult,
+// // } from "../types/booking.types";
+
+// // const isNotFoundError = (error: unknown) => {
+// //   return (
+// //     typeof error === "object" &&
+// //     error !== null &&
+// //     "response" in error &&
+// //     (error as { response?: { status?: number } }).response?.status === 404
+// //   );
+// // };
+
+// // const emptyBookingsResponse = (): ApiResponse<IConsultation[]> => ({
+// //   success: true,
+// //   message: "No consultations found.",
+// //   data: [],
+// // } as unknown as ApiResponse<IConsultation[]>);
+
+// // export const bookConsultation = async (
+// //   payload: IBookConsultationPayload,
+// // ): Promise<IBookConsultationResult> => {
+// //   const response = await httpClient.post<IBookConsultationResult>(
+// //     "/consultations/book",
+// //     payload,
+// //   );
+
+// //   return response.data;
+// // };
+
+// // export const bookConsultationWithPayLater = async (
+// //   payload: IBookConsultationPayload,
+// // ): Promise<IBookConsultationResult> => {
+// //   const response = await httpClient.post<IBookConsultationResult>(
+// //     "/consultations/book/pay-later",
+// //     payload,
+// //   );
+
+// //   return response.data;
+// // };
+
+// // export const initiateConsultationPayment = async (
+// //   consultationId: string,
+// // ): Promise<IInitiateConsultationPaymentResult> => {
+// //   const response = await httpClient.post<IInitiateConsultationPaymentResult>(
+// //     `/consultations/${consultationId}/initiate-payment`,
+// //   );
+
+// //   return response.data;
+// // };
+
+// // export const getMyBookings = async (params?: IConsultationQueryParams) => {
+// //   try {
+// //     return await httpClient.get<IConsultation[]>("/consultations/me", {
+// //       params,
+// //       silent: true,
+// //     });
+// //   } catch (error) {
+// //     if (!isNotFoundError(error)) {
+// //       throw error;
+// //     }
+
+// //     try {
+// //       return await httpClient.get<IConsultation[]>("/consultations/client/me", {
+// //         params,
+// //         silent: true,
+// //       });
+// //     } catch (fallbackError) {
+// //       if (!isNotFoundError(fallbackError)) {
+// //         throw fallbackError;
+// //       }
+
+// //       try {
+// //         return await httpClient.get<IConsultation[]>("/consultations", {
+// //           params,
+// //           silent: true,
+// //         });
+// //       } catch (finalError) {
+// //         if (isNotFoundError(finalError)) {
+// //           return emptyBookingsResponse();
+// //         }
+
+// //         throw finalError;
+// //       }
+// //     }
+// //   }
+// // };
+
+// // export const getMyExpertBookings = async (params?: IConsultationQueryParams) => {
+// //   try {
+// //     return await httpClient.get<IConsultation[]>("/consultations/expert/me", {
+// //       params,
+// //       silent: true,
+// //     });
+// //   } catch (error) {
+// //     if (!isNotFoundError(error)) {
+// //       throw error;
+// //     }
+
+// //     try {
+// //       return await httpClient.get<IConsultation[]>("/consultations", {
+// //         params,
+// //         silent: true,
+// //       });
+// //     } catch (fallbackError) {
+// //       if (isNotFoundError(fallbackError)) {
+// //         return emptyBookingsResponse();
+// //       }
+
+// //       throw fallbackError;
+// //     }
+// //   }
+// // };
+
+// // export const updateConsultationStatus = async (
+// //   consultationId: string,
+// //   status: string,
+// // ) => {
+// //   const response = await httpClient.patch<IConsultation>(
+// //     `/consultations/${consultationId}/status`,
+// //     { status },
+// //   );
+
+// //   return response.data;
+// // };
+
+
+
+
+
 // import { httpClient } from "../lib/axious/httpClient";
 // import type { ApiResponse } from "../types/api.types";
 // import type {
-//   IBookConsultationPayload,
-//   IBookConsultationResult,
+//   ConsultationStatus,
 //   IConsultation,
 //   IConsultationQueryParams,
-//   IInitiateConsultationPaymentResult,
 // } from "../types/booking.types";
 
-// const isNotFoundError = (error: unknown) => {
-//   return (
-//     typeof error === "object" &&
-//     error !== null &&
-//     "response" in error &&
-//     (error as { response?: { status?: number } }).response?.status === 404
-//   );
-// };
+// type ConsultationCollection = IConsultation[] | undefined;
 
-// const emptyBookingsResponse = (): ApiResponse<IConsultation[]> => ({
-//   success: true,
-//   message: "No consultations found.",
-//   data: [],
-// } as unknown as ApiResponse<IConsultation[]>);
+// const toArray = (value: unknown, nestedKeys: string[] = []): unknown[] => {
+//   if (Array.isArray(value)) {
+//     return value;
+//   }
 
-// export const bookConsultation = async (
-//   payload: IBookConsultationPayload,
-// ): Promise<IBookConsultationResult> => {
-//   const response = await httpClient.post<IBookConsultationResult>(
-//     "/consultations/book",
-//     payload,
-//   );
+//   if (value && typeof value === "object") {
+//     for (const nestedKey of nestedKeys) {
+//       const nestedValue = (value as Record<string, unknown>)[nestedKey];
 
-//   return response.data;
-// };
-
-// export const bookConsultationWithPayLater = async (
-//   payload: IBookConsultationPayload,
-// ): Promise<IBookConsultationResult> => {
-//   const response = await httpClient.post<IBookConsultationResult>(
-//     "/consultations/book/pay-later",
-//     payload,
-//   );
-
-//   return response.data;
-// };
-
-// export const initiateConsultationPayment = async (
-//   consultationId: string,
-// ): Promise<IInitiateConsultationPaymentResult> => {
-//   const response = await httpClient.post<IInitiateConsultationPaymentResult>(
-//     `/consultations/${consultationId}/initiate-payment`,
-//   );
-
-//   return response.data;
-// };
-
-// export const getMyBookings = async (params?: IConsultationQueryParams) => {
-//   try {
-//     return await httpClient.get<IConsultation[]>("/consultations/me", {
-//       params,
-//       silent: true,
-//     });
-//   } catch (error) {
-//     if (!isNotFoundError(error)) {
-//       throw error;
+//       if (Array.isArray(nestedValue)) {
+//         return nestedValue;
+//       }
 //     }
+//   }
 
+//   return [];
+// };
+
+// const normalizeConsultations = (payload: ConsultationCollection): IConsultation[] => {
+//   if (!Array.isArray(payload)) {
+//     return [];
+//   }
+
+//   return payload.map((item) => ({
+//     ...item,
+//     client: item.client ?? null,
+//     expert: item.expert ?? null,
+//     payment: item.payment ?? null,
+//   }));
+// };
+
+// const asBookingsResponse = (response: ApiResponse<unknown>): ApiResponse<IConsultation[]> => {
+//   const items = toArray(response.data, ["data", "items", "result", "rows", "bookings"]);
+
+//   return {
+//     ...response,
+//     data: normalizeConsultations(items as ConsultationCollection),
+//     meta:
+//       (response.data as { meta?: ApiResponse<IConsultation[]>["meta"] } | undefined)?.meta ??
+//       response.meta,
+//   };
+// };
+
+// const requestBookings = async (
+//   endpoint: string,
+//   params: IConsultationQueryParams = {},
+// ): Promise<ApiResponse<IConsultation[]>> => {
+//   const response = await httpClient.get<unknown>(endpoint, {
+//     params,
+//     silent: true,
+//   });
+
+//   return asBookingsResponse(response);
+// };
+
+// export const getAllBookings = async (
+//   params: IConsultationQueryParams = {},
+// ): Promise<ApiResponse<IConsultation[]>> => {
+//   try {
+//     const response = await requestBookings("/consultations/admin/bookings", params);
+
+//     return response.data ? response : { ...response, data: [] };
+//   } catch (primaryError) {
 //     try {
-//       return await httpClient.get<IConsultation[]>("/consultations/client/me", {
-//         params,
-//         silent: true,
-//       });
-//     } catch (fallbackError) {
-//       if (!isNotFoundError(fallbackError)) {
-//         throw fallbackError;
-//       }
+//       const response = await requestBookings("/consultations", params);
 
-//       try {
-//         return await httpClient.get<IConsultation[]>("/consultations", {
-//           params,
-//           silent: true,
-//         });
-//       } catch (finalError) {
-//         if (isNotFoundError(finalError)) {
-//           return emptyBookingsResponse();
-//         }
-
-//         throw finalError;
-//       }
+//       return response.data ? response : { ...response, data: [] };
+//     } catch {
+//       throw primaryError;
 //     }
 //   }
 // };
 
-// export const getMyExpertBookings = async (params?: IConsultationQueryParams) => {
-//   try {
-//     return await httpClient.get<IConsultation[]>("/consultations/expert/me", {
-//       params,
-//       silent: true,
-//     });
-//   } catch (error) {
-//     if (!isNotFoundError(error)) {
-//       throw error;
-//     }
-
-//     try {
-//       return await httpClient.get<IConsultation[]>("/consultations", {
-//         params,
-//         silent: true,
-//       });
-//     } catch (fallbackError) {
-//       if (isNotFoundError(fallbackError)) {
-//         return emptyBookingsResponse();
-//       }
-
-//       throw fallbackError;
-//     }
-//   }
-// };
-
-// export const updateConsultationStatus = async (
+// export const updateBookingStatusAction = async (
 //   consultationId: string,
-//   status: string,
+//   status: ConsultationStatus,
 // ) => {
 //   const response = await httpClient.patch<IConsultation>(
 //     `/consultations/${consultationId}/status`,
 //     { status },
 //   );
 
+//   return response.data;
+// };
+
+// export const cancelUnpaidBookingsAction = async () => {
+//   const response = await httpClient.post<null>("/consultations/cancel-unpaid");
 //   return response.data;
 // };

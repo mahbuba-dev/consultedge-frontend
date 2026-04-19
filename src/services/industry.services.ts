@@ -29,15 +29,28 @@ export const getIndustries = async (): Promise<IIndustry[]> => {
 // CREATE
 export const createIndustry = async (formData: FormData) => {
   try {
-    return await httpClient.post<IIndustry>("/industries", formData, {
+    const res = await httpClient.post<{
+      success: boolean;
+      message: string;
+      data: any;
+    }>("/industries", formData, {
       headers: { "Content-Type": "multipart/form-data" },
+      silent: true,
     });
-  } catch (error) {
-    console.log("Error creating industry:", error);
-    throw error;
+    return res;
+  } catch (error: any) {
+    // Normalize error so UI can handle gracefully and terminal never crashes
+    const status = error?.response?.status;
+    const message = error?.response?.data?.message || error?.message || "Failed to create industry";
+    return {
+      success: false,
+      message,
+      status,
+      data: null,
+      error,
+    };
   }
 };
-
 // UPDATE
 export const updateIndustry = async (id: string, payload: IIndustryUpdatePayload) => {
   const trimmedName = payload.name?.trim();

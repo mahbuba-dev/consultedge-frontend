@@ -8,6 +8,7 @@ export interface ITestimonial {
   createdAt: string;
   updatedAt?: string;
   isHidden?: boolean;
+  status?: "APPROVED" | "HIDDEN" | "PENDING";
   expertReply?: string | null;
   repliedAt?: string;
   moderationStatus?: string;

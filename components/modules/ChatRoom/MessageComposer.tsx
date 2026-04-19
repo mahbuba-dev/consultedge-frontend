@@ -66,7 +66,7 @@ export default function MessageComposer({
           />
           {disabled ? (
             <p className="text-xs text-muted-foreground">
-              Admin accounts can view conversations in read-only mode.
+              Messaging is currently unavailable for this conversation.
             </p>
           ) : null}
         </div>

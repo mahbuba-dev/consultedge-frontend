@@ -24,8 +24,7 @@ export default async function AdminMessagesPage({ searchParams }: AdminMessagesP
       dashboardHref="/admin/dashboard"
       participantId={participantId}
       title="Admin message desk"
-      description="Monitor live conversations in a read-only, support-friendly workspace."
-      readOnly
+      description="Monitor and join live conversations from the admin workspace."
     />
   );
 }

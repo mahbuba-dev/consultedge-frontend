@@ -1,3 +1,4 @@
+
 import ReviewsManagementTable from "@/components/modules/Table/ReviewsManagementTable";
 
 export default function ReviewsManagementPage() {

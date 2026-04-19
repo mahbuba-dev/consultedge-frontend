@@ -5,7 +5,7 @@ import { format } from "date-fns";
 
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/src/lib/utils";
-import { getParticipantDisplayName } from "@/src/services/chatRoom.service";
+import { getParticipantDisplayName, isMessageFromCurrentUser } from "@/src/services/chatRoom.service";
 import type { ChatMessage } from "@/src/types/chat.types";
 import MessageAttachmentCard from "./MessageAttachmentCard";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
@@ -21,7 +21,7 @@ export default function MessageBubble({
   currentUserId,
   onDelete,
 }: MessageBubbleProps) {
-  const isOwnMessage = currentUserId && message.senderId === currentUserId;
+  const isOwnMessage = isMessageFromCurrentUser(message, currentUserId);
   const [popoverOpen, setPopoverOpen] = useState(false);
 
   if (message.type === "SYSTEM") {

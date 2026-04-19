@@ -151,7 +151,7 @@ export default function ChatWorkspace({
 
   const otherParticipantPresence = getPresence(otherParticipant?.userId ?? otherParticipant?.id);
   const activeRoomId = selectedRoom?.id;
-  const isReadOnly = readOnly || currentUser?.role === "ADMIN";
+  const isReadOnly = readOnly;
 
   useEffect(() => {
     if (!activeRoomId) {

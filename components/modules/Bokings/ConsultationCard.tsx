@@ -40,6 +40,7 @@ type ConsultationCardProps = {
   canPayNow?: boolean;
   isPaying?: boolean;
   onPayNow: (consultationId: string) => void;
+  onOpenReschedule: (booking: IConsultation) => void;
 };
 
 const formatDateTime = (value?: string) => {
@@ -115,6 +116,7 @@ export default function ConsultationCard({
   canPayNow = false,
   isPaying = false,
   onPayNow,
+  onOpenReschedule
 }: ConsultationCardProps) {
   const expertName = booking.expert?.fullName || "Consultation booking";
   const expertTitle = booking.expert?.title || "Expert consultation";
@@ -336,9 +338,7 @@ const handleConfirmEnd = async () => {
         <Button
           variant="outline"
           className="border-red-300 text-red-700 hover:bg-red-50"
-          onClick={() =>
-            router.push(`/dashboard/reschedule?consultationId=${booking.id}`)
-          }
+         onClick={() => onOpenReschedule?.(booking)}
         >
           Reschedule
         </Button>

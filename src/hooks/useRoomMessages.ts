@@ -6,12 +6,40 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useChatSocket } from "@/src/hooks/useChatSocket";
 import {
   getRoomMessages,
+  isMessageFromCurrentUser,
   mergeUniqueMessages,
   sendRoomMessage,
   sortChatRooms,
   uploadRoomAttachment,
 } from "@/src/services/chatRoom.service";
 import type { ChatMessage } from "@/src/types/chat.types";
+
+const hydrateOwnMessage = (message: ChatMessage, currentUser?: { userId: string; role: ChatMessage["senderRole"]; name: string } | null) => {
+  if (!currentUser) {
+    return message;
+  }
+
+  if (message.sender && message.text) {
+    return message;
+  }
+
+  return {
+    ...message,
+    senderId:
+      message.senderId && message.senderId !== "unknown"
+        ? message.senderId
+        : currentUser.userId,
+    senderRole: message.senderRole ?? currentUser.role,
+    sender:
+      message.sender ?? {
+        id: currentUser.userId,
+        userId: currentUser.userId,
+        role: currentUser.role ?? "ADMIN",
+        fullName: currentUser.name,
+        name: currentUser.name,
+      },
+  };
+};
 
 const updateRoomPreview = (
   current: any,
@@ -37,7 +65,9 @@ const updateRoomPreview = (
       ...updatedRooms[roomIndex],
       lastMessage: message,
       updatedAt: message.createdAt,
-      unreadCount: message.senderId === currentUserId ? 0 : updatedRooms[roomIndex].unreadCount ?? 0,
+      unreadCount: isMessageFromCurrentUser(message, currentUserId)
+        ? 0
+        : updatedRooms[roomIndex].unreadCount ?? 0,
     };
   }
 
@@ -47,7 +77,7 @@ const updateRoomPreview = (
 
 export const useRoomMessages = (roomId?: string) => {
   const queryClient = useQueryClient();
-  const { currentUser, emit, isFallbackPolling } = useChatSocket(roomId);
+  const { currentUser, isFallbackPolling } = useChatSocket(roomId);
 
   const messagesQuery = useQuery({
     queryKey: ["chat-room-messages", roomId],
@@ -97,28 +127,23 @@ export const useRoomMessages = (roomId?: string) => {
 
       return { previousMessages, optimisticId: optimisticMessage.id };
     },
-    onsuccess: (message, _payload, context) => {
+    onSuccess: (message, _payload, context) => {
       if (!roomId) {
         return;
       }
 
+      const resolvedMessage = hydrateOwnMessage(message, currentUser);
+
       queryClient.setQueryData<ChatMessage[]>(["chat-room-messages", roomId], (current = []) =>
         mergeUniqueMessages([
           ...current.filter((item) => item.id !== context?.optimisticId),
-          message,
+          resolvedMessage,
         ]),
       );
 
       queryClient.setQueriesData({ queryKey: ["chat-rooms"] }, (current) =>
-        updateRoomPreview(current, roomId, message, currentUser?.userId),
+        updateRoomPreview(current, roomId, resolvedMessage, currentUser?.userId),
       );
-
-      emit("send_message", {
-        roomId,
-        text: message.text,
-        type: message.type,
-        attachment: message.attachment,
-      });
     },
     onError: (_error, _payload, context) => {
       if (!roomId) {
@@ -131,25 +156,20 @@ export const useRoomMessages = (roomId?: string) => {
 
   const uploadAttachmentMutation = useMutation({
     mutationFn: async (file: File) => uploadRoomAttachment(roomId as string, file),
-    onsuccess: (message) => {
+    onSuccess: (message) => {
       if (!roomId) {
         return;
       }
 
+      const resolvedMessage = hydrateOwnMessage(message, currentUser);
+
       queryClient.setQueryData<ChatMessage[]>(["chat-room-messages", roomId], (current = []) =>
-        mergeUniqueMessages([...current, message]),
+        mergeUniqueMessages([...current, resolvedMessage]),
       );
 
       queryClient.setQueriesData({ queryKey: ["chat-rooms"] }, (current) =>
-        updateRoomPreview(current, roomId, message, currentUser?.userId),
+        updateRoomPreview(current, roomId, resolvedMessage, currentUser?.userId),
       );
-
-      emit("send_message", {
-        roomId,
-        text: message.text,
-        type: message.type,
-        attachment: message.attachment,
-      });
     },
   });
 

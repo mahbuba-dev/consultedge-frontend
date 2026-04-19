@@ -44,14 +44,19 @@ export default function IndustryCreateForm() {
       try {
         const res = await createIndustry(fd);
 
-        if (!res?.success) {
-          const message = res?.message || "Failed to create industry";
-          toast.error(message, {
-            description: "Please review the details and try again.",
-          });
-          return;
-        }
-
+        // if (!res?.success) {
+        //   const message = res?.message || "Failed to create industry";
+        //   toast.error(message, {
+        //     description: "Please review the details and try again.",
+        //   });
+        //   return;
+        // }
+if (!res?.success) {
+  toast.error(res?.message || "Failed to create industry", {
+    description: "Please review the details and try again.",
+  });
+  return;
+}
         const industryName = value.name.trim() || "Your new industry";
 
         toast.success("Industry created successfully ✨", {

@@ -19,6 +19,7 @@ import {
 import { getMe } from "@/src/services/auth.services";
 import {
   getParticipantDisplayName,
+  isMessageFromCurrentUser,
   markChatRoomAsRead,
   mergeUniqueMessages,
   normalizeChatMessage,
@@ -235,7 +236,7 @@ export function ChatSocketProvider({ children }: { children: React.ReactNode }) 
       const existingMessages =
         queryClient.getQueryData<ChatMessage[]>(["chat-room-messages", message.roomId]) ?? [];
       const isDuplicate = existingMessages.some((entry) => entry.id === message.id);
-      const isOwnMessage = message.senderId === currentUser.userId;
+      const isOwnMessage = isMessageFromCurrentUser(message, currentUser.userId);
       const isActiveRoom = activeRoomId === message.roomId;
 
       queryClient.setQueryData<ChatMessage[]>(["chat-room-messages", message.roomId], (current) =>

@@ -15,8 +15,7 @@ export default async function AdminMessageRoomPage({ params }: AdminMessageRoomP
       dashboardHref="/admin/dashboard"
       selectedRoomId={roomId}
       title="Admin message desk"
-      description="Monitor live conversations in a read-only, support-friendly workspace."
-      readOnly
+      description="Monitor and join live conversations from the admin workspace."
     />
   );
 }

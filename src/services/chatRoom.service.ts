@@ -48,8 +48,20 @@ const normalizeParticipant = (value: any): ChatParticipant => ({
   id: String(value?.id ?? value?.userId ?? value?.participantId ?? crypto.randomUUID()),
   userId: value?.userId ? String(value.userId) : undefined,
   role: (value?.role ?? "CLIENT") as ChatRole,
-  fullName: value?.fullName ?? value?.name ?? value?.user?.name,
-  name: value?.name ?? value?.fullName ?? value?.user?.name,
+  fullName:
+    value?.fullName ??
+    value?.name ??
+    value?.user?.name ??
+    value?.admin?.name ??
+    value?.client?.fullName ??
+    value?.expert?.fullName,
+  name:
+    value?.name ??
+    value?.fullName ??
+    value?.user?.name ??
+    value?.admin?.name ??
+    value?.client?.fullName ??
+    value?.expert?.fullName,
   title: value?.title,
   email: value?.email ?? value?.user?.email,
   profilePhoto: value?.profilePhoto ?? value?.image ?? value?.avatarUrl ?? null,
@@ -67,7 +79,33 @@ const normalizeAttachment = (value: any): ChatAttachment => ({
 });
 
 export const normalizeChatMessage = (value: any): ChatMessage => {
-  const raw = value?.message ?? value?.data ?? value;
+  const nestedData =
+    value?.data && typeof value.data === "object"
+      ? value.data.message && typeof value.data.message === "object"
+        ? {
+            ...value.data.message,
+            roomId:
+              value.data.message.roomId ??
+              value.data.roomId ??
+              value?.roomId,
+          }
+        : value.data
+      : undefined;
+  const directMessage =
+    value?.message && typeof value.message === "object"
+      ? value.message
+      : undefined;
+  const payloadData =
+    value?.payload && typeof value.payload === "object"
+      ? {
+          ...value.payload,
+          ...(value.payload.message && typeof value.payload.message === "object"
+            ? value.payload.message
+            : {}),
+          roomId: value.payload.roomId ?? value?.roomId,
+        }
+      : undefined;
+  const raw = nestedData ?? directMessage ?? payloadData ?? value;
   const sender = raw?.sender || raw?.user || raw?.author ? normalizeParticipant(raw.sender ?? raw.user ?? raw.author) : null;
   const attachment = raw?.attachment || raw?.file || raw?.media;
 
@@ -85,6 +123,19 @@ export const normalizeChatMessage = (value: any): ChatMessage => {
     pending: Boolean(raw?.pending),
     failed: Boolean(raw?.failed),
   };
+};
+
+export const isMessageFromCurrentUser = (
+  message: ChatMessage,
+  currentUserId?: string,
+) => {
+  if (!currentUserId) {
+    return false;
+  }
+
+  return [message.senderId, message.sender?.userId, message.sender?.id]
+    .filter(Boolean)
+    .some((candidate) => String(candidate) === currentUserId);
 };
 
 export const normalizeChatRoom = (value: any): ChatRoom => {
