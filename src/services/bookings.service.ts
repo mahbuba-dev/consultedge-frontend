@@ -446,12 +446,13 @@ export const updateConsultationStatus = async (
 
 export const rescheduleConsultation = async (
   consultationId: string,
-  newScheduleId: string,
+  expertScheduleId: string,
 ): Promise<IConsultation> => {
   const response = await httpClient.patch<IConsultation>(
     `/consultations/reschedule/${consultationId}`,
-    { scheduleId: newScheduleId },
+    { newExpertScheduleId: expertScheduleId },
   );
+
   return response.data;
 };
 

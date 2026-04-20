@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { format, parseISO } from "date-fns";
 import { CalendarDays, LockKeyhole, Sparkles } from "lucide-react";
@@ -18,7 +18,6 @@ import {
 } from "@/components/ui/card";
 import type { IExpertAvailability } from "@/src/types/expert.types";
 import Portal from "./BookingPortal";
-import BookConsultationButton from "../Experts/BookConsultationButton";
 
 type BookSessionPanelProps = {
   expertId: string;
@@ -61,6 +60,16 @@ export default function BookSessionPanel({
 }: BookSessionPanelProps) {
   const router = useRouter();
   const [isBookingOpen, setIsBookingOpen] = useState(false);
+  const bookingPanelRef = useRef<HTMLDivElement | null>(null);
+
+  const scrollToBookingPanel = () => {
+    window.requestAnimationFrame(() => {
+      bookingPanelRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+  };
 
   // ✅ Find next available slot
   const nextAvailableSlot = useMemo(() => {
@@ -82,7 +91,6 @@ export default function BookSessionPanel({
     return upcoming[0] ?? null;
   }, [availability]);
 
-  // ✅ FIXED: Book now works
   const handleBookNow = () => {
     if (!isLoggedIn) {
       toast.error("Please sign in to continue booking.", {
@@ -98,44 +106,28 @@ export default function BookSessionPanel({
     }
 
     setIsBookingOpen(true);
-
-    setTimeout(() => {
-      document
-        .getElementById("booking-calendar-panel")
-        ?.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        });
-    }, 100);
   };
 
-  // ✅ FIXED: Prevent unwanted reopen loop
   useEffect(() => {
     if (openSignal <= 0) return;
 
     setIsBookingOpen((prev) => (prev ? prev : true));
-
-    setTimeout(() => {
-      document
-        .getElementById("booking-calendar-panel")
-        ?.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        });
-    }, 100);
   }, [openSignal]);
 
+  useEffect(() => {
+    if (!isBookingOpen) return;
+
+    scrollToBookingPanel();
+  }, [isBookingOpen]);
+
   return (
-   
-    <div className="z-9999 space-y-4 relative pointer-events-auto">
-      
-      {/* TOP CARD */}
+    <div className="relative isolate z-10 space-y-4">
       <Card
-        className=" z-9999 scroll-mt-24 border-cyan-200/70 shadow-lg shadow-cyan-500/5"
+        className="relative z-10 scroll-mt-24 border-cyan-200/70 shadow-lg shadow-cyan-500/5"
         id="book-session"
       >
-        <CardHeader className="z-9999 space-y-4 ">
-          <div className="z-9999 flex flex-wrap items-start justify-between gap-4">
+        <CardHeader className="space-y-4">
+          <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <Badge className="mb-2 bg-cyan-100 text-cyan-700">
                 <Sparkles className="mr-1 size-3.5" />
@@ -149,19 +141,13 @@ export default function BookSessionPanel({
               </CardDescription>
             </div>
 
-            {/* <Button
+            <button
+              type="button"
               onClick={handleBookNow}
-              className=" z-9999 bg-blue-600 hover:bg-blue-700 "
+              className="relative z-20 inline-flex min-h-11 items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
             >
               {isBookingOpen ? "Select a time below ↓" : "Book now"}
-            </Button> */}
-            {/* <Button
-  className="relative z-99999  pointer-events-auto"
-  onClick={() => console.log("BOOK NOW CLICKED")}
->
-  Book now
-</Button> */}
-
+            </button>
           </div>
         </CardHeader>
 
@@ -208,36 +194,35 @@ export default function BookSessionPanel({
         </CardContent>
       </Card>
 
-      {/* BOOKING PANEL */}
-    {isBookingOpen && (
-  <Portal>
-    <Card
-      id="booking-calendar-panel"
-      className="mx-auto mt-20 w-full max-w-3xl rounded-xl bg-white p-6 shadow-xl"
-    >
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => setIsBookingOpen(false)}
-      >
-        Close booking
-      </Button>
+      {isBookingOpen && (
+        <Portal>
+          <div ref={bookingPanelRef} className="w-full px-4">
+            <Card
+              id="booking-calendar-panel"
+              className="mx-auto mt-20 w-full max-w-3xl rounded-xl bg-white p-6 shadow-xl"
+            >
+              <Button
+                variant="outline"
+                size="sm"
+                type="button"
+                onClick={() => setIsBookingOpen(false)}
+              >
+                Close booking
+              </Button>
 
-      <AvailabilityCalendar
-        expertId={expertId}
-        expertName={expertName}
-        expertTitle={expertTitle}
-        consultationFee={consultationFee}
-        availability={availability}
-        isLoggedIn={isLoggedIn}
-        userRole={userRole}
-      />
-    </Card>
-  </Portal>
-)}
-
+              <AvailabilityCalendar
+                expertId={expertId}
+                expertName={expertName}
+                expertTitle={expertTitle}
+                consultationFee={consultationFee}
+                availability={availability}
+                isLoggedIn={isLoggedIn}
+                userRole={userRole}
+              />
+            </Card>
+          </div>
+        </Portal>
+      )}
     </div>
-   
-
   );
 }

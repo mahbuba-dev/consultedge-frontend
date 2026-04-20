@@ -132,11 +132,7 @@ export const adminNavItems: NavSection[] = [
        href: "/admin/dashboard/messages",
        icon: "MessageCircleMore",
       },
-      {
-       title: "Conversation Hub",
-       href: "/admin/dashboard/messages",
-       icon: "MessagesSquare",
-      },
+   
     ],
   },
 ];

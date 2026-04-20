@@ -436,6 +436,11 @@ export default function ConsultationsList({
   const [rescheduleModalOpen, setRescheduleModalOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<IConsultation | null>(null);
 
+  const closeRescheduleModal = () => {
+    setRescheduleModalOpen(false);
+    setSelectedBooking(null);
+  };
+
   const onOpenReschedule = (booking: IConsultation) => {
     setSelectedBooking(booking);
     setRescheduleModalOpen(true);
@@ -478,15 +483,17 @@ export default function ConsultationsList({
   // Reschedule mutation
   // -------------------------
   const rescheduleMutation = useMutation({
-    mutationFn: ({ consultationId, scheduleId }: { consultationId: string; scheduleId: string }) =>
-      rescheduleConsultation(consultationId, scheduleId),
+    mutationFn: ({ consultationId, expertScheduleId }: { consultationId: string; expertScheduleId: string }) =>
+      rescheduleConsultation(consultationId, expertScheduleId),
     onSuccess: () => {
       toast.success("Consultation rescheduled successfully");
-      setRescheduleModalOpen(false);
+      closeRescheduleModal();
       void refetch();
     },
-    onError: () => {
-      toast.error("Unable to reschedule consultation");
+    onError: (mutationError) => {
+      toast.error(
+        getErrorMessage(mutationError, "Unable to reschedule consultation"),
+      );
     },
   });
 
@@ -644,12 +651,13 @@ export default function ConsultationsList({
       {selectedBooking && (
         <RescheduleModal
           open={rescheduleModalOpen}
-          onClose={() => setRescheduleModalOpen(false)}
+          onClose={closeRescheduleModal}
           booking={selectedBooking}
-          onConfirm={(newSlot) =>
+          isSubmitting={rescheduleMutation.isPending}
+          onConfirm={(expertScheduleId) =>
             rescheduleMutation.mutate({
               consultationId: selectedBooking.id,
-              scheduleId: newSlot,
+              expertScheduleId,
             })
           }
         />
