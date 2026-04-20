@@ -145,7 +145,7 @@ export default function HomeSection2({ testimonials }: HomeSection2Props) {
         </div>
       </section>
 
-      <section className="space-y-6 rounded-[2.25rem] border bg-linear-to-br from-emerald-50/75 via-white to-cyan-50/65 p-5 shadow-[0_26px_60px_-40px_rgba(5,150,105,0.28)] dark:border-white/10 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 md:p-7">
+      <section className=" mt-8 space-y-6 rounded-[2.25rem] border bg-linear-to-br from-emerald-50/75 via-white to-cyan-50/65 p-5 shadow-[0_26px_60px_-40px_rgba(5,150,105,0.28)] dark:border-white/10 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 md:p-7">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
           <div>
             <Badge variant="secondary" className="mb-2 bg-emerald-100 text-emerald-700">
