@@ -3,7 +3,10 @@ import type { IIndustry } from "@/src/types/industry.types";
 import Image from "next/image";
 
 export default async function IndustriesPage() {
-  const industries: IIndustry[] = await getAllIndustries();
+  const industriesResponse = await getAllIndustries();
+  const industries: IIndustry[] = Array.isArray(industriesResponse?.data)
+    ? industriesResponse.data
+    : [];
 
   return (
     <main className="min-h-screen bg-linear-to-b from-white to-gray-50 py-12 px-4 md:px-12">
