@@ -7,6 +7,8 @@ import {
   ArrowLeft,
   ArrowRight,
   CalendarRange,
+  Clock3,
+  Layers3,
   ShieldCheck,
   Sparkles,
   Users,
@@ -57,6 +59,24 @@ const trustCards = [
   },
 ];
 
+const heroStats = [
+  {
+    value: "24/7",
+    label: "Expert discovery",
+    icon: Clock3,
+  },
+  {
+    value: "1 hub",
+    label: "Booking and follow-up",
+    icon: Layers3,
+  },
+  {
+    value: "100%",
+    label: "Guided workflow feel",
+    icon: ShieldCheck,
+  },
+];
+
 const AUTO_PLAY_DELAY = 6000;
 
 export default function Banner() {
@@ -81,8 +101,8 @@ export default function Banner() {
   };
 
   return (
-    <section className="relative -mx-4 -mt-6 overflow-hidden border-y border-slate-800/80 bg-slate-950 shadow-[0_30px_80px_-30px_rgba(34,211,238,0.35)] md:-mx-6 lg:-mt-8">
-      <div className="relative h-125 overflow-hidden md:h-155 lg:h-170">
+    <section className="relative -mx-4 -mt-6 overflow-hidden rounded-b-[2.25rem] border-b border-slate-800/80 bg-slate-950 shadow-[0_30px_80px_-30px_rgba(34,211,238,0.35)] md:-mx-6 lg:-mt-8 lg:rounded-b-[2.75rem]">
+      <div className="relative min-h-[42rem] overflow-hidden md:min-h-[47rem] lg:min-h-[49rem]">
         {carouselSlides.map((slide, index) => (
           <div
             key={slide.title}
@@ -105,44 +125,102 @@ export default function Banner() {
           </div>
         ))}
 
-        <div className="relative z-10 mx-auto flex h-full w-full max-w-7xl flex-col justify-between px-6 py-6 text-white md:px-8 md:py-8 lg:px-10">
-          <div className="max-w-3xl space-y-5 pt-2 md:pt-4">
-            <Badge className="border-white/20 bg-white/10 text-white hover:bg-white/10">
-              <Sparkles className="mr-1 size-3.5" />
-              Premium consultation platform
-            </Badge>
+        <div className="relative z-10 mx-auto flex h-full w-full max-w-7xl flex-col justify-between px-5 py-6 text-white md:px-8 md:py-8 lg:px-10 lg:py-10">
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)] lg:items-end">
+            <div className="max-w-3xl space-y-5 pt-3 md:space-y-6 md:pt-6 lg:pt-10">
+              <Badge className="border-white/20 bg-white/10 text-white hover:bg-white/10">
+                <Sparkles className="mr-1 size-3.5" />
+                Premium consultation platform
+              </Badge>
 
-            <div key={currentSlide.title} className="consultedge-banner-copy space-y-3">
-              <p className="text-sm font-semibold uppercase tracking-[0.25em] text-cyan-200">
-                {currentSlide.eyebrow}
-              </p>
-              <h1 className="max-w-2xl text-4xl font-bold tracking-tight md:text-5xl lg:text-6xl">
-                {currentSlide.title}
-              </h1>
-              <p className="max-w-2xl text-sm text-slate-200 md:text-lg">
-                {currentSlide.description}
-              </p>
+              <div key={currentSlide.title} className="consultedge-banner-copy space-y-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.32em] text-cyan-200 md:text-sm">
+                  {currentSlide.eyebrow}
+                </p>
+                <h1 className="max-w-2xl text-4xl font-bold tracking-tight text-balance md:text-5xl lg:text-6xl xl:text-[4.25rem] xl:leading-[1.02]">
+                  {currentSlide.title}
+                </h1>
+                <p className="max-w-2xl text-sm leading-7 text-slate-200 md:text-lg md:leading-8">
+                  {currentSlide.description}
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                <Link href="/experts">
+                  <Button className="h-11 rounded-full bg-white px-5 text-slate-900 hover:bg-white/90">
+                    Explore experts
+                    <ArrowRight className="ml-2 size-4" />
+                  </Button>
+                </Link>
+                <Link href="/apply-expert">
+                  <Button
+                    variant="outline"
+                    className="h-11 rounded-full border-white/30 bg-transparent px-5 text-white hover:bg-white/10 hover:text-white"
+                  >
+                    Become an expert
+                  </Button>
+                </Link>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-3">
+                {heroStats.map((item) => {
+                  const Icon = item.icon;
+
+                  return (
+                    <div
+                      key={item.label}
+                      className="rounded-2xl border border-white/12 bg-white/8 px-4 py-3 backdrop-blur-md"
+                    >
+                      <div className="mb-2 flex items-center gap-2 text-cyan-200">
+                        <Icon className="size-4" />
+                        <span className="text-[11px] uppercase tracking-[0.18em] text-white/70">
+                          {item.label}
+                        </span>
+                      </div>
+                      <p className="text-xl font-semibold text-white md:text-2xl">{item.value}</p>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
-            <div className="flex flex-wrap gap-3">
-              <Link href="/experts">
-                <Button className="bg-white text-slate-900 hover:bg-white/90">
-                  Explore experts
-                  <ArrowRight className="ml-2 size-4" />
-                </Button>
-              </Link>
-              <Link href="/apply-expert">
-                <Button
-                  variant="outline"
-                  className="border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white"
-                >
-                  Become an expert
-                </Button>
-              </Link>
+            <div className="hidden lg:block">
+              <div className="rounded-[2rem] border border-white/12 bg-white/10 p-5 backdrop-blur-xl shadow-[0_28px_80px_-34px_rgba(15,23,42,0.75)]">
+                <div className="mb-5 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.24em] text-cyan-200">Why it feels premium</p>
+                    <p className="mt-2 text-2xl font-semibold text-white">Designed for faster expert decisions</p>
+                  </div>
+                  <div className="rounded-2xl border border-white/10 bg-white/10 p-3 text-cyan-200">
+                    <Sparkles className="size-5" />
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  {trustCards.map((item) => {
+                    const Icon = item.icon;
+
+                    return (
+                      <div
+                        key={item.title}
+                        className="flex items-start gap-3 rounded-2xl border border-white/10 bg-slate-950/30 p-4"
+                      >
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-cyan-200">
+                          <Icon className="size-5" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-white">{item.title}</p>
+                          <p className="text-sm text-slate-300">{item.subtitle}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-4 pt-6 md:pt-8">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2 px-1">
                 {carouselSlides.map((slide, index) => (
@@ -184,7 +262,7 @@ export default function Banner() {
               </div>
             </div>
 
-            <div className="grid gap-3 md:grid-cols-3">
+            <div className="grid gap-3 md:grid-cols-3 lg:hidden">
               {trustCards.map((item, index) => {
                 const Icon = item.icon;
 

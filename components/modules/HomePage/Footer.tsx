@@ -20,8 +20,6 @@ const quickLinks = [
   { label: "Experts", href: "/experts" },
   { label: "How it works", href: "/industries" },
   { label: "Contact", href: "/contact" },
-  { label: "Blogs", href: "/blogs" },
-  { label: "Process", href: "/process" },
 ];
 
 const platformLinks = [
@@ -65,7 +63,7 @@ export default function Footer() {
   }, []);
 
   return (
-    <footer className="mt-16 border-t border-slate-800 bg-slate-950 text-slate-200">
+    <footer className="mt-20 border-t border-slate-800 bg-slate-950 text-slate-200">
       <style>{`
         .footer-fade-up {
           transition: opacity 0.4s cubic-bezier(.4,0,.2,1), transform 0.4s cubic-bezier(.4,0,.2,1);
@@ -105,8 +103,8 @@ export default function Footer() {
           transform: scaleX(1);
         }
       `}</style>
-      <div ref={footerRef} className="mx-auto w-full max-w-7xl px-4 pt-8 md:px-6">
-        <div className="relative overflow-hidden rounded-[1.75rem] border border-cyan-400/20 bg-linear-to-r from-blue-950 via-slate-900 to-cyan-950 p-5 shadow-[0_24px_70px_-30px_rgba(34,211,238,0.3)] md:p-8">
+      <div ref={footerRef} className="mx-auto w-full max-w-7xl px-4 pt-10 md:px-6">
+        <div className="relative overflow-hidden rounded-[2.1rem] border border-cyan-400/20 bg-linear-to-r from-blue-950 via-slate-900 to-cyan-950 p-6 shadow-[0_24px_70px_-30px_rgba(34,211,238,0.3)] md:p-8 lg:p-10">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.08),transparent_35%)]" />
 
           <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
@@ -117,7 +115,7 @@ export default function Footer() {
               </Badge>
 
               <div className="space-y-2">
-                <h2 className="text-2xl font-bold text-white md:text-3xl">
+                <h2 className="text-2xl font-bold text-white md:text-3xl lg:text-4xl">
                   Talk with the right expert, faster.
                 </h2>
                 <p className="max-w-2xl text-sm text-slate-300 md:text-base">
@@ -142,27 +140,27 @@ export default function Footer() {
               </div>
             </div>
    
-           <div className="flex flex-wrap gap-3">
-        <Button asChild className="bg-white text-slate-900 hover:bg-white/90">
-        <Link href="/experts">
-      Browse experts
-      <ArrowRight className="ml-2 size-4" />
-       </Link>
-     </Button>
+            <div className="flex flex-wrap gap-3">
+              <Button asChild className="h-11 rounded-full bg-white px-5 text-slate-900 hover:bg-white/90">
+                <Link href="/experts">
+                  Browse experts
+                  <ArrowRight className="ml-2 size-4" />
+                </Link>
+              </Button>
 
-     <Button
-    asChild
-    variant="outline"
-    className="border-white/20 bg-transparent text-white hover:bg-white/10 hover:text-white"
-  >
-    <Link href="/contact">Contact us</Link>
-    </Button>
-    </div>
+              <Button
+                asChild
+                variant="outline"
+                className="h-11 rounded-full border-white/20 bg-transparent px-5 text-white hover:bg-white/10 hover:text-white"
+              >
+                <Link href="/contact">Contact us</Link>
+              </Button>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-12 md:grid-cols-[1.15fr_0.7fr_0.7fr_0.95fr] md:px-6">
+      <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-12 md:grid-cols-[1.2fr_0.7fr_0.7fr_0.95fr] md:px-6 lg:gap-14 lg:py-14">
         <div className="space-y-5">
           <Link href="/" className="inline-flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-linear-to-br from-blue-600 via-cyan-600 to-sky-500 text-white shadow-lg shadow-blue-500/25">
@@ -214,7 +212,7 @@ export default function Footer() {
           <h3 className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
             Quick links
           </h3>
-          <div className="space-x-4 text-sm">
+          <div className="space-y-3 text-sm">
             {quickLinks.map((link) => (
               <Link key={link.href} href={link.href} className="footer-ink-link block transition hover:text-white">
                 <span>{link.label}</span>

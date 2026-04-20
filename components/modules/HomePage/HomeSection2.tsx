@@ -70,7 +70,7 @@ type HomeSection2Props = {
 export default function HomeSection2({ testimonials }: HomeSection2Props) {
   return (
     <>
-      <section className="space-y-10">
+      <section className="rounded-[2.25rem] border border-border/60 bg-white/75 p-5 shadow-[0_28px_60px_-40px_rgba(15,23,42,0.28)] backdrop-blur md:p-7 dark:border-white/10 dark:bg-slate-950/55">
         {/* Header */}
         <div className="mx-auto max-w-2xl space-y-3 text-center">
           <Badge variant="secondary" className="bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300">
@@ -86,7 +86,7 @@ export default function HomeSection2({ testimonials }: HomeSection2Props) {
         </div>
 
         {/* Audience cards */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {audiences.map((item, index) => {
             const Icon = item.icon;
             return (
@@ -108,19 +108,19 @@ export default function HomeSection2({ testimonials }: HomeSection2Props) {
         </div>
 
         {/* Trust signals + CTA */}
-        <div className="consultedge-reveal--visible rounded-2xl border border-border/60 bg-white/80 shadow-sm dark:border-white/10 dark:bg-slate-900/60 mb-10 md:mb-16 lg:mb-20" style={{ animationDelay: "520ms" }}>
+        <div className="consultedge-reveal--visible mt-8 rounded-[1.8rem] border border-border/60 bg-linear-to-r from-slate-950 via-blue-950 to-cyan-950 text-white shadow-sm dark:border-white/10" style={{ animationDelay: "520ms" }}>
           <div className="grid gap-6 p-6 md:grid-cols-[1fr_auto] md:items-center md:p-8">
             <div className="grid gap-5 sm:grid-cols-3">
               {trustSignals.map((signal) => {
                 const Icon = signal.icon;
                 return (
                   <div key={signal.label} className="flex items-start gap-3">
-                    <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-950/50">
-                      <Icon className="size-4 text-blue-600" />
+                    <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/10">
+                      <Icon className="size-4 text-cyan-200" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-foreground">{signal.label}</p>
-                      <p className="text-xs text-muted-foreground">{signal.sub}</p>
+                      <p className="text-sm font-semibold text-white">{signal.label}</p>
+                      <p className="text-xs text-slate-300">{signal.sub}</p>
                     </div>
                   </div>
                 );
@@ -129,14 +129,14 @@ export default function HomeSection2({ testimonials }: HomeSection2Props) {
             <div className="flex shrink-0 flex-wrap gap-3">
               <Link
                 href="/experts"
-                className="bg-blue-600 text-white hover:bg-blue-700 inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all"
+                className="inline-flex h-11 items-center gap-2 rounded-full bg-white px-5 text-sm font-medium text-slate-900 transition-all hover:bg-white/90"
               >
                 Browse experts
                 <ArrowRight className="ml-2 size-4" />
               </Link>
               <Link
                 href="/register"
-                className="border border-border bg-background hover:bg-muted hover:text-foreground inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all"
+                className="inline-flex h-11 items-center gap-2 rounded-full border border-white/20 bg-transparent px-5 text-sm font-medium text-white transition-all hover:bg-white/10"
               >
                 Create account
               </Link>
@@ -145,7 +145,7 @@ export default function HomeSection2({ testimonials }: HomeSection2Props) {
         </div>
       </section>
 
-      <section className="space-y-6 rounded-[2rem] border bg-linear-to-br from-emerald-50/70 via-white to-cyan-50/60 p-5 shadow-sm dark:border-white/10 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 md:p-6 mt-10 md:mt-16 lg:mt-20">
+      <section className="space-y-6 rounded-[2.25rem] border bg-linear-to-br from-emerald-50/75 via-white to-cyan-50/65 p-5 shadow-[0_26px_60px_-40px_rgba(5,150,105,0.28)] dark:border-white/10 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 md:p-7">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
           <div>
             <Badge variant="secondary" className="mb-2 bg-emerald-100 text-emerald-700">

@@ -38,20 +38,37 @@ export default function ExpertAnimated({ experts }: ExpertAnimatedProps) {
     : 0;
 
   return (
-    <section className="space-y-10 md:space-y-16 lg:space-y-20">
-      <div className="space-y-3">
-        <Badge variant="secondary" className="mb-2 gap-1 bg-cyan-100 text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-200">
-          <Sparkles className="size-3.5" />
-          Featured experts
-        </Badge>
-        <h2 className="text-2xl font-bold tracking-tight md:text-3xl lg:text-4xl">
-          Meet standout professionals ready for high-impact consulting
-        </h2>
-        <p className="max-w-2xl text-muted-foreground md:text-base">
-          Explore trusted specialists in a premium expert showcase, compare profiles quickly, and open the right consultation flow in one click.
-        </p>
-        {/* Stats cards row below description */}
-        <div className="mt-6 grid gap-3 sm:grid-cols-3">
+    <section className="rounded-[2.25rem] border border-blue-100/70 bg-linear-to-br from-white via-cyan-50/40 to-blue-50/55 p-5 shadow-[0_30px_70px_-42px_rgba(37,99,235,0.35)] md:p-7 lg:p-8 dark:border-white/10 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900">
+      <div className="space-y-8 md:space-y-10">
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(280px,0.42fr)] xl:items-end">
+          <div className="space-y-3">
+            <Badge variant="secondary" className="mb-2 gap-1 bg-cyan-100 text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-200">
+              <Sparkles className="size-3.5" />
+              Featured experts
+            </Badge>
+            <h2 className="text-2xl font-bold tracking-tight md:text-3xl lg:text-4xl">
+              Meet standout professionals ready for high-impact consulting
+            </h2>
+            <p className="max-w-2xl text-muted-foreground md:text-base">
+              Explore trusted specialists in a premium expert showcase, compare profiles quickly, and open the right consultation flow in one click.
+            </p>
+          </div>
+
+          <div className="rounded-[1.75rem] border border-blue-100/80 bg-white/80 p-5 shadow-sm dark:border-white/10 dark:bg-slate-900/70">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-700 dark:text-cyan-200">
+              Curated shortlist
+            </p>
+            <p className="mt-2 text-lg font-semibold text-foreground">
+              Profiles optimized for faster scanning on desktop and mobile.
+            </p>
+            <Link href="/experts" className="mt-4 inline-flex items-center text-sm font-medium text-blue-700 transition hover:text-blue-800 dark:text-blue-300 dark:hover:text-blue-200">
+              Browse the full expert network
+              <ArrowRight className="ml-2 size-4" />
+            </Link>
+          </div>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-3">
           <Card className="consultedge-reveal--visible consultedge-card-glow border-cyan-200/70 bg-white/85 shadow-sm dark:border-white/10 dark:bg-slate-900/80" style={{ animationDelay: "110ms" }}>
             <CardContent className="flex items-center gap-3 p-4">
               <div className="rounded-full bg-cyan-100 p-2 text-cyan-700">
@@ -86,12 +103,8 @@ export default function ExpertAnimated({ experts }: ExpertAnimatedProps) {
             </CardContent>
           </Card>
         </div>
-      </div>
-
-      {/* Browse experts button removed as requested */}
-
-      {tickerExperts.length > 0 ? (
-        <div className="relative overflow-hidden rounded-[2rem] border border-cyan-100 bg-linear-to-r from-slate-950 via-blue-950 to-cyan-950 px-2 py-4 shadow-[0_24px_70px_-26px_rgba(34,211,238,0.35)]">
+        {tickerExperts.length > 0 ? (
+          <div className="relative overflow-hidden rounded-[2rem] border border-cyan-100 bg-linear-to-r from-slate-950 via-blue-950 to-cyan-950 px-2 py-4 shadow-[0_24px_70px_-26px_rgba(34,211,238,0.35)]">
           <div className="navbar-gradient-motion" aria-hidden="true" />
           <div className=" absolute inset-y-0 left-0 z-10 w-16 bg-linear-to-r from-slate-950 to-transparent" />
           <div className=" absolute inset-y-0 right-0 z-10 w-16 bg-linear-to-l from-cyan-950 to-transparent" />
@@ -107,7 +120,7 @@ export default function ExpertAnimated({ experts }: ExpertAnimatedProps) {
                 <Link
                   key={`${expert.id}-${index}`}
                   href={`/experts/${expert.id}`}
-                  className="block w-64 shrink-0 sm:w-70"
+                  className="block w-[18rem] shrink-0 sm:w-[19rem] lg:w-[20rem]"
                 >
                   <Card className="h-full border-white/10 bg-white/10 text-white backdrop-blur transition duration-300 hover:-translate-y-1 hover:border-cyan-300/70 hover:bg-white/15 hover:shadow-[0_24px_60px_-28px_rgba(34,211,238,0.45)]">
                     <CardContent className="space-y-4 p-4">
@@ -189,14 +202,15 @@ export default function ExpertAnimated({ experts }: ExpertAnimatedProps) {
               );
             })}
           </div>
-        </div>
-      ) : (
-        <Card>
-          <CardContent className="py-10 text-center text-muted-foreground">
-            Featured experts will appear here once expert data is available.
-          </CardContent>
-        </Card>
-      )}
+          </div>
+        ) : (
+          <Card>
+            <CardContent className="py-10 text-center text-muted-foreground">
+              Featured experts will appear here once expert data is available.
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </section>
   );
 }
