@@ -148,13 +148,7 @@ export default function Footer() {
                 </Link>
               </Button>
 
-              <Button
-                asChild
-                variant="outline"
-                className="h-11 rounded-full border-white/20 bg-transparent px-5 text-white hover:bg-white/10 hover:text-white"
-              >
-                <Link href="/contact">Contact us</Link>
-              </Button>
+           
             </div>
           </div>
         </div>
@@ -212,7 +206,7 @@ export default function Footer() {
           <h3 className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
             Quick links
           </h3>
-          <div className="space-y-3 text-sm">
+          <div className="space-y-3 text-sm grid grid-cols-2 gap-2 md:grid-cols-1">
             {quickLinks.map((link) => (
               <Link key={link.href} href={link.href} className="footer-ink-link block transition hover:text-white">
                 <span>{link.label}</span>
@@ -225,7 +219,7 @@ export default function Footer() {
           <h3 className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
             Platform
           </h3>
-          <div className="space-y-3 text-sm">
+          <div className="space-y-3 text-sm grid grid-cols-2 gap-2 md:grid-cols-1">
             {platformLinks.map((link) => (
               <Link key={link.href} href={link.href} className="footer-ink-link block transition hover:text-white">
                 <span>{link.label}</span>

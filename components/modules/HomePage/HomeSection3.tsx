@@ -167,7 +167,7 @@ export default function HomeSection3() {
         </div>
       </section>
 
-      <section className="grid gap-6 rounded-[2.25rem] border bg-linear-to-r from-cyan-50 via-white to-blue-50 p-6 shadow-[0_26px_60px_-42px_rgba(14,165,233,0.28)] dark:border-white/10 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 md:p-8 lg:grid-cols-[0.8fr_1.2fr]">
+      <section className=" my-8 grid gap-6 rounded-[2.25rem] border bg-linear-to-r from-cyan-50 via-white to-blue-50 p-6 shadow-[0_26px_60px_-42px_rgba(14,165,233,0.28)] dark:border-white/10 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 md:p-8 lg:grid-cols-[0.8fr_1.2fr]">
         <div className="space-y-4">
           <div>
             <Badge variant="secondary" className="mb-2 bg-sky-100 text-sky-700">
