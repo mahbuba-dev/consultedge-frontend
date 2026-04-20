@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/card";
 
 import { ILoginPayload, loginZodSchema } from "@/src/zod/auth.validation";
+import { getFriendlyAuthErrorMessage } from "@/src/lib/authErrorMessages";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
 import { Eye, EyeOff } from "lucide-react";
@@ -81,7 +82,7 @@ const LoginForm = ({ redirectPath, passwordReset = false }: LoginFormProps) => {
 
         // Handle failed login
         if (!result.success) {
-          setServerError(result.message || "Login failed");
+          setServerError(result.message || "We couldn't sign you in right now. Please try again.");
           return;
         }
 
@@ -96,8 +97,7 @@ const LoginForm = ({ redirectPath, passwordReset = false }: LoginFormProps) => {
           return;
         }
 
-        console.log(`Login failed: ${error.message}`);
-        setServerError(`Login failed: ${error.message}`);
+        setServerError(getFriendlyAuthErrorMessage(error, "login"));
       }
     },
   });

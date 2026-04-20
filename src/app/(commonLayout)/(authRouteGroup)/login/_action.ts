@@ -73,6 +73,7 @@
 "use server";
 
 import { getDefaultDashboardRoute, isValidRedirectForRole, UserRole } from "@/src/lib/authUtilis";
+import { getFriendlyAuthErrorMessage } from "@/src/lib/authErrorMessages";
 
 import { setTokenInCookies } from "@/src/lib/tokenUtils";
 import { ApiErrorResponse } from "@/src/types/api.types";
@@ -96,7 +97,6 @@ export const loginAction = async (payload : ILoginPayload, redirectPath ?: strin
         const response = await httpClient.post<ILOginResponse>("/auth/login", parsedPayload.data);
 
         const { accessToken, refreshToken, token, user} = response.data;
-        console.log(response.data, "response.data");
         const {role, emailVerified, needPasswordChange, email} = user;
         await setTokenInCookies("accessToken", accessToken, 7 * 24 * 60 * 60); // 7 days
         await setTokenInCookies("refreshToken", refreshToken, 30 * 24 * 60 * 60); // 30 days
@@ -118,7 +118,6 @@ export const loginAction = async (payload : ILoginPayload, redirectPath ?: strin
         }
         
     } catch (error : any) {
-        console.log(error, "error");
         if(error && typeof error === "object" && "digest" in error && typeof error.digest === "string" && error.digest.startsWith("NEXT_REDIRECT")){
             throw error;
         }
@@ -128,7 +127,7 @@ export const loginAction = async (payload : ILoginPayload, redirectPath ?: strin
         }
         return {
             success: false,
-            message: `Login failed: ${error.message}`,
+            message: getFriendlyAuthErrorMessage(error, "login"),
         }
     }
 }

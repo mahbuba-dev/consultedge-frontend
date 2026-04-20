@@ -23,6 +23,7 @@ import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { getFriendlyAuthErrorMessage } from "@/src/lib/authErrorMessages";
 import { IRegisterPayload, registerZodSchema } from "@/src/zod/auth.validation";
 
 interface RegisterFormProps {
@@ -72,7 +73,7 @@ const RegisterForm = ({ redirectPath }: RegisterFormProps) => {
         const result = (await mutateAsync(value)) as any;
 
         if (!result.success) {
-          setServerError(result.message || "Registration failed");
+          setServerError(result.message || "We couldn't create your account right now. Please try again.");
           return;
         }
 
@@ -87,8 +88,7 @@ const RegisterForm = ({ redirectPath }: RegisterFormProps) => {
           return;
         }
 
-        console.log(`Registration failed: ${error.message}`);
-        setServerError(`Registration failed: ${error.message}`);
+        setServerError(getFriendlyAuthErrorMessage(error, "register"));
       }
     },
   });

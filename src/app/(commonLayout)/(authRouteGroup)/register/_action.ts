@@ -2,6 +2,7 @@
 
 import { ApiErrorResponse } from "@/src/types/api.types";
 import { IRegisterResponse } from "@/src/types/auth.types";
+import { getFriendlyAuthErrorMessage } from "@/src/lib/authErrorMessages";
 
 import { redirect } from "next/navigation";
 import { httpClient } from "@/src/lib/axious/httpClient";
@@ -46,8 +47,6 @@ export const registerAction = async (
 
     redirect(loginUrl);
   } catch (error: any) {
-    console.log(error, "register error");
-
     // Allow Next.js redirect errors to bubble
     if (
       error &&
@@ -69,7 +68,7 @@ export const registerAction = async (
 
     return {
       success: false,
-      message: error?.response?.data?.message || "Registration failed",
+      message: getFriendlyAuthErrorMessage(error, "register"),
     };
   }
 };
