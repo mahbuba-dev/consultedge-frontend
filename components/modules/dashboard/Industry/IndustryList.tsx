@@ -63,67 +63,74 @@ export default function IndustryList() {
   };
 
   return (
-    <div className="border rounded-lg overflow-hidden">
-      <table className="w-full border-collapse">
-        <thead className="bg-gray-100">
-          <tr>
-            <th className="p-3 text-left">Icon</th>
-            <th className="p-3 text-left">Name</th>
-            <th className="p-3 text-left">Description</th>
-            <th className="p-3 text-left">Created</th>
-            <th className="p-3 text-left">Updated</th>
-            <th className="p-3 text-left">Actions</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {industries.map((industry: any) => (
-            <tr key={industry.id} className="border-t">
-              <td className="p-3">
-                {industry.icon ? (
-                  <img src={industry.icon} className="w-10 h-10 rounded" />
-                ) : (
-                  <span className="text-gray-400">No Icon</span>
-                )}
-              </td>
-
-              <td className="p-3 font-medium">{industry.name}</td>
-              <td className="p-3 text-gray-600">{industry.description}</td>
-
-              <td className="p-3">
-                <DateCell date={industry.createdAt} />
-              </td>
-
-              <td className="p-3">
-                <DateCell date={industry.updatedAt} />
-              </td>
-
-              <td className="p-3 space-x-3">
-                <Link
-                  href={`/admin/dashboard/industries-management/${industry.id}/edit`}
-                  className="text-blue-600 hover:underline"
-                >
-                  Edit
-                </Link>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    setSelectedIndustry({
-                      id: industry.id,
-                      name: industry.name,
-                    })
-                  }
-                  disabled={deleteMutation.isPending}
-                  className="text-red-600 hover:underline disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {deleteMutation.isPending ? "Deleting..." : "Delete"}
-                </button>
-              </td>
+    <div className="border rounded-lg overflow-x-auto bg-white">
+      {/* Responsive table wrapper */}
+      <div className="min-w-150 md:min-w-0 w-full">
+        <table className="w-full border-collapse text-sm md:text-base">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="p-2 md:p-3 text-left whitespace-nowrap">Icon</th>
+              <th className="p-2 md:p-3 text-left whitespace-nowrap">Name</th>
+              <th className="p-2 md:p-3 text-left whitespace-nowrap">Description</th>
+              <th className="p-2 md:p-3 text-left whitespace-nowrap">Created</th>
+              <th className="p-2 md:p-3 text-left whitespace-nowrap">Updated</th>
+              <th className="p-2 md:p-3 text-left whitespace-nowrap">Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+
+          <tbody>
+            {industries.map((industry: any) => (
+              <tr key={industry.id} className="border-t hover:bg-gray-50 transition-colors">
+                <td className="p-2 md:p-3 align-middle">
+                  {industry.icon ? (
+                    <img src={industry.icon} className="w-8 h-8 md:w-10 md:h-10 rounded object-cover" />
+                  ) : (
+                    <span className="text-gray-400">No Icon</span>
+                  )}
+                </td>
+
+                <td className="p-2 md:p-3 font-medium align-middle max-w-30 md:max-w-xs truncate">
+                  {industry.name}
+                </td>
+                <td className="p-2 md:p-3 text-gray-600 align-middle max-w-45 md:max-w-md truncate">
+                  {industry.description}
+                </td>
+
+                <td className="p-2 md:p-3 align-middle">
+                  <DateCell date={industry.createdAt} />
+                </td>
+
+                <td className="p-2 md:p-3 align-middle">
+                  <DateCell date={industry.updatedAt} />
+                </td>
+
+                <td className="p-2 md:p-3 space-x-2 md:space-x-3 align-middle">
+                  <Link
+                    href={`/admin/dashboard/industries-management/${industry.id}/edit`}
+                    className="text-blue-600 hover:underline"
+                  >
+                    Edit
+                  </Link>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setSelectedIndustry({
+                        id: industry.id,
+                        name: industry.name,
+                      })
+                    }
+                    disabled={deleteMutation.isPending}
+                    className="text-red-600 hover:underline disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {deleteMutation.isPending ? "Deleting..." : "Delete"}
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       <AlertDialog
         open={Boolean(selectedIndustry)}
