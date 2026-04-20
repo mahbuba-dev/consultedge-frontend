@@ -9,7 +9,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { applyExpertAction } from "@/src/services/expert.services";
 import { getAllIndustries } from "@/src/services/industry.services";
-import type { IIndustry } from "@/src/types/industry.types";
+import type { IIndustry, IIndustryListResponse } from "@/src/types/industry.types";
 import { useState } from "react";
 
 export default function ApplyExpertForm() {
@@ -29,19 +29,20 @@ const mutation = useMutation({
   });
 
   const {
-    data: industries = [],
+    data: industriesResponse,
     isLoading: isIndustriesLoading,
     isError: isIndustriesError,
-  } = useQuery({
+  } = useQuery<IIndustryListResponse>({
     queryKey: ["industries", "options"],
     queryFn: getAllIndustries,
-    select: (response): IIndustry[] =>
-      Array.isArray(response?.data) ? response.data : [],
-    initialData: { data: [] },
     staleTime: 5 * 60 * 1000,
     retry: 2,
     refetchOnMount: true,
   });
+
+  const industries: IIndustry[] = Array.isArray(industriesResponse?.data)
+    ? industriesResponse.data
+    : [];
 
 
   const form = useForm({
