@@ -139,10 +139,14 @@ const normalizeReactionActorIds = (value: any): string[] => {
     ? value
     : Array.isArray(value?.users)
       ? value.users
+      : Array.isArray(value?.user)
+        ? value.user
       : Array.isArray(value?.reactors)
         ? value.reactors
         : Array.isArray(value?.participants)
           ? value.participants
+          : Array.isArray(value?.members)
+            ? value.members
           : Array.isArray(value?.items)
             ? value.items
             : [];
@@ -153,10 +157,69 @@ const normalizeReactionActorIds = (value: any): string[] => {
         return String(entry);
       }
 
-      return entry?.userId ?? entry?.id ?? entry?.participantId ?? entry?.reactorId;
+      return (
+        entry?.userId ??
+        entry?.id ??
+        entry?.participantId ??
+        entry?.reactorId ??
+        entry?.user?.id ??
+        entry?.member?.id
+      );
     })
     .filter(Boolean)
     .map(String);
+};
+
+const REACTION_CONTAINER_KEYS = new Set([
+  "reaction",
+  "reactions",
+  "groupedReactions",
+  "reactionGroups",
+  "messageReaction",
+  "messageReactions",
+  "massageReaction",
+  "massageReactions",
+  "emojiReactions",
+  "items",
+  "data",
+  "groups",
+  "grouped",
+  "summary",
+  "emojiCounts",
+  "emojiSummary",
+  "aggregates",
+  "byEmoji",
+]);
+
+const mergeReactionsByEmoji = (reactions: ChatMessageReaction[]) => {
+  const merged = new Map<string, ChatMessageReaction>();
+
+  reactions.forEach((reaction) => {
+    const existing = merged.get(reaction.emoji);
+
+    if (!existing) {
+      merged.set(reaction.emoji, {
+        ...reaction,
+        reactorIds: Array.from(new Set(reaction.reactorIds ?? [])),
+      });
+      return;
+    }
+
+    const reactorIds = Array.from(
+      new Set([...(existing.reactorIds ?? []), ...(reaction.reactorIds ?? [])]),
+    );
+
+    merged.set(reaction.emoji, {
+      emoji: reaction.emoji,
+      count: Math.max(existing.count ?? 0, reaction.count ?? 0, reactorIds.length),
+      reactorIds,
+      reactedByCurrentUser: Boolean(
+        existing.reactedByCurrentUser || reaction.reactedByCurrentUser,
+      ),
+    });
+  });
+
+  return [...merged.values()];
 };
 
 const normalizeChatMessageReaction = (
@@ -185,8 +248,21 @@ const normalizeChatMessageReaction = (
     };
   }
 
+  const safeFallbackEmoji =
+    fallbackEmoji && !REACTION_CONTAINER_KEYS.has(fallbackEmoji) ? fallbackEmoji : undefined;
+
   const emoji = String(
-    value?.emoji ?? value?.reaction ?? value?.value ?? value?.label ?? fallbackEmoji ?? "",
+    value?.emoji ??
+      value?.emojiCode ??
+      value?.emojiValue ??
+      value?.reaction?.emoji ??
+      value?.reactionType?.emoji ??
+      value?.type?.emoji ??
+      value?.value?.emoji ??
+      value?.value ??
+      value?.label ??
+      safeFallbackEmoji ??
+      "",
   ).trim();
 
   if (!emoji) {
@@ -229,27 +305,81 @@ const normalizeChatMessageReactions = (value: any): ChatMessageReaction[] => {
   }
 
   if (Array.isArray(value)) {
-    return value
+    return mergeReactionsByEmoji(
+      value
       .map((entry) => normalizeChatMessageReaction(entry))
-      .filter((entry): entry is ChatMessageReaction => Boolean(entry));
+      .filter((entry): entry is ChatMessageReaction => Boolean(entry)),
+    );
   }
 
   if (typeof value === "object") {
     const nestedArray =
-      toArray(value, ["reactions", "items", "data", "groups", "groupedReactions"]) ?? [];
+      toArray(value, [
+        "reaction",
+        "reactions",
+        "items",
+        "data",
+        "groups",
+        "groupedReactions",
+        "reactionGroups",
+        "messageReaction",
+        "messageReactions",
+        "massageReaction",
+        "massageReactions",
+        "emojiReactions",
+        "grouped",
+        "summary",
+        "emojiCounts",
+        "emojiSummary",
+        "aggregates",
+        "byEmoji",
+      ]) ?? [];
 
     if (nestedArray.length > 0) {
-      return nestedArray
-        .map((entry) => normalizeChatMessageReaction(entry))
-        .filter((entry): entry is ChatMessageReaction => Boolean(entry));
+      return mergeReactionsByEmoji(
+        nestedArray
+          .map((entry) => normalizeChatMessageReaction(entry))
+          .filter((entry): entry is ChatMessageReaction => Boolean(entry)),
+      );
     }
 
-    return Object.entries(value)
-      .map(([emoji, reactionValue]) => normalizeChatMessageReaction(reactionValue, emoji))
-      .filter((entry): entry is ChatMessageReaction => Boolean(entry));
+    return mergeReactionsByEmoji(
+      Object.entries(value)
+        .filter(([emoji]) => !REACTION_CONTAINER_KEYS.has(emoji))
+        .map(([emoji, reactionValue]) => normalizeChatMessageReaction(reactionValue, emoji))
+        .filter((entry): entry is ChatMessageReaction => Boolean(entry)),
+    );
   }
 
   return [];
+};
+
+const pickReactionSource = (...candidates: any[]) => {
+  for (const candidate of candidates) {
+    if (candidate == null) {
+      continue;
+    }
+
+    if (Array.isArray(candidate)) {
+      if (candidate.length > 0) {
+        return candidate;
+      }
+
+      continue;
+    }
+
+    if (typeof candidate === "object") {
+      if (Object.keys(candidate).length > 0) {
+        return candidate;
+      }
+
+      continue;
+    }
+
+    return candidate;
+  }
+
+  return undefined;
 };
 
 export const normalizeChatMessage = (value: any): ChatMessage => {
@@ -262,12 +392,26 @@ export const normalizeChatMessage = (value: any): ChatMessage => {
               value.data.message.roomId ??
               value.data.roomId ??
               value?.roomId,
-            reactions:
-              value.data.message.reactions ??
-              value.data.reactions ??
-              value.data.reactionGroups ??
-              value.data.groupedReactions ??
+            reactions: pickReactionSource(
+              value.data.message.groupedReactions,
+              value.data.groupedReactions,
+              value.data.message.reactionGroups,
+              value.data.reactionGroups,
+              value.data.message.messageReaction,
+              value.data.messageReaction,
+              value.data.message.messageReactions,
               value.data.messageReactions,
+              value.data.message.massageReaction,
+              value.data.message.massageReactions,
+              value.data.massageReaction,
+              value.data.massageReactions,
+              value.data.message.emojiReactions,
+              value.data.emojiReactions,
+              value.data.message.reaction,
+              value.data.reaction,
+              value.data.message.reactions,
+              value.data.reactions,
+            ),
           }
         : value.data
       : undefined;
@@ -276,12 +420,26 @@ export const normalizeChatMessage = (value: any): ChatMessage => {
       ? {
           ...value.message,
           roomId: value.message.roomId ?? value?.roomId,
-          reactions:
-            value.message.reactions ??
-            value.reactions ??
-            value.reactionGroups ??
-            value.groupedReactions ??
+          reactions: pickReactionSource(
+            value.message.groupedReactions,
+            value.groupedReactions,
+            value.message.reactionGroups,
+            value.reactionGroups,
+            value.message.messageReaction,
+            value.messageReaction,
+            value.message.messageReactions,
             value.messageReactions,
+            value.message.massageReaction,
+            value.message.massageReactions,
+            value.massageReaction,
+            value.massageReactions,
+            value.message.emojiReactions,
+            value.emojiReactions,
+            value.message.reaction,
+            value.reaction,
+            value.message.reactions,
+            value.reactions,
+          ),
         }
       : undefined;
   const payloadData =
@@ -292,12 +450,26 @@ export const normalizeChatMessage = (value: any): ChatMessage => {
             ? value.payload.message
             : {}),
           roomId: value.payload.roomId ?? value?.roomId,
-          reactions:
-            value.payload.message?.reactions ??
-            value.payload.reactions ??
-            value.payload.reactionGroups ??
-            value.payload.groupedReactions ??
+          reactions: pickReactionSource(
+            value.payload.message?.groupedReactions,
+            value.payload.groupedReactions,
+            value.payload.message?.reactionGroups,
+            value.payload.reactionGroups,
+            value.payload.message?.messageReaction,
+            value.payload.messageReaction,
+            value.payload.message?.messageReactions,
             value.payload.messageReactions,
+            value.payload.message?.massageReaction,
+            value.payload.message?.massageReactions,
+            value.payload.massageReaction,
+            value.payload.massageReactions,
+            value.payload.message?.emojiReactions,
+            value.payload.emojiReactions,
+            value.payload.message?.reaction,
+            value.payload.reaction,
+            value.payload.message?.reactions,
+            value.payload.reactions,
+          ),
         }
       : undefined;
   const raw = nestedData ?? directMessage ?? payloadData ?? value;
@@ -316,7 +488,17 @@ export const normalizeChatMessage = (value: any): ChatMessage => {
     sender,
     attachment: attachment ? normalizeAttachment(attachment) : null,
     reactions: normalizeChatMessageReactions(
-      raw?.reactions ?? raw?.reactionGroups ?? raw?.groupedReactions ?? raw?.messageReactions,
+      pickReactionSource(
+        raw?.groupedReactions,
+        raw?.reactionGroups,
+        raw?.messageReaction,
+        raw?.messageReactions,
+        raw?.massageReaction,
+        raw?.massageReactions,
+        raw?.emojiReactions,
+        raw?.reaction,
+        raw?.reactions,
+      ),
     ),
     pending: Boolean(raw?.pending),
     failed: Boolean(raw?.failed),

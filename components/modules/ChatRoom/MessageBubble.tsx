@@ -24,7 +24,9 @@ export default function MessageBubble({
 }: MessageBubbleProps) {
   const isOwnMessage = isMessageFromCurrentUser(message, currentUserId);
   const [popoverOpen, setPopoverOpen] = useState(false);
+  const canReactToMessage = !isOwnMessage;
   const reactionsDisabled =
+    !canReactToMessage ||
     !onToggleReaction ||
     message.pending ||
     message.failed ||
@@ -138,27 +140,29 @@ export default function MessageBubble({
           sideOffset={8}
           className="w-auto p-2 flex flex-col items-center"
         >
-          <div className="flex gap-2 mb-2">
-            {["👍", "😂", "😮", "😢", "❤️"].map((emoji) => (
-              <button
-                key={emoji}
-                type="button"
-                disabled={reactionsDisabled}
-                className="text-xl transition-transform hover:scale-125 disabled:cursor-not-allowed disabled:opacity-50"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  if (reactionsDisabled) {
-                    return;
-                  }
-                  setPopoverOpen(false);
-                  void onToggleReaction?.(message.id, emoji);
-                }}
-              >
-                {emoji}
-              </button>
-            ))}
-            <span className="sr-only">Add reaction</span>
-          </div>
+          {canReactToMessage ? (
+            <div className="mb-2 flex gap-2">
+              {["👍", "😂", "😮", "😢", "❤️"].map((emoji) => (
+                <button
+                  key={emoji}
+                  type="button"
+                  disabled={reactionsDisabled}
+                  className="text-xl transition-transform hover:scale-125 disabled:cursor-not-allowed disabled:opacity-50"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    if (reactionsDisabled) {
+                      return;
+                    }
+                    setPopoverOpen(false);
+                    void onToggleReaction?.(message.id, emoji);
+                  }}
+                >
+                  {emoji}
+                </button>
+              ))}
+              <span className="sr-only">Add reaction</span>
+            </div>
+          ) : null}
 
           {isOwnMessage && (
             <button

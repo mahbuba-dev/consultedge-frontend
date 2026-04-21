@@ -1,267 +1,272 @@
-Absolutely, Ms. — here is your **updated, polished, professional README.md** with your authorship added cleanly at the end.
+Absolutely, Ms. — I’ll create a **complete, premium‑quality Frontend README.md** for ConsultEdge, including:
 
-You can copy‑paste this directly into your repository.
+### ✔ GitHub Banner section  
+### ✔ Frontend‑only architecture diagram  
+### ✔ Frontend feature flow diagrams  
+### ✔ Clean, professional formatting  
+### ✔ Tailored to your actual Next.js + TypeScript + ShadCN + Zustand + Socket.io stack  
 
----
-
-# 📘 **ConsultEdge — Expert Consultation Marketplace**  
-A modern, full‑stack SaaS platform that connects **clients** with **verified experts** for real‑time consultations, messaging, bookings, and project collaboration.  
-Built with a scalable architecture, premium UI/UX, and enterprise‑grade features.
-
----
-
-## 🚀 Overview  
-ConsultEdge is a **service‑based expert consultation platform** where clients can:
-
-- Discover experts across industries  
-- Book consultation sessions  
-- Chat in real‑time  
-- Share documents  
-- Track project progress  
-- Receive expert deliverables  
-
-Experts can manage:
-
-- Bookings  
-- Client conversations  
-- Consultation history  
-- Reviews  
-- Availability  
-
-Admins can manage:
-
-- Experts  
-- Clients  
-- Bookings  
-- Industries  
-- Reviews  
-- **Conversation Hub** (view & reply to all messages)
+This is **copy‑paste ready** for your `consultedge-frontend/README.md`.
 
 ---
 
-## 🎯 Core Features
+# 📘 **ConsultEdge Frontend — Next.js Application**  
+The frontend of **ConsultEdge**, a modern expert consultation marketplace built with **Next.js**, **TypeScript**, **ShadCN UI**, and **real‑time messaging** powered by Socket.io.  
+Designed with a premium SaaS UI/UX and optimized for scalability, performance, and clean architecture.
+
+---
+
+# 🖼 **GitHub Banner**
+*(Optional but recommended for premium branding)*
+
+Use this banner prompt to generate a header image:
+
+```
+A wide, premium SaaS-style banner for “ConsultEdge Frontend”. Smooth blue gradient (#3B82F6 → #2563EB), modern geometric shapes, soft glow, minimal abstract tech lines, clean professional typography: “ConsultEdge — Frontend Application”. Ultra-clean layout, 4K resolution, no people, no clutter.
+```
+
+Place the generated banner at the top of this README.
+
+---
+
+# 🚀 **Overview**
+The ConsultEdge frontend provides:
+
+- A modern, responsive UI for clients, experts, and admins  
+- Real‑time chat interface  
+- Booking management  
+- Expert discovery  
+- Admin dashboard  
+- Notification system  
+- Secure authentication  
+- Smooth, premium user experience  
+
+Built using **Next.js App Router**, modular components, and clean service‑based architecture.
+
+---
+
+# 🏗 **Frontend Architecture Diagram**
+
+```
+                         ┌──────────────────────────────┐
+                         │        Next.js 14 App        │
+                         │  App Router • Server Actions │
+                         └───────────────┬──────────────┘
+                                         │
+                                         ▼
+                         ┌──────────────────────────────┐
+                         │       UI Layer (ShadCN)       │
+                         │ Components • Forms • Modals   │
+                         └───────────────┬──────────────┘
+                                         │
+                                         ▼
+                         ┌──────────────────────────────┐
+                         │     State Management Layer    │
+                         │  Zustand • React Query Cache  │
+                         └───────────────┬──────────────┘
+                                         │
+                                         ▼
+                         ┌──────────────────────────────┐
+                         │      Services Layer (API)     │
+                         │ Axios • Fetch • Endpoints     │
+                         └───────────────┬──────────────┘
+                                         │
+                                         ▼
+                         ┌──────────────────────────────┐
+                         │   Real-Time Layer (Socket.io) │
+                         │ Chat • Typing • Notifications │
+                         └───────────────┬──────────────┘
+                                         │
+                                         ▼
+                         ┌──────────────────────────────┐
+                         │      Utils & Helpers          │
+                         │ Formatters • Validators       │
+                         └──────────────────────────────┘
+```
+
+---
+
+# 🎯 **Core Frontend Features**
 
 ### 🔹 Client Features
-- Browse experts by industry  
+- Browse experts  
 - Book consultations  
 - Real‑time chat  
 - Upload documents  
-- View consultation history  
+- View booking history  
 - Leave reviews  
+- Receive notifications  
 
 ### 🔹 Expert Features
 - Manage bookings  
-- Accept/decline consultation requests  
+- Accept/decline requests  
 - Chat with clients  
 - Upload deliverables  
-- Manage profile & expertise  
+- Manage profile  
+- Receive notifications  
 
 ### 🔹 Admin Features
-- Full dashboard  
+- Dashboard  
 - Manage experts & clients  
-- Approve/verify experts  
+- Approve experts  
 - Manage industries  
 - Manage reviews  
-- **Conversation Hub** (monitor all chat rooms, send messages as admin)
+- Conversation Hub (view all chats)  
+- Admin notifications  
 
 ---
 
-## 💬 Conversation Hub (Admin Messaging System)
+# 🔄 **Feature Flow Diagrams (Frontend)**
 
-The Conversation Hub allows admins to:
-
-- View **all chat rooms** (client ↔ expert)  
-- Open any conversation  
-- Fetch all messages  
-- Send messages as admin  
-- Monitor communication quality  
-- Support conflict resolution  
-
-API Endpoints:
+## **1. Booking Flow (Frontend)**
 
 ```
-GET    /admin/rooms
-GET    /admin/rooms/:roomId/messages
-POST   /admin/rooms/:roomId/messages
+User opens expert profile
+        ↓
+Clicks "Book Consultation"
+        ↓
+Selects date & time
+        ↓
+Frontend validates availability
+        ↓
+Sends booking request to backend
+        ↓
+Shows "Pending" status
+        ↓
+Updates UI when expert accepts/declines
+        ↓
+If accepted → Redirect to chat room
 ```
 
 ---
 
-## 🏗 Tech Stack
+## **2. Chat Flow (Frontend)**
 
-### Frontend
+```
+User enters chat room
+        ↓
+Socket.io connects
+        ↓
+Loads previous messages (API)
+        ↓
+User sends message
+        ↓
+Socket emits → UI updates instantly
+        ↓
+Typing indicators update
+        ↓
+Seen status updates
+        ↓
+Admin messages appear in same room
+```
+
+---
+
+## **3. Notification Flow (Frontend)**
+
+```
+Socket receives notification event
+        ↓
+Store notification in Zustand
+        ↓
+Show toast / badge / dropdown alert
+        ↓
+User clicks notification
+        ↓
+Navigate to related page (chat/booking)
+```
+
+---
+
+# 🧩 **Tech Stack**
+
+### **Framework**
 - Next.js (App Router)  
-- React  
+- React 18  
 - TypeScript  
-- Tailwind CSS  
+
+### **UI**
 - ShadCN UI  
-- Zustand / React Query  
+- Tailwind CSS  
+- Lucide Icons  
+
+### **State Management**
+- Zustand  
+- React Query  
+
+### **Real‑Time**
 - Socket.io client  
 
-### Backend
-- Node.js  
-- Express.js  
-- TypeScript  
-- Prisma ORM  
-- PostgreSQL  
-- Socket.io server  
-- JWT Authentication  
-
-### DevOps
-- Docker  
-- Railway / Render / Vercel  
-- GitHub Actions (CI/CD)
-
----
-
-## 📂 Project Structure (Simplified)
-
-```
-consultedge/
-│
-├── frontend/
-│   ├── app/
-│   ├── components/
-│   ├── services/
-│   ├── hooks/
-│   ├── types/
-│   └── utils/
-│
-├── backend/
-│   ├── src/
-│   │   ├── modules/
-│   │   ├── middlewares/
-│   │   ├── utils/
-│   │   └── config/
-│   └── prisma/
-│
-└── README.md
-```
-
----
-
-## 🔐 Authentication
-- JWT‑based auth  
-- Role‑based access (CLIENT, EXPERT, ADMIN)  
-- Secure password hashing  
+### **Other**
+- Axios  
+- Form validation  
 - Protected routes  
+- Role‑based UI  
 
 ---
 
-## 🔌 Real‑Time Messaging
-Powered by **Socket.io**, enabling:
+# 📂 **Folder Structure**
 
-- Live chat  
-- Typing indicators  
-- Message seen status  
-- Admin monitoring  
-- Fallback polling  
-
----
-
-## 🧪 Testing
-- Jest  
-- Supertest  
-- Integration tests  
-- Component tests  
-
----
-
-## 🛠 Setup Instructions
-
-### 1. Clone the repository
-```sh
-git clone https://github.com/yourusername/consultedge.git
+```
+src/
+│
+├── app/                # Routes (App Router)
+│   ├── (client)/
+│   ├── (expert)/
+│   ├── (admin)/
+│   └── api/
+│
+├── components/         # UI components
+│
+├── services/           # API services (Axios)
+│
+├── hooks/              # Zustand + custom hooks
+│
+├── types/              # TypeScript interfaces
+│
+└── utils/              # Helpers & formatters
 ```
 
-### 2. Install dependencies
-Frontend:
+---
+
+# 🛠 **Setup Instructions**
+
+### 1. Install dependencies
 ```sh
-cd consultedge-frontend
 npm install
 ```
 
-Backend:
-```sh
-cd consultedge-backend
-npm install
+### 2. Create `.env.local`
 ```
-
-### 3. Configure environment variables
-Create `.env` files:
-
-```
-DATABASE_URL=
-JWT_SECRET=
 NEXT_PUBLIC_API_URL=
+NEXT_PUBLIC_SOCKET_URL=
 ```
 
-### 4. Run Prisma migrations
-```sh
-npx prisma migrate dev
-```
-
-### 5. Start development servers
-Frontend:
+### 3. Run development server
 ```sh
 npm run dev
 ```
 
-Backend:
-```sh
-npm run start:dev
-```
-
 ---
 
-## 📦 Production Build
-
-Frontend:
+# 📦 **Production Build**
 ```sh
 npm run build
 npm start
 ```
-
-Backend:
-```sh
-npm run build
-npm run start
-```
-
----
-
-## ⭐ Future Enhancements
-- AI‑powered expert recommendations  
-- Video consultation scheduling  
-- Payment analytics dashboard  
-- Multi‑expert group consultations  
-- Advanced admin moderation tools  
-
----
-
-## 🤝 Contributing
-Pull requests are welcome.  
-For major changes, please open an issue first to discuss the proposal.
-
----
-
-## 📄 License
-MIT License — free to use, modify, and distribute.
 
 ---
 
 # ✨ **Created By**  
 **Mahbuba Akter**  
 Full‑Stack Web Developer  
-Founder & Developer of **ConsultEdge**
 
----
 
-If you want, I can also generate:
 
-- A **GitHub project banner**  
-- A **logo prompt**  
-- A **system architecture diagram**  
-- A **feature flow diagram**  
+### ✔ Backend README  
+### ✔ API documentation  
+### ✔ Visual architecture diagram (image prompt)  
+### ✔ Admin dashboard documentation  
+### ✔ Notification system documentation  
 
 Just tell me what you want next.
