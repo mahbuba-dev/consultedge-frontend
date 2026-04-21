@@ -283,7 +283,7 @@ const axiousInstance = async () => {
 
 
 import { ApiResponse } from "@/src/types/api.types";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 
 // ---------------------------------------------
 // Normalize API Base URL
@@ -365,7 +365,36 @@ export interface ApiRequestOptions {
   headers?: Record<string, string>;
   withCredentials?: boolean;
   silent?: boolean;
+  expectedStatuses?: number[];
 }
+
+const getErrorStatus = (error: unknown) => {
+  if (axios.isAxiosError(error)) {
+    return error.response?.status;
+  }
+
+  return undefined;
+};
+
+const shouldLogRequestError = (
+  error: unknown,
+  options?: ApiRequestOptions,
+) => {
+  if (options?.silent) {
+    return false;
+  }
+
+  const status = getErrorStatus(error);
+
+  if (
+    typeof status === "number" &&
+    options?.expectedStatuses?.includes(status)
+  ) {
+    return false;
+  }
+
+  return true;
+};
 
 // ---------------------------------------------
 // HTTP GET
@@ -379,10 +408,13 @@ const httpGet = async <TData>(
     const response = await instance.get<ApiResponse<TData>>(endpoint, {
       params: options?.params,
       headers: options?.headers,
+      withCredentials: options?.withCredentials,
     });
     return response.data;
   } catch (error) {
-    if (!options?.silent) console.error(`GET ${endpoint} failed:`, error);
+    if (shouldLogRequestError(error, options)) {
+      console.error(`GET ${endpoint} failed:`, error);
+    }
     throw error;
   }
 };
@@ -400,10 +432,13 @@ const httpPost = async <TData>(
     const response = await instance.post<ApiResponse<TData>>(endpoint, data, {
       params: options?.params,
       headers: options?.headers,
+      withCredentials: options?.withCredentials,
     });
     return response.data;
   } catch (error) {
-    if (!options?.silent) console.error(`POST ${endpoint} failed:`, error);
+    if (shouldLogRequestError(error, options)) {
+      console.error(`POST ${endpoint} failed:`, error);
+    }
     throw error;
   }
 };
@@ -421,10 +456,13 @@ const httpPut = async <TData>(
     const response = await instance.put<ApiResponse<TData>>(endpoint, data, {
       params: options?.params,
       headers: options?.headers,
+      withCredentials: options?.withCredentials,
     });
     return response.data;
   } catch (error) {
-    if (!options?.silent) console.error(`PUT ${endpoint} failed:`, error);
+    if (shouldLogRequestError(error, options)) {
+      console.error(`PUT ${endpoint} failed:`, error);
+    }
     throw error;
   }
 };
@@ -442,10 +480,13 @@ const httpPatch = async <TData>(
     const response = await instance.patch<ApiResponse<TData>>(endpoint, data, {
       params: options?.params,
       headers: options?.headers,
+      withCredentials: options?.withCredentials,
     });
     return response.data;
   } catch (error) {
-    if (!options?.silent) console.error(`PATCH ${endpoint} failed:`, error);
+    if (shouldLogRequestError(error, options)) {
+      console.error(`PATCH ${endpoint} failed:`, error);
+    }
     throw error;
   }
 };
@@ -462,10 +503,13 @@ const httpDelete = async <TData>(
     const response = await instance.delete<ApiResponse<TData>>(endpoint, {
       params: options?.params,
       headers: options?.headers,
+      withCredentials: options?.withCredentials,
     });
     return response.data;
   } catch (error) {
-    if (!options?.silent) console.error(`DELETE ${endpoint} failed:`, error);
+    if (shouldLogRequestError(error, options)) {
+      console.error(`DELETE ${endpoint} failed:`, error);
+    }
     throw error;
   }
 };

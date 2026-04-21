@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/card";
 import { getMe } from "@/src/services/auth.services";
 import { getDashboardData } from "@/src/services/dashboard.services";
-import { getTestimonialsByExpert } from "@/src/services/testimonial.services";
+import { getTestimonialsForExpertContext } from "@/src/services/testimonial.services";
 import type { ApiResponse } from "@/src/types/api.types";
 import type { IUserProfile } from "@/src/types/auth.types";
 import type { IExpertDashboardStats } from "@/src/types/expert.dashboard";
@@ -57,11 +57,12 @@ const ExpertDashboardContent = () => {
   });
 
   const expertId = profile?.expert?.id;
+  const userId = profile?.id;
 
   const { data: testimonials = [] } = useQuery<ITestimonial[]>({
-    queryKey: ["expert-testimonials", expertId],
-    queryFn: () => getTestimonialsByExpert(expertId as string),
-    enabled: Boolean(expertId),
+    queryKey: ["expert-testimonials", expertId, userId],
+    queryFn: () => getTestimonialsForExpertContext([expertId, userId]),
+    enabled: Boolean(expertId || userId),
     staleTime: 60 * 1000,
   });
 
@@ -135,7 +136,7 @@ const ExpertDashboardContent = () => {
 
           <div className="flex flex-wrap gap-3">
             <Link href="/my-profile">
-              <Button className="bg-white text-slate-900 hover:bg-white/90">
+              <Button className="bg-white text-slate-900 hover:bg-white/90 px-5">
                 View Profile
               </Button>
             </Link>

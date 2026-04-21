@@ -30,7 +30,7 @@ import type { ITestimonial } from "@/src/types/testimonial.types";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  getTestimonialsByExpert,
+  getTestimonialsForExpertContext,
   replyToTestimonial,
 } from "@/src/services/testimonial.services";
 
@@ -43,15 +43,16 @@ export default function ExpertReviewsPanel({ profile }: Props) {
   const [replyText, setReplyText] = useState("");
 
   const expertId = profile?.expert?.id ?? null;
+  const userId = profile?.id ?? null;
   const expertName = profile?.expert?.fullName ?? "your expert";
 
   const queryClient = useQueryClient();
 
   // ✅ FETCH REVIEWS (React Query owns data now)
   const { data: reviews = [] } = useQuery({
-    queryKey: ["testimonials", expertId],
-    queryFn: () => getTestimonialsByExpert(expertId!),
-    enabled: !!expertId,
+    queryKey: ["testimonials", expertId, userId],
+    queryFn: () => getTestimonialsForExpertContext([expertId, userId]),
+    enabled: Boolean(expertId || userId),
   });
 
   // ✅ MUTATION
@@ -64,9 +65,9 @@ export default function ExpertReviewsPanel({ profile }: Props) {
       reply: string;
     }) => replyToTestimonial(id, { expertReply: reply }),
 
-    onsuccess: () => {
+    onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["testimonials", expertId],
+        queryKey: ["testimonials", expertId, userId],
       });
     },
   });

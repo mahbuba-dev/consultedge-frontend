@@ -117,7 +117,7 @@ export default function ExpertAnimated({ experts }: ExpertAnimatedProps) {
                 <Link
                   key={`${expert.id}-${index}`}
                   href={`/experts/${expert.id}`}
-                  className="block w-[18rem] shrink-0 sm:w-[19rem] lg:w-[20rem]"
+                  className="block w-[15rem] shrink-0 sm:w-[10rem] lg:w-[20rem]"
                 >
                   <Card className="h-full border-white/10 bg-white/10 text-white backdrop-blur transition duration-300 hover:-translate-y-1 hover:border-cyan-300/70 hover:bg-white/15 hover:shadow-[0_24px_60px_-28px_rgba(34,211,238,0.45)]">
                     <CardContent className="space-y-4 p-4">

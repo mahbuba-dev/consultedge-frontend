@@ -23,6 +23,7 @@ import {
   markChatRoomAsRead,
   mergeUniqueMessages,
   normalizeChatMessage,
+  replaceChatMessage,
   upsertChatRoomActivity,
 } from "@/src/services/chatRoom.service";
 import type { IUserProfile } from "@/src/types/auth.types";
@@ -292,6 +293,31 @@ export function ChatSocketProvider({ children }: { children: React.ReactNode }) 
       });
     };
 
+    const handleMessageReactionUpdated = (payload: any) => {
+      const message = normalizeChatMessage(payload);
+
+      if (!message?.roomId || !message?.id) {
+        return;
+      }
+
+      queryClient.setQueryData<ChatMessage[]>(["chat-room-messages", message.roomId], (current = []) =>
+        replaceChatMessage(current, message),
+      );
+
+      queryClient.setQueriesData({ queryKey: ["chat-rooms"] }, (current) =>
+        updateRoomsCache(current as ChatRoom[] | { data?: ChatRoom[] } | undefined, (rooms) =>
+          rooms.map((room) =>
+            room.id === message.roomId && room.lastMessage?.id === message.id
+              ? {
+                  ...room,
+                  lastMessage: message,
+                }
+              : room,
+          ),
+        ),
+      );
+    };
+
     const handleTyping = (payload: any) => {
       if (!payload?.roomId || !payload?.userId) {
         return;
@@ -409,6 +435,7 @@ export function ChatSocketProvider({ children }: { children: React.ReactNode }) 
 
     client.onStateChange(handleConnectionStateChange);
     client.on("receive_message", handleReceiveMessage);
+    client.on("message_reaction_updated", handleMessageReactionUpdated);
     client.on("presence_update", handlePresenceUpdate);
     client.on("typing", handleTyping);
     client.on("call_started", handleCallStarted);
@@ -420,6 +447,7 @@ export function ChatSocketProvider({ children }: { children: React.ReactNode }) 
     return () => {
       client.offStateChange(handleConnectionStateChange);
       client.off("receive_message", handleReceiveMessage);
+      client.off("message_reaction_updated", handleMessageReactionUpdated);
       client.off("presence_update", handlePresenceUpdate);
       client.off("typing", handleTyping);
       client.off("call_started", handleCallStarted);

@@ -34,7 +34,11 @@ export const registerAction = async (
 
   try {
     // 2️⃣ Call backend API
-    await httpClient.post<IRegisterResponse>("/auth/register", parsed.data);
+    await httpClient.post<IRegisterResponse>(
+      "/auth/register",
+      parsed.data,
+      { expectedStatuses: [400, 403, 409, 429] }
+    );
 
     const safeRedirectPath =
       redirectPath?.startsWith("/") && !redirectPath.startsWith("//")

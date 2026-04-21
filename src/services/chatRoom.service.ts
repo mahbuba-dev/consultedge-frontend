@@ -12,6 +12,7 @@ import type {
   ChatCall,
   ChatCallStatus,
   ChatMessage,
+  ChatMessageReaction,
   ChatMessageType,
   ChatParticipant,
   ChatRoom,
@@ -32,6 +33,14 @@ const toArray = (value: unknown, nestedKeys: string[] = []): any[] => {
       if (Array.isArray(nestedValue)) {
         return nestedValue;
       }
+
+       if (nestedValue && typeof nestedValue === "object") {
+        const nestedArray = toArray(nestedValue, nestedKeys);
+
+        if (nestedArray.length > 0) {
+          return nestedArray;
+        }
+      }
     }
   }
 
@@ -43,6 +52,49 @@ export const getParticipantDisplayName = (participant?: ChatParticipant | null) 
 
 export const getParticipantKey = (participant?: ChatParticipant | null) =>
   String(participant?.userId ?? participant?.id ?? "");
+
+const isCurrentParticipant = (
+  participant: ChatParticipant,
+  currentUserId?: string,
+) => {
+  if (!currentUserId) {
+    return false;
+  }
+
+  return [participant.userId, participant.id]
+    .filter(Boolean)
+    .some((candidate) => String(candidate) === currentUserId);
+};
+
+export const getOtherParticipants = ({
+  participants,
+  currentUserId,
+  currentUserRole,
+}: {
+  participants: ChatParticipant[];
+  currentUserId?: string;
+  currentUserRole?: ChatRole | null;
+}) => {
+  const otherParticipantsById = participants.filter(
+    (participant) => !isCurrentParticipant(participant, currentUserId),
+  );
+
+  if (otherParticipantsById.length > 0 && otherParticipantsById.length < participants.length) {
+    return otherParticipantsById;
+  }
+
+  if (currentUserRole) {
+    const otherParticipantsByRole = participants.filter(
+      (participant) => participant.role !== currentUserRole,
+    );
+
+    if (otherParticipantsByRole.length > 0) {
+      return otherParticipantsByRole;
+    }
+  }
+
+  return participants.slice(1);
+};
 
 const normalizeParticipant = (value: any): ChatParticipant => ({
   id: String(value?.id ?? value?.userId ?? value?.participantId ?? crypto.randomUUID()),
@@ -78,6 +130,128 @@ const normalizeAttachment = (value: any): ChatAttachment => ({
   size: value?.size,
 });
 
+const normalizeReactionActorIds = (value: any): string[] => {
+  if (!value) {
+    return [];
+  }
+
+  const entries = Array.isArray(value)
+    ? value
+    : Array.isArray(value?.users)
+      ? value.users
+      : Array.isArray(value?.reactors)
+        ? value.reactors
+        : Array.isArray(value?.participants)
+          ? value.participants
+          : Array.isArray(value?.items)
+            ? value.items
+            : [];
+
+  return entries
+    .map((entry) => {
+      if (typeof entry === "string" || typeof entry === "number") {
+        return String(entry);
+      }
+
+      return entry?.userId ?? entry?.id ?? entry?.participantId ?? entry?.reactorId;
+    })
+    .filter(Boolean)
+    .map(String);
+};
+
+const normalizeChatMessageReaction = (
+  value: any,
+  fallbackEmoji?: string,
+): ChatMessageReaction | null => {
+  if (!value && !fallbackEmoji) {
+    return null;
+  }
+
+  if (typeof value === "string") {
+    return {
+      emoji: value,
+      count: 1,
+      reactorIds: [],
+      reactedByCurrentUser: false,
+    };
+  }
+
+  if (typeof value === "number" && fallbackEmoji) {
+    return {
+      emoji: fallbackEmoji,
+      count: value,
+      reactorIds: [],
+      reactedByCurrentUser: false,
+    };
+  }
+
+  const emoji = String(
+    value?.emoji ?? value?.reaction ?? value?.value ?? value?.label ?? fallbackEmoji ?? "",
+  ).trim();
+
+  if (!emoji) {
+    return null;
+  }
+
+  const reactorIds = Array.from(
+    new Set(
+      [
+        ...normalizeReactionActorIds(value?.reactorIds),
+        ...normalizeReactionActorIds(value?.userIds),
+        ...normalizeReactionActorIds(value?.participants),
+        ...normalizeReactionActorIds(value?.reactors),
+        ...normalizeReactionActorIds(value?.users),
+      ],
+    ),
+  );
+
+  const normalizedCount = Number(
+    value?.count ?? value?._count ?? value?.total ?? value?.aggregateCount ?? reactorIds.length ?? 0,
+  );
+
+  return {
+    emoji,
+    count: Number.isFinite(normalizedCount) && normalizedCount > 0 ? normalizedCount : reactorIds.length || 1,
+    reactorIds,
+    reactedByCurrentUser: Boolean(
+      value?.reactedByCurrentUser ??
+        value?.hasReacted ??
+        value?.userReacted ??
+        value?.selected ??
+        value?.isOwnReaction,
+    ),
+  };
+};
+
+const normalizeChatMessageReactions = (value: any): ChatMessageReaction[] => {
+  if (!value) {
+    return [];
+  }
+
+  if (Array.isArray(value)) {
+    return value
+      .map((entry) => normalizeChatMessageReaction(entry))
+      .filter((entry): entry is ChatMessageReaction => Boolean(entry));
+  }
+
+  if (typeof value === "object") {
+    const nestedArray =
+      toArray(value, ["reactions", "items", "data", "groups", "groupedReactions"]) ?? [];
+
+    if (nestedArray.length > 0) {
+      return nestedArray
+        .map((entry) => normalizeChatMessageReaction(entry))
+        .filter((entry): entry is ChatMessageReaction => Boolean(entry));
+    }
+
+    return Object.entries(value)
+      .map(([emoji, reactionValue]) => normalizeChatMessageReaction(reactionValue, emoji))
+      .filter((entry): entry is ChatMessageReaction => Boolean(entry));
+  }
+
+  return [];
+};
+
 export const normalizeChatMessage = (value: any): ChatMessage => {
   const nestedData =
     value?.data && typeof value.data === "object"
@@ -88,12 +262,27 @@ export const normalizeChatMessage = (value: any): ChatMessage => {
               value.data.message.roomId ??
               value.data.roomId ??
               value?.roomId,
+            reactions:
+              value.data.message.reactions ??
+              value.data.reactions ??
+              value.data.reactionGroups ??
+              value.data.groupedReactions ??
+              value.data.messageReactions,
           }
         : value.data
       : undefined;
   const directMessage =
     value?.message && typeof value.message === "object"
-      ? value.message
+      ? {
+          ...value.message,
+          roomId: value.message.roomId ?? value?.roomId,
+          reactions:
+            value.message.reactions ??
+            value.reactions ??
+            value.reactionGroups ??
+            value.groupedReactions ??
+            value.messageReactions,
+        }
       : undefined;
   const payloadData =
     value?.payload && typeof value.payload === "object"
@@ -103,6 +292,12 @@ export const normalizeChatMessage = (value: any): ChatMessage => {
             ? value.payload.message
             : {}),
           roomId: value.payload.roomId ?? value?.roomId,
+          reactions:
+            value.payload.message?.reactions ??
+            value.payload.reactions ??
+            value.payload.reactionGroups ??
+            value.payload.groupedReactions ??
+            value.payload.messageReactions,
         }
       : undefined;
   const raw = nestedData ?? directMessage ?? payloadData ?? value;
@@ -120,6 +315,9 @@ export const normalizeChatMessage = (value: any): ChatMessage => {
     senderRole: (raw?.senderRole ?? sender?.role ?? "CLIENT") as ChatRole,
     sender,
     attachment: attachment ? normalizeAttachment(attachment) : null,
+    reactions: normalizeChatMessageReactions(
+      raw?.reactions ?? raw?.reactionGroups ?? raw?.groupedReactions ?? raw?.messageReactions,
+    ),
     pending: Boolean(raw?.pending),
     failed: Boolean(raw?.failed),
   };
@@ -185,6 +383,98 @@ export const mergeUniqueMessages = (messages: ChatMessage[]) => {
   return [...merged.values()].sort(
     (left, right) => new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime(),
   );
+};
+
+export const replaceChatMessage = (messages: ChatMessage[], message: ChatMessage) =>
+  mergeUniqueMessages([...messages.filter((entry) => entry.id !== message.id), message]);
+
+export const getCurrentUserReactionEmoji = (
+  message: ChatMessage,
+  currentUserId?: string,
+) => {
+  if (!currentUserId) {
+    return null;
+  }
+
+  const matchedReaction = (message.reactions ?? []).find(
+    (reaction) =>
+      reaction.reactedByCurrentUser ||
+      reaction.reactorIds?.includes(currentUserId),
+  );
+
+  return matchedReaction?.emoji ?? null;
+};
+
+export const toggleReactionLocally = ({
+  message,
+  emoji,
+  currentUserId,
+}: {
+  message: ChatMessage;
+  emoji: string;
+  currentUserId?: string;
+}): ChatMessage => {
+  if (!emoji || !currentUserId) {
+    return message;
+  }
+
+  const currentReactionEmoji = getCurrentUserReactionEmoji(message, currentUserId);
+
+  const nextReactions = (message.reactions ?? [])
+    .map((reaction) => {
+      const reactorIds = Array.from(new Set(reaction.reactorIds ?? []));
+      const hasCurrentUser =
+        reaction.reactedByCurrentUser || reactorIds.includes(currentUserId);
+
+      if (!hasCurrentUser) {
+        return reaction;
+      }
+
+      const remainingIds = reactorIds.filter((reactorId) => reactorId !== currentUserId);
+      const nextCount = Math.max(0, (reaction.count ?? reactorIds.length ?? 1) - 1);
+
+      if (nextCount === 0) {
+        return null;
+      }
+
+      return {
+        ...reaction,
+        count: nextCount,
+        reactorIds: remainingIds,
+        reactedByCurrentUser: false,
+      };
+    })
+    .filter((reaction): reaction is NonNullable<ChatMessage["reactions"]>[number] => Boolean(reaction));
+
+  if (currentReactionEmoji !== emoji) {
+    const targetIndex = nextReactions.findIndex((reaction) => reaction.emoji === emoji);
+
+    if (targetIndex === -1) {
+      nextReactions.push({
+        emoji,
+        count: 1,
+        reactorIds: [currentUserId],
+        reactedByCurrentUser: true,
+      });
+    } else {
+      const targetReaction = nextReactions[targetIndex];
+      const reactorIds = Array.from(new Set(targetReaction.reactorIds ?? []));
+
+      nextReactions[targetIndex] = {
+        ...targetReaction,
+        count: Math.max(0, targetReaction.count ?? reactorIds.length ?? 0) + 1,
+        reactorIds: reactorIds.includes(currentUserId)
+          ? reactorIds
+          : [...reactorIds, currentUserId],
+        reactedByCurrentUser: true,
+      };
+    }
+  }
+
+  return {
+    ...message,
+    reactions: nextReactions,
+  };
 };
 
 export const sortChatRooms = (rooms: ChatRoom[]) => {
@@ -392,6 +682,20 @@ export const getRoomMessages = async (roomId: string): Promise<ChatMessage[]> =>
 
     throw error;
   }
+};
+
+export const toggleMessageReaction = async (
+  roomId: string,
+  messageId: string,
+  emoji: string,
+): Promise<ChatMessage> => {
+  const response = await httpClient.post<ChatMessage>(
+    `${CHAT_BASE_PATH}/rooms/${roomId}/messages/${messageId}/reactions`,
+    { emoji },
+    { silent: true },
+  );
+
+  return normalizeChatMessage(response);
 };
 
 export const sendRoomMessage = async (

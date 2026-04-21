@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "@tanstack/react-form";
+import { toast } from "sonner";
 
 import AppField from "@/components/form/AppField";
 import AppSubmitButton from "@/components/form/AppSubmitButton";
@@ -36,19 +37,31 @@ export default function VerifyEmailPage() {
   // Verify OTP mutation
   const verifyMutation = useMutation({
     mutationFn: async (payload: { email: string; otp: string }) => {
-      return httpClient.post("/auth/verify-email", payload);
+      return httpClient.post("/auth/verify-email", payload, {
+        expectedStatuses: [400, 401, 403, 429],
+      });
     },
   });
 
   // Resend OTP mutation
   const resendMutation = useMutation({
     mutationFn: async () => {
-      return httpClient.post("/auth/resend-otp", { email });
+      return httpClient.post("/auth/resend-otp", { email }, {
+        expectedStatuses: [400, 403, 404, 429],
+      });
     },
-    onsuccess: () => {
+    onSuccess: () => {
       setServersuccess("A new OTP has been sent to your email.");
+      setServerError(null);
+      toast.success("A new OTP has been sent to your email.");
       setTimer(120);
       setCanResend(false);
+    },
+    onError: (err: any) => {
+      const message = err?.response?.data?.message || "Failed to resend OTP";
+      setServerError(message);
+      setServersuccess(null);
+      toast.error(message);
     },
   });
 
@@ -67,12 +80,15 @@ export default function VerifyEmailPage() {
         });
 
         setServersuccess("Email verified successfully!");
+        toast.success("Email verified successfully!");
 
         setTimeout(() => {
           window.location.href = "/login";
         }, 1500);
       } catch (err: any) {
-        setServerError(err?.response?.data?.message || "Invalid OTP");
+        const message = err?.response?.data?.message || "Invalid OTP";
+        setServerError(message);
+        toast.error(message);
       }
     },
   });

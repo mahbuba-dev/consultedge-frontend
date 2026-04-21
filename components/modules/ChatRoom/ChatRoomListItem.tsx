@@ -6,12 +6,13 @@ import { MessageSquareText, Paperclip } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/src/lib/utils";
-import { getParticipantDisplayName } from "@/src/services/chatRoom.service";
-import type { ChatRoom } from "@/src/types/chat.types";
+import { getOtherParticipants, getParticipantDisplayName } from "@/src/services/chatRoom.service";
+import type { ChatRole, ChatRoom } from "@/src/types/chat.types";
 
 interface ChatRoomListItemProps {
   room: ChatRoom;
   currentUserId?: string;
+  currentUserRole?: ChatRole | null;
   isActive?: boolean;
   onSelect?: (roomId: string) => void;
 }
@@ -19,12 +20,15 @@ interface ChatRoomListItemProps {
 export default function ChatRoomListItem({
   room,
   currentUserId,
+  currentUserRole,
   isActive = false,
   onSelect,
 }: ChatRoomListItemProps) {
-  const otherParticipants = room.participants.filter(
-    (participant) => (participant.userId ?? participant.id) !== currentUserId,
-  );
+  const otherParticipants = getOtherParticipants({
+    participants: room.participants,
+    currentUserId,
+    currentUserRole,
+  });
 
   const primaryParticipant = otherParticipants[0] ?? room.participants[0];
   const otherParticipantsLabel = otherParticipants

@@ -109,7 +109,7 @@ import { ShieldCheck, Wifi, WifiOff } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { getParticipantDisplayName } from "@/src/services/chatRoom.service";
+import { getOtherParticipants, getParticipantDisplayName } from "@/src/services/chatRoom.service";
 import type { ChatRoom, ChatParticipant } from "@/src/types/chat.types";
 import CallControls from "./CallControls";
 import PresenceBadge from "./PresenceBadge";
@@ -117,6 +117,7 @@ import PresenceBadge from "./PresenceBadge";
 interface ChatRoomHeaderProps {
   room: ChatRoom;
   currentUserId?: string;
+  currentUserRole?: ChatParticipant["role"];
   connectionState?: "connecting" | "connected" | "reconnecting" | "disconnected";
   isFallbackPolling?: boolean;
   isOnline?: boolean;
@@ -130,6 +131,7 @@ interface ChatRoomHeaderProps {
 export default function ChatRoomHeader({
   room,
   currentUserId,
+  currentUserRole,
   connectionState = "disconnected",
   isFallbackPolling = false,
   isOnline = false,
@@ -139,12 +141,11 @@ export default function ChatRoomHeader({
   onStartCall,
   onEndCall,
 }: ChatRoomHeaderProps) {
-  // Normalize participant identity
-  const getId = (p: ChatParticipant) => p.userId ?? p.id;
-
-  const otherParticipants = room.participants.filter(
-    (p) => getId(p) !== currentUserId,
-  );
+  const otherParticipants = getOtherParticipants({
+    participants: room.participants,
+    currentUserId,
+    currentUserRole,
+  });
 
   const primaryParticipant =
     otherParticipants[0] ?? room.participants[0];

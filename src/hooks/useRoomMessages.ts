@@ -8,8 +8,11 @@ import {
   getRoomMessages,
   isMessageFromCurrentUser,
   mergeUniqueMessages,
+  replaceChatMessage,
   sendRoomMessage,
   sortChatRooms,
+  toggleReactionLocally,
+  toggleMessageReaction,
   uploadRoomAttachment,
 } from "@/src/services/chatRoom.service";
 import type { ChatMessage } from "@/src/types/chat.types";
@@ -73,6 +76,29 @@ const updateRoomPreview = (
 
   const sortedRooms = sortChatRooms(updatedRooms);
   return Array.isArray(current) ? sortedRooms : { ...current, data: sortedRooms };
+};
+
+const replaceMessageInPreview = (current: any, roomId: string, message: ChatMessage) => {
+  if (!current) {
+    return current;
+  }
+
+  const rooms = Array.isArray(current) ? current : Array.isArray(current?.data) ? current.data : [];
+
+  if (!Array.isArray(rooms)) {
+    return current;
+  }
+
+  const updatedRooms = rooms.map((room) =>
+    room.id === roomId && room.lastMessage?.id === message.id
+      ? {
+          ...room,
+          lastMessage: message,
+        }
+      : room,
+  );
+
+  return Array.isArray(current) ? updatedRooms : { ...current, data: updatedRooms };
 };
 
 export const useRoomMessages = (roomId?: string) => {
@@ -173,13 +199,85 @@ export const useRoomMessages = (roomId?: string) => {
     },
   });
 
+  const toggleReactionMutation = useMutation({
+    mutationFn: async ({ messageId, emoji }: { messageId: string; emoji: string }) =>
+      toggleMessageReaction(roomId as string, messageId, emoji),
+    onSuccess: (message) => {
+      if (!roomId) {
+        return;
+      }
+
+      queryClient.setQueryData<ChatMessage[]>(["chat-room-messages", roomId], (current = []) =>
+        replaceChatMessage(current, message),
+      );
+
+      queryClient.setQueriesData({ queryKey: ["chat-rooms"] }, (current) =>
+        replaceMessageInPreview(current, roomId, message),
+      );
+    },
+  });
+
+  const applyOptimisticReaction = ({
+    messageId,
+    emoji,
+  }: {
+    messageId: string;
+    emoji: string;
+  }) => {
+    if (!roomId || !currentUser) {
+      return () => undefined;
+    }
+
+    const previousMessages =
+      queryClient.getQueryData<ChatMessage[]>(["chat-room-messages", roomId]) ?? [];
+
+    let optimisticMessage: ChatMessage | null = null;
+
+    queryClient.setQueryData<ChatMessage[]>(["chat-room-messages", roomId], (current = []) =>
+      current.map((message) => {
+        if (message.id !== messageId) {
+          return message;
+        }
+
+        optimisticMessage = toggleReactionLocally({
+          message,
+          emoji,
+          currentUserId: currentUser.userId,
+        });
+
+        return optimisticMessage;
+      }),
+    );
+
+    if (optimisticMessage) {
+      queryClient.setQueriesData({ queryKey: ["chat-rooms"] }, (current) =>
+        replaceMessageInPreview(current, roomId, optimisticMessage as ChatMessage),
+      );
+    }
+
+    return () => {
+      queryClient.setQueryData(["chat-room-messages", roomId], previousMessages);
+
+      const previousMessage = previousMessages.find((message) => message.id === messageId);
+
+      if (previousMessage) {
+        queryClient.setQueriesData({ queryKey: ["chat-rooms"] }, (current) =>
+          replaceMessageInPreview(current, roomId, previousMessage),
+        );
+      }
+    };
+  };
+
   return {
     ...messagesQuery,
     messages: useMemo(() => mergeUniqueMessages(messagesQuery.data ?? []), [messagesQuery.data]),
+    applyOptimisticReaction,
     sendMessage: sendMessageMutation.mutateAsync,
     uploadAttachment: uploadAttachmentMutation.mutateAsync,
+    toggleReaction: toggleReactionMutation.mutateAsync,
     isSending: sendMessageMutation.isPending,
     isUploading: uploadAttachmentMutation.isPending,
+    isTogglingReaction: toggleReactionMutation.isPending,
   };
 };
 

@@ -26,6 +26,13 @@ export interface ChatAttachment {
   size?: number;
 }
 
+export interface ChatMessageReaction {
+  emoji: string;
+  count: number;
+  reactorIds?: string[];
+  reactedByCurrentUser?: boolean;
+}
+
 export interface ChatMessage {
   id: string;
   roomId: string;
@@ -37,6 +44,7 @@ export interface ChatMessage {
   senderRole?: ChatRole;
   sender?: ChatParticipant | null;
   attachment?: ChatAttachment | null;
+  reactions?: ChatMessageReaction[];
   pending?: boolean;
   failed?: boolean;
 }

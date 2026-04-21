@@ -14,6 +14,7 @@ interface MessageListProps {
   currentUserId?: string;
   isLoading?: boolean;
   roomId?: string;
+  onToggleReaction?: (messageId: string, emoji: string) => Promise<unknown> | void;
 }
 
 export default function MessageList({
@@ -21,6 +22,7 @@ export default function MessageList({
   currentUserId,
   isLoading = false,
   roomId,
+  onToggleReaction,
 }: MessageListProps) {
   const endRef = useRef<HTMLDivElement | null>(null);
   const [localMessages, setLocalMessages] = useState(messages);
@@ -67,6 +69,7 @@ export default function MessageList({
               message={message}
               currentUserId={currentUserId}
               onDelete={handleDelete}
+              onToggleReaction={onToggleReaction}
             />
           ))
         )}

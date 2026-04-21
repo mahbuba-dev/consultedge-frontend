@@ -58,9 +58,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getIndustries } from "@/src/services/industry.services";
+import { getAllIndustries } from "@/src/services/industry.services";
 import { getExperts } from "@/src/services/expert.services";
-import { IIndustry } from "@/src/types/industry.types";
+import { IExpert } from "@/src/types/expert.types";
+import { IIndustry, IIndustryListResponse } from "@/src/types/industry.types";
 import { cn } from "@/src/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowUpDown, ShieldCheck, Sparkles, TrendingUp, Users } from "lucide-react";
@@ -105,9 +106,21 @@ const parseOptionalNumber = (value: string | null) => {
   return Number.isFinite(parsed) ? parsed : undefined;
 };
 
+const getSortableTimestamp = (expert: IExpert) => {
+  const createdAt = Date.parse(expert.createdAt ?? "");
+
+  if (Number.isFinite(createdAt)) {
+    return createdAt;
+  }
+
+  const updatedAt = Date.parse(expert.updatedAt ?? "");
+
+  return Number.isFinite(updatedAt) ? updatedAt : 0;
+};
+
 const getQuickFilterButtonClass = (isActive: boolean) =>
   cn(
-    "rounded-full border px-4 transition-all duration-300 hover:-translate-y-0.5",
+    "h-auto min-h-9 rounded-full border px-3 py-2 text-xs font-medium whitespace-nowrap transition-all duration-300 hover:-translate-y-0.5 sm:px-4 sm:text-sm",
     isActive
       ? "border-blue-600 bg-blue-600 text-white shadow-lg shadow-blue-500/25 hover:bg-blue-600 dark:border-blue-500 dark:bg-blue-500"
       : "border-blue-200 bg-white/80 text-blue-700 hover:border-blue-300 hover:bg-blue-50 dark:border-white/15 dark:bg-slate-900/85 dark:text-blue-200 dark:hover:border-blue-400/50 dark:hover:bg-slate-800/90",
@@ -132,14 +145,19 @@ export default function ExpertsPageClient() {
     queryFn: () => getExperts(queryString),
   });
 
-  const { data: industries = [] } = useQuery<IIndustry[]>({
-    queryKey: ["industries", "options"],
-    queryFn: getIndustries,
-    initialData: [],
+  const { data: industries = [] } = useQuery<
+    IIndustryListResponse,
+    Error,
+    IIndustry[]
+  >({
+    queryKey: ["industries", "experts-filter-options"],
+    queryFn: getAllIndustries,
+    select: (response) =>
+      Array.isArray(response?.data) ? response.data : [],
     staleTime: 5 * 60 * 1000,
   });
 
-  const experts = Array.isArray(data?.data) ? data.data : [];
+  const experts: IExpert[] = Array.isArray(data?.data) ? data.data : [];
   const meta = data?.meta;
   const selectedIndustryId = searchParams.get("industryId") ?? "all";
   const selectedVerification = searchParams.get("isVerified") ?? "all";
@@ -234,8 +252,8 @@ export default function ExpertsPageClient() {
             break;
           default:
             comparison =
-              new Date(leftExpert.createdAt).getTime() -
-              new Date(rightExpert.createdAt).getTime();
+              getSortableTimestamp(leftExpert) -
+              getSortableTimestamp(rightExpert);
         }
 
         return sortOrder === "asc" ? comparison : -comparison;
@@ -412,8 +430,8 @@ export default function ExpertsPageClient() {
             </div>
         </div>
 
-        <div className="mt-6 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-          <div className="w-full xl:max-w-md">
+        <div className="mt-6 grid gap-3 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:items-start">
+          <div className="min-w-0">
             <DataTableSearch
               key={searchTerm}
               initialValue={searchTerm}
@@ -423,17 +441,17 @@ export default function ExpertsPageClient() {
             />
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]">
             <Select
               value={selectedIndustryId}
               onValueChange={(value) =>
                 handleSelectFilterChange("industryId", value)
               }
             >
-              <SelectTrigger className="h-11 min-w-38 rounded-full border-blue-200 bg-white/90 text-blue-950 shadow-sm transition-all duration-200 hover:border-blue-300 focus:ring-2 focus:ring-blue-500/20 dark:border-white/15 dark:bg-slate-900/90 dark:text-slate-100 dark:hover:border-blue-400/40 dark:focus:ring-blue-400/30">
+              <SelectTrigger className="h-11 w-full min-w-0 rounded-2xl border-blue-200 bg-white/90 text-left text-blue-950 shadow-sm transition-all duration-200 hover:border-blue-300 focus:ring-2 focus:ring-blue-500/20 dark:border-white/15 dark:bg-slate-900/90 dark:text-slate-100 dark:hover:border-blue-400/40 dark:focus:ring-blue-400/30">
                 <SelectValue placeholder="Industry" />
               </SelectTrigger>
-              <SelectContent className="z-9999">
+              <SelectContent position="popper" className="min-w-48">
                 <SelectItem value="all">All industries</SelectItem>
                 {industries.map((industry: IIndustry) => (
                   <SelectItem key={industry.id} value={industry.id}>
@@ -449,7 +467,7 @@ export default function ExpertsPageClient() {
                 handleSelectFilterChange("isVerified", value)
               }
             >
-              <SelectTrigger className="h-11 min-w-36 rounded-full border-blue-200 bg-white/90 text-blue-950 shadow-sm transition-all duration-200 hover:border-blue-300 focus:ring-2 focus:ring-blue-500/20 dark:border-white/15 dark:bg-slate-900/90 dark:text-slate-100 dark:hover:border-blue-400/40 dark:focus:ring-blue-400/30">
+              <SelectTrigger className="h-11 w-full min-w-0 rounded-2xl border-blue-200 bg-white/90 text-left text-blue-950 shadow-sm transition-all duration-200 hover:border-blue-300 focus:ring-2 focus:ring-blue-500/20 dark:border-white/15 dark:bg-slate-900/90 dark:text-slate-100 dark:hover:border-blue-400/40 dark:focus:ring-blue-400/30">
                 <SelectValue placeholder="Verification" />
               </SelectTrigger>
               <SelectContent>
@@ -459,27 +477,27 @@ export default function ExpertsPageClient() {
               </SelectContent>
             </Select>
 
-            <div className="flex items-center gap-2 rounded-full border border-blue-200 bg-white/90 px-3 py-1.5 shadow-sm shadow-blue-500/10 transition-all duration-200 hover:border-blue-300 dark:border-white/15 dark:bg-slate-900/90 dark:shadow-none dark:hover:border-blue-400/40">
-              <ArrowUpDown className="h-4 w-4 text-blue-600 dark:text-blue-300" />
-              <Select value={activeSortValue} onValueChange={handleSortChange}>
-                <SelectTrigger className="h-8 w-45 border-0 px-0 text-blue-950 shadow-none focus:ring-0 dark:text-slate-100">
+            <Select value={activeSortValue} onValueChange={handleSortChange}>
+              <SelectTrigger className="h-11 w-full min-w-0 rounded-2xl border-blue-200 bg-white/90 text-left text-blue-950 shadow-sm transition-all duration-200 hover:border-blue-300 focus:ring-2 focus:ring-blue-500/20 dark:border-white/15 dark:bg-slate-900/90 dark:text-slate-100 dark:hover:border-blue-400/40 dark:focus:ring-blue-400/30">
+                <div className="flex min-w-0 items-center gap-2">
+                  <ArrowUpDown className="h-4 w-4 shrink-0 text-blue-600 dark:text-blue-300" />
                   <SelectValue placeholder="Sort experts" />
-                </SelectTrigger>
-                <SelectContent>
-                  {sortOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                {sortOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
             {hasActiveFilters ? (
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-blue-700 hover:bg-blue-50 hover:text-blue-800 dark:text-blue-300 dark:hover:bg-blue-500/15 dark:hover:text-blue-200"
+                className="h-11 justify-center rounded-2xl px-4 text-blue-700 hover:bg-blue-50 hover:text-blue-800 sm:justify-self-start xl:self-stretch dark:text-blue-300 dark:hover:bg-blue-500/15 dark:hover:text-blue-200"
                 onClick={clearAllFilters}
               >
                 Clear all
@@ -488,67 +506,75 @@ export default function ExpertsPageClient() {
           </div>
         </div>
 
-        <div className="mt-4 space-y-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Experience
-            </span>
-            {experiencePresets.map((preset) => (
-              <Button
-                key={preset.label}
-                type="button"
-                size="sm"
-                variant="ghost"
-                className={getQuickFilterButtonClass(
-                  isActivePreset("experience", preset),
-                )}
-                onClick={() => handleQuickRange("experience", preset)}
-              >
-                {preset.label}
-              </Button>
-            ))}
-            {hasExperienceRange ? (
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                className="text-blue-700 hover:bg-blue-50 hover:text-blue-800 dark:text-blue-300 dark:hover:bg-blue-500/15 dark:hover:text-blue-200"
-                onClick={() => handleQuickRange("experience")}
-              >
-                Reset
-              </Button>
-            ) : null}
+        <div className="mt-4 grid gap-3 lg:grid-cols-2">
+          <div className="rounded-2xl border border-blue-100/80 bg-white/70 p-3 shadow-sm shadow-blue-500/5 dark:border-white/10 dark:bg-slate-950/40">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                Experience
+              </span>
+              {hasExperienceRange ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  className="h-auto px-2 py-1 text-xs text-blue-700 hover:bg-blue-50 hover:text-blue-800 dark:text-blue-300 dark:hover:bg-blue-500/15 dark:hover:text-blue-200"
+                  onClick={() => handleQuickRange("experience")}
+                >
+                  Reset
+                </Button>
+              ) : null}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {experiencePresets.map((preset) => (
+                <Button
+                  key={preset.label}
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  className={getQuickFilterButtonClass(
+                    isActivePreset("experience", preset),
+                  )}
+                  onClick={() => handleQuickRange("experience", preset)}
+                >
+                  {preset.label}
+                </Button>
+              ))}
+            </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Price
-            </span>
-            {pricePresets.map((preset) => (
-              <Button
-                key={preset.label}
-                type="button"
-                size="sm"
-                variant="ghost"
-                className={getQuickFilterButtonClass(
-                  isActivePreset("price", preset),
-                )}
-                onClick={() => handleQuickRange("price", preset)}
-              >
-                {preset.label}
-              </Button>
-            ))}
-            {hasPriceRange ? (
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                className="text-blue-700 hover:bg-blue-50 hover:text-blue-800 dark:text-blue-300 dark:hover:bg-blue-500/15 dark:hover:text-blue-200"
-                onClick={() => handleQuickRange("price")}
-              >
-                Reset
-              </Button>
-            ) : null}
+          <div className="rounded-2xl border border-blue-100/80 bg-white/70 p-3 shadow-sm shadow-blue-500/5 dark:border-white/10 dark:bg-slate-950/40">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                Price
+              </span>
+              {hasPriceRange ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  className="h-auto px-2 py-1 text-xs text-blue-700 hover:bg-blue-50 hover:text-blue-800 dark:text-blue-300 dark:hover:bg-blue-500/15 dark:hover:text-blue-200"
+                  onClick={() => handleQuickRange("price")}
+                >
+                  Reset
+                </Button>
+              ) : null}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {pricePresets.map((preset) => (
+                <Button
+                  key={preset.label}
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  className={getQuickFilterButtonClass(
+                    isActivePreset("price", preset),
+                  )}
+                  onClick={() => handleQuickRange("price", preset)}
+                >
+                  {preset.label}
+                </Button>
+              ))}
+            </div>
           </div>
         </div>
       </div>

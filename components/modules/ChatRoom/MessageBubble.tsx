@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { format } from "date-fns";
-
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/src/lib/utils";
 import { getParticipantDisplayName, isMessageFromCurrentUser } from "@/src/services/chatRoom.service";
@@ -14,15 +13,35 @@ interface MessageBubbleProps {
   message: ChatMessage;
   currentUserId?: string;
   onDelete?: (id: string) => void;
+  onToggleReaction?: (messageId: string, emoji: string) => Promise<unknown> | void;
 }
 
 export default function MessageBubble({
   message,
   currentUserId,
   onDelete,
+  onToggleReaction,
 }: MessageBubbleProps) {
   const isOwnMessage = isMessageFromCurrentUser(message, currentUserId);
   const [popoverOpen, setPopoverOpen] = useState(false);
+  const reactionsDisabled =
+    !onToggleReaction ||
+    message.pending ||
+    message.failed ||
+    !message.id ||
+    message.id.startsWith("temp-");
+
+  const hasCurrentUserReaction = (reaction: NonNullable<ChatMessage["reactions"]>[number]) => {
+    if (reaction.reactedByCurrentUser) {
+      return true;
+    }
+
+    if (!currentUserId) {
+      return false;
+    }
+
+    return reaction.reactorIds?.some((reactorId) => reactorId === currentUserId) ?? false;
+  };
 
   if (message.type === "SYSTEM") {
     return (
@@ -35,49 +54,84 @@ export default function MessageBubble({
   return (
     <div className={cn("flex", isOwnMessage ? "justify-end" : "justify-start")}>
       <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-        <PopoverTrigger asChild>
-          <div
-            className={cn(
-              "max-w-[85%] space-y-2 rounded-2xl border px-4 py-3 shadow-sm md:max-w-[70%] relative cursor-pointer",
-              isOwnMessage
-                ? "border-blue-500 bg-blue-600 text-white"
-                : "border-border/60 bg-background",
-            )}
-            onClick={() => setPopoverOpen(true)}
-          >
-            {!isOwnMessage ? (
-              <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">
-                {getParticipantDisplayName(message.sender)}
-              </p>
-            ) : null}
-
-            {message.text ? (
-              <p
-                className={cn(
-                  "text-sm leading-6",
-                  isOwnMessage ? "text-white" : "text-foreground",
-                )}
-              >
-                {message.text}
-              </p>
-            ) : null}
-
-            {message.attachment ? (
-              <MessageAttachmentCard attachment={message.attachment} />
-            ) : null}
-
+        <div className="flex max-w-[85%] flex-col gap-2 md:max-w-[70%]">
+          <PopoverTrigger asChild>
             <div
               className={cn(
-                "flex items-center justify-end gap-2 text-[11px]",
-                isOwnMessage ? "text-white/80" : "text-muted-foreground",
+                "space-y-2 rounded-2xl border px-4 py-3 shadow-sm relative cursor-pointer",
+                isOwnMessage
+                  ? "border-blue-500 bg-blue-600 text-white"
+                  : "border-border/60 bg-background",
+              )}
+              onClick={() => setPopoverOpen(true)}
+            >
+              {!isOwnMessage ? (
+                <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">
+                  {getParticipantDisplayName(message.sender)}
+                </p>
+              ) : null}
+
+              {message.text ? (
+                <p
+                  className={cn(
+                    "text-sm leading-6",
+                    isOwnMessage ? "text-white" : "text-foreground",
+                  )}
+                >
+                  {message.text}
+                </p>
+              ) : null}
+
+              {message.attachment ? (
+                <MessageAttachmentCard attachment={message.attachment} />
+              ) : null}
+
+              <div
+                className={cn(
+                  "flex items-center justify-end gap-2 text-[11px]",
+                  isOwnMessage ? "text-white/80" : "text-muted-foreground",
+                )}
+              >
+                <span>{format(new Date(message.createdAt), "p")}</span>
+                {message.pending ? <span>Sending…</span> : null}
+                {message.failed ? <span>Failed</span> : null}
+              </div>
+            </div>
+          </PopoverTrigger>
+
+          {message.reactions?.length ? (
+            <div
+              className={cn(
+                "flex flex-wrap gap-2",
+                isOwnMessage ? "justify-end" : "justify-start",
               )}
             >
-              <span>{format(new Date(message.createdAt), "p")}</span>
-              {message.pending ? <span>Sending…</span> : null}
-              {message.failed ? <span>Failed</span> : null}
+              {message.reactions.map((reaction) => (
+                <button
+                  key={`${message.id}-${reaction.emoji}`}
+                  type="button"
+                  disabled={reactionsDisabled}
+                  className={cn(
+                    "inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-60",
+                    hasCurrentUserReaction(reaction)
+                      ? "border-blue-300 bg-blue-50 text-blue-700"
+                      : "border-border/60 bg-background text-foreground hover:border-blue-200 hover:bg-blue-50/60",
+                  )}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    if (reactionsDisabled) {
+                      return;
+                    }
+                    void onToggleReaction?.(message.id, reaction.emoji);
+                  }}
+                >
+                  <span>{reaction.emoji}</span>
+                  <span>{reaction.count}</span>
+                </button>
+              ))}
             </div>
-          </div>
-        </PopoverTrigger>
+          ) : null}
+        </div>
 
         <PopoverContent
           align="center"
@@ -88,15 +142,22 @@ export default function MessageBubble({
             {["👍", "😂", "😮", "😢", "❤️"].map((emoji) => (
               <button
                 key={emoji}
-                className="text-xl hover:scale-125 transition-transform"
-                onClick={() => {
+                type="button"
+                disabled={reactionsDisabled}
+                className="text-xl transition-transform hover:scale-125 disabled:cursor-not-allowed disabled:opacity-50"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  if (reactionsDisabled) {
+                    return;
+                  }
                   setPopoverOpen(false);
-                  // TODO: handle emoji reaction
+                  void onToggleReaction?.(message.id, emoji);
                 }}
               >
                 {emoji}
               </button>
             ))}
+            <span className="sr-only">Add reaction</span>
           </div>
 
           {isOwnMessage && (

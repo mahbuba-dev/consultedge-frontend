@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowUpRight,
   CalendarDays,
@@ -11,6 +12,7 @@ import {
   ReceiptText,
   ShieldCheck,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,13 +24,37 @@ import EndSessionModal from "../Session/EndSessionModel";
 import ReviewModal from "../Review/ReviewModal";
 import CallPanel from "../ChatRoom/CallPanel";
 import { updateConsultationStatus } from "@/src/services/bookings.service";
-import { Router } from "next/router";
-import { useRouter } from "next/navigation";
+import { createTestimonial } from "@/src/services/testimonial.services";
+import type { ITestimonial } from "@/src/types/testimonial.types";
 
 
-const isPastSession = (date?: string) => {
-  if (!date) return false;
-  return new Date(date) < new Date();
+const getConsultationEndTime = (booking: IConsultation) => {
+  const rawBooking = booking as IConsultation & {
+    endDateTime?: string | null;
+    schedule?: { endDateTime?: string | null } | null;
+  };
+
+  const endValue =
+    booking.expertSchedule?.schedule?.endDateTime ??
+    rawBooking.schedule?.endDateTime ??
+    rawBooking.endDateTime ??
+    null;
+
+  if (endValue) {
+    return new Date(endValue);
+  }
+
+  return booking.date ? new Date(booking.date) : null;
+};
+
+const isPastSession = (booking: IConsultation) => {
+  const endTime = getConsultationEndTime(booking);
+
+  if (!endTime) {
+    return false;
+  }
+
+  return endTime < new Date();
 };
 
 
@@ -41,6 +67,39 @@ type ConsultationCardProps = {
   isPaying?: boolean;
   onPayNow: (consultationId: string) => void;
   onOpenReschedule: (booking: IConsultation) => void;
+  onReviewSubmitted?: () => void;
+};
+
+const updateConsultationCache = (
+  current: unknown,
+  consultationId: string,
+  updater: (consultation: IConsultation) => IConsultation,
+) => {
+  if (!current || typeof current !== "object") {
+    return current;
+  }
+
+  const currentData = (current as { data?: unknown }).data;
+
+  if (!Array.isArray(currentData)) {
+    return current;
+  }
+
+  return {
+    ...(current as Record<string, unknown>),
+    data: currentData.map((consultation) => {
+      if (
+        consultation &&
+        typeof consultation === "object" &&
+        "id" in consultation &&
+        consultation.id === consultationId
+      ) {
+        return updater(consultation as IConsultation);
+      }
+
+      return consultation;
+    }),
+  };
 };
 
 const formatDateTime = (value?: string) => {
@@ -116,7 +175,8 @@ export default function ConsultationCard({
   canPayNow = false,
   isPaying = false,
   onPayNow,
-  onOpenReschedule
+  onOpenReschedule,
+  onReviewSubmitted,
 }: ConsultationCardProps) {
   const expertName = booking.expert?.fullName || "Consultation booking";
   const expertTitle = booking.expert?.title || "Expert consultation";
@@ -127,7 +187,7 @@ export default function ConsultationCard({
     .slice(0, 2)
     .toUpperCase();
 
-const router = useRouter();
+  const queryClient = useQueryClient();
 
   // Session flow state
   const [joinOpen, setJoinOpen] = useState(false);
@@ -139,7 +199,7 @@ const router = useRouter();
   // Session status logic
   const isCompleted = booking.status === "COMPLETED";
   const isConfirmed = booking.status === "CONFIRMED" && booking.paymentStatus === "PAID";
-  const isPast = isPastSession(booking.date);
+  const isPast = isPastSession(booking);
   // Handlers
   const handleJoin = () => {
     setLoading(true);
@@ -160,36 +220,57 @@ const router = useRouter();
   //   setReviewOpen(true);
   //   // Here, trigger backend session completion
   // };
-const handleConfirmEnd = async () => {
-  try {
-    setLoading(true);
+  const completeConsultationMutation = useMutation({
+    mutationFn: () => updateConsultationStatus(booking.id, "COMPLETED"),
+    onSuccess: () => {
+      setEndOpen(false);
+      setCallOpen(false);
+      setReviewOpen(true);
+      toast.success("Session ended successfully.");
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || error?.message || "Error ending session.");
+    },
+  });
 
-    // 1. Update backend
-    await updateConsultationStatus(booking.id, "COMPLETED");
+  const submitReviewMutation = useMutation({
+    mutationFn: ({ rating, comment }: { rating: number; comment: string }) =>
+      createTestimonial({
+        rating,
+        comment,
+        consultationId: booking.id,
+      }),
+    onSuccess: (testimonial: ITestimonial) => {
+      queryClient.setQueryData(["consultations"], (current: unknown) =>
+        updateConsultationCache(current, booking.id, (consultation) => ({
+          ...consultation,
+          status: "COMPLETED",
+          testimonial,
+        })),
+      );
 
-    // 2. Update UI instantly
-    booking.status = "COMPLETED";
-
-    // 3. Close modals
-    setEndOpen(false);
-    setCallOpen(false);
-
-    // 4. Open review modal
-    setReviewOpen(true);
-
-  } catch (error) {
-    console.error("Error ending session:", error);
-  } finally {
-    setLoading(false);
-  }
-};
-  const handleSubmitReview = (rating: number, comment: string) => {
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
       setReviewOpen(false);
-      // Here, trigger backend review submission
-    }, 1200);
+      toast.success("Review submitted successfully!");
+      onReviewSubmitted?.();
+      void queryClient.invalidateQueries({ queryKey: ["consultations"] });
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || error?.message || "Failed to submit review. Please try again.");
+    },
+  });
+
+  const handleConfirmEnd = async () => {
+    await completeConsultationMutation.mutateAsync();
+  };
+
+  const handleSubmitReview = async (rating: number, comment: string) => {
+    if (hasReview) {
+      toast.info("Review already submitted for this consultation.");
+      setReviewOpen(false);
+      return;
+    }
+
+    await submitReviewMutation.mutateAsync({ rating, comment });
   };
 
   const hasReview = Boolean(booking.testimonial);
@@ -324,7 +405,7 @@ const handleConfirmEnd = async () => {
   )}
 
   {isCompleted && hasReview && (
-    <Badge className="w-full text-center bg-emerald-100 text-emerald-700 text-sm font-semibold p-2">
+    <Badge className="w-full text-center bg-emerald-100 text-emerald-700 text-sm font-semibold p-4">
       Feedback Submitted
     </Badge>
   )}
@@ -395,13 +476,15 @@ const handleConfirmEnd = async () => {
         open={endOpen}
         onConfirm={handleConfirmEnd}
         onCancel={() => setEndOpen(false)}
-        loading={loading}
+        loading={loading || completeConsultationMutation.isPending}
       />
       <ReviewModal
         open={reviewOpen}
         onSubmit={handleSubmitReview}
         onClose={() => setReviewOpen(false)}
-        loading={loading} consultationId={""}      />
+        loading={loading || submitReviewMutation.isPending}
+        consultationId={booking.id}
+      />
     </>
   );
 }

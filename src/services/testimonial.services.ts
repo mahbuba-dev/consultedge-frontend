@@ -5,6 +5,15 @@ import type { ITestimonial } from "../types/testimonial.types";
 
 type ApiPayload<TData> = ApiResponse<TData> | { data?: TData } | TData;
 
+type TestimonialCollectionShape = {
+  data?: unknown;
+  testimonials?: unknown;
+  items?: unknown;
+  result?: unknown;
+  results?: unknown;
+  rows?: unknown;
+};
+
 // ------------------------------
 // ADMIN UPDATE REVIEW STATUS
 // ------------------------------
@@ -22,6 +31,45 @@ export const updateTestimonialStatus = async (
 // ------------------------------
 const normalizeTestimonials = (payload: ITestimonial[] | undefined) =>
   Array.isArray(payload) ? payload : [];
+
+const extractTestimonialCollection = (payload: unknown): ITestimonial[] => {
+  if (Array.isArray(payload)) {
+    return payload as ITestimonial[];
+  }
+
+  if (!payload || typeof payload !== "object") {
+    return [];
+  }
+
+  const candidate = payload as TestimonialCollectionShape;
+  const pools = [
+    candidate.data,
+    candidate.testimonials,
+    candidate.items,
+    candidate.result,
+    candidate.results,
+    candidate.rows,
+  ];
+
+  for (const pool of pools) {
+    if (Array.isArray(pool)) {
+      return pool as ITestimonial[];
+    }
+
+    if (pool && typeof pool === "object") {
+      const nested = pool as TestimonialCollectionShape;
+
+      if (Array.isArray(nested.data)) return nested.data as ITestimonial[];
+      if (Array.isArray(nested.testimonials)) return nested.testimonials as ITestimonial[];
+      if (Array.isArray(nested.items)) return nested.items as ITestimonial[];
+      if (Array.isArray(nested.result)) return nested.result as ITestimonial[];
+      if (Array.isArray(nested.results)) return nested.results as ITestimonial[];
+      if (Array.isArray(nested.rows)) return nested.rows as ITestimonial[];
+    }
+  }
+
+  return [];
+};
 
 // Extract actual data from backend response
 const extractData = <TData>(response: ApiPayload<TData> | undefined): TData | undefined => {
@@ -58,7 +106,21 @@ const requestTestimonials = async (
     silent: true,
   });
 
-  return normalizeTestimonials(extractData<ITestimonial[]>(response));
+  return normalizeTestimonials(
+    extractTestimonialCollection(extractData<unknown>(response) ?? response),
+  );
+};
+
+const mergeTestimonialsById = (items: ITestimonial[]) => {
+  const unique = new Map<string, ITestimonial>();
+
+  items.forEach((item) => {
+    if (item?.id) {
+      unique.set(item.id, item);
+    }
+  });
+
+  return [...unique.values()];
 };
 
 // ------------------------------
@@ -149,13 +211,75 @@ return res;
 export const getTestimonialsByExpert = async (
   expertId: string
 ): Promise<ITestimonial[]> => {
-  const response = await httpClient.get<ITestimonial[]>(
-    `/testimonials/expert/${expertId}`
-  );
+  if (!expertId) {
+    return [];
+  }
 
-  const data = extractData<ITestimonial[]>(response);
+  try {
+    return await requestTestimonials(`/testimonials/expert/${expertId}`);
+  } catch (error: any) {
+    if (error?.response?.status === 404) {
+      return [];
+    }
 
-  return Array.isArray(data) ? data : [];
+    throw error;
+  }
+};
+
+export const getTestimonialsForExpertContext = async (
+  identifiers: Array<string | null | undefined>,
+): Promise<ITestimonial[]> => {
+  const uniqueIdentifiers = [...new Set(identifiers.filter(Boolean) as string[])];
+
+  if (uniqueIdentifiers.length === 0) {
+    return [];
+  }
+
+  const collected: ITestimonial[] = [];
+
+  for (const identifier of uniqueIdentifiers) {
+    try {
+      const byPath = await getTestimonialsByExpert(identifier);
+
+      if (byPath.length > 0) {
+        collected.push(...byPath);
+      }
+    } catch {
+      // Try query-param based lookup next.
+    }
+
+    try {
+      const byExpertId = await requestTestimonials("/testimonials", {
+        expertId: identifier,
+        limit: 100,
+        sortBy: "createdAt",
+        sortOrder: "desc",
+      });
+
+      if (byExpertId.length > 0) {
+        collected.push(...byExpertId);
+      }
+    } catch {
+      // Try userId-based lookup next.
+    }
+
+    try {
+      const byUserId = await requestTestimonials("/testimonials", {
+        userId: identifier,
+        limit: 100,
+        sortBy: "createdAt",
+        sortOrder: "desc",
+      });
+
+      if (byUserId.length > 0) {
+        collected.push(...byUserId);
+      }
+    } catch {
+      // Ignore unsupported filter variants.
+    }
+  }
+
+  return mergeTestimonialsById(collected);
 };
 
 

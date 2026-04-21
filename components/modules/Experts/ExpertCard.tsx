@@ -71,7 +71,7 @@ export default function ExpertCard({ expert }: { expert: IExpert }) {
           <div className="flex items-start gap-3">
             <div className="relative flex flex-col items-center">
               <div className="relative">
-                <Avatar size="lg" className="border-2 border-white/20 ring-2 ring-white/10">
+                <Avatar size="lg" className="mt-3 border-2 border-white/20 ring-2 ring-white/10">
                   {expert.profilePhoto ? (
                     <AvatarImage src={expert.profilePhoto} alt={expert.fullName} />
                   ) : null}
@@ -92,7 +92,7 @@ export default function ExpertCard({ expert }: { expert: IExpert }) {
             </div>
             <div className="min-w-0 space-y-2 flex-1">
               <div className="flex items-center gap-2">
-                <h2 className="text-xl font-semibold tracking-tight text-white">
+                <h2 className="text-xl font-semibold tracking-tight text-white ">
                   {expert.fullName}
                 </h2>
                 {expert.isVerified && (
@@ -101,7 +101,7 @@ export default function ExpertCard({ expert }: { expert: IExpert }) {
                   </span>
                 )}
               </div>
-              <p className="text-sm text-white/80">{expert.title}</p>
+              <p className="text-xs text-white/80">{expert.title}</p>
             </div>
             <div className="ml-auto rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold text-white backdrop-blur">
               {formatCurrency(expertPrice)}

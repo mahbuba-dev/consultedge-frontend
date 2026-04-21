@@ -11,6 +11,7 @@ import ChatRoomListItem from "./ChatRoomListItem";
 interface ChatSidebarProps {
   rooms: ChatRoom[];
   currentUserId?: string;
+  currentUserRole?: ChatRole | null;
   selectedRoomId?: string;
   isLoading?: boolean;
   isRefreshing?: boolean;
@@ -24,6 +25,7 @@ interface ChatSidebarProps {
 export default function ChatSidebar({
   rooms,
   currentUserId,
+  currentUserRole,
   selectedRoomId,
   isLoading = false,
   isRefreshing = false,
@@ -84,6 +86,7 @@ export default function ChatSidebar({
                 key={room.id}
                 room={room}
                 currentUserId={currentUserId}
+                currentUserRole={currentUserRole}
                 isActive={selectedRoomId === room.id}
                 onSelect={onSelectRoom}
               />

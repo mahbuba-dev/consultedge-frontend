@@ -94,7 +94,11 @@ export const loginAction = async (payload : ILoginPayload, redirectPath ?: strin
     }
     try {
 
-        const response = await httpClient.post<ILOginResponse>("/auth/login", parsedPayload.data);
+        const response = await httpClient.post<ILOginResponse>(
+            "/auth/login",
+            parsedPayload.data,
+            { expectedStatuses: [400, 401, 403, 429] },
+        );
 
         const { accessToken, refreshToken, token, user} = response.data;
         const {role, emailVerified, needPasswordChange, email} = user;

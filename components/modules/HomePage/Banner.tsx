@@ -16,6 +16,7 @@ import {
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/src/lib/utils";
 
 const carouselSlides = [
   {
@@ -102,7 +103,7 @@ export default function Banner() {
 
   return (
     <section className="relative -mx-4 -mt-6 overflow-hidden rounded-b-[2.25rem] border-b border-slate-800/80 bg-slate-950 shadow-[0_30px_80px_-30px_rgba(34,211,238,0.35)] md:-mx-6 lg:-mt-8 lg:rounded-b-[2.75rem]">
-      <div className="relative min-h-[42rem] overflow-hidden md:min-h-[47rem] lg:min-h-[49rem]">
+      <div className="relative min-h-168 overflow-hidden md:min-h-188 lg:min-h-196">
         {carouselSlides.map((slide, index) => (
           <div
             key={slide.title}
@@ -146,21 +147,25 @@ export default function Banner() {
               </div>
 
               <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                <Button asChild className="h-11 rounded-full bg-white px-5 text-slate-900 hover:bg-white/90">
-                  <Link href="/experts">
+                <Link
+                  href="/experts"
+                  className={cn(
+                    "inline-flex h-11 items-center justify-center rounded-full border border-transparent px-5 text-sm font-medium transition-all",
+                    "bg-white text-slate-900 hover:bg-white/90",
+                  )}
+                >
                     Explore experts
                     <ArrowRight className="ml-2 size-4" />
-                  </Link>
-                </Button>
-                <Button
-                  asChild
-                    variant="outline"
-                    className="h-11 rounded-full border-white/30 bg-transparent px-5 text-white hover:bg-white/10 hover:text-white"
-                  >
-                  <Link href="/apply-expert">
+                </Link>
+                <Link
+                  href="/apply-expert"
+                  className={cn(
+                    "inline-flex h-11 items-center justify-center rounded-full border px-5 text-sm font-medium transition-all",
+                    "border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white",
+                  )}
+                >
                     Become an expert
-                  </Link>
-                </Button>
+                </Link>
               </div>
 
               <div className="grid gap-3 sm:grid-cols-3">

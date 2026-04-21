@@ -10,6 +10,52 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getMyExpertBookings } from "@/src/services/bookings.service";
+import { IConsultation } from "@/src/types/booking.types";
+
+type ConsultationResponseShape = {
+  data?: unknown;
+  consultations?: unknown;
+  items?: unknown;
+  result?: unknown;
+  results?: unknown;
+};
+
+const extractConsultations = (payload: unknown): IConsultation[] => {
+  if (Array.isArray(payload)) {
+    return payload as IConsultation[];
+  }
+
+  if (!payload || typeof payload !== "object") {
+    return [];
+  }
+
+  const candidate = payload as ConsultationResponseShape;
+  const pools = [
+    candidate.data,
+    candidate.consultations,
+    candidate.items,
+    candidate.result,
+    candidate.results,
+  ];
+
+  for (const pool of pools) {
+    if (Array.isArray(pool)) {
+      return pool as IConsultation[];
+    }
+
+    if (pool && typeof pool === "object") {
+      const nested = pool as ConsultationResponseShape;
+
+      if (Array.isArray(nested.data)) return nested.data as IConsultation[];
+      if (Array.isArray(nested.consultations)) return nested.consultations as IConsultation[];
+      if (Array.isArray(nested.items)) return nested.items as IConsultation[];
+      if (Array.isArray(nested.result)) return nested.result as IConsultation[];
+      if (Array.isArray(nested.results)) return nested.results as IConsultation[];
+    }
+  }
+
+  return [];
+};
 
 export default function MySessionPage() {
   const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
@@ -25,7 +71,7 @@ export default function MySessionPage() {
   // ---------------- DATA ----------------
 
   const consultations = useMemo(
-    () => (Array.isArray(data) ? data : []),
+    () => extractConsultations(data),
     [data]
   );
 
@@ -56,7 +102,7 @@ export default function MySessionPage() {
   return (
     <div className="space-y-6 px-4 py-6 md:px-6">
       {/* HEADER */}
-      <section className="rounded-3xl bg-gradient-to-r from-slate-900 via-blue-900 to-cyan-800 p-6 text-white shadow-xl">
+      <section className="rounded-3xl bg-linear-to-r from-slate-900 via-blue-900 to-cyan-800 p-6 text-white shadow-xl">
         <div className="flex flex-col gap-4 md:flex-row md:sessionustify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">

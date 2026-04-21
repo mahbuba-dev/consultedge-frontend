@@ -340,7 +340,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -369,6 +369,7 @@ export type ConsultationsListProps = {
   redirectPaymentId?: string | null;
   redirectTransactionId?: string | null;
   redirectAmount?: string | null;
+  onReviewSubmitted?: () => void;
 };
 
 type ConsultationsPayload = {
@@ -429,12 +430,14 @@ export default function ConsultationsList({
   redirectPaymentId,
   redirectTransactionId,
   redirectAmount,
+  onReviewSubmitted,
 }: ConsultationsListProps) {
   // -------------------------
   // Local state
   // -------------------------
   const [rescheduleModalOpen, setRescheduleModalOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<IConsultation | null>(null);
+  const queryClient = useQueryClient();
 
   const closeRescheduleModal = () => {
     setRescheduleModalOpen(false);
@@ -485,10 +488,42 @@ export default function ConsultationsList({
   const rescheduleMutation = useMutation({
     mutationFn: ({ consultationId, expertScheduleId }: { consultationId: string; expertScheduleId: string }) =>
       rescheduleConsultation(consultationId, expertScheduleId),
-    onSuccess: () => {
+    onSuccess: (updatedConsultation) => {
+      queryClient.setQueryData(["consultations"], (current: unknown) => {
+        if (!current || typeof current !== "object") {
+          return current;
+        }
+
+        const currentData = (current as { data?: unknown }).data;
+
+        if (!Array.isArray(currentData)) {
+          return current;
+        }
+
+        return {
+          ...(current as Record<string, unknown>),
+          data: currentData.map((consultation) => {
+            if (
+              consultation &&
+              typeof consultation === "object" &&
+              "id" in consultation &&
+              consultation.id === updatedConsultation.id
+            ) {
+              return {
+                ...consultation,
+                ...updatedConsultation,
+              };
+            }
+
+            return consultation;
+          }),
+        };
+      });
+
       toast.success("Consultation rescheduled successfully");
       closeRescheduleModal();
       void refetch();
+      void queryClient.invalidateQueries({ queryKey: ["consultations"] });
     },
     onError: (mutationError) => {
       toast.error(
@@ -641,6 +676,7 @@ export default function ConsultationsList({
                 isPaying={payNowMutation.isPending}
                 onPayNow={(id: string) => payNowMutation.mutate(id)}
                 onOpenReschedule={onOpenReschedule}
+                onReviewSubmitted={onReviewSubmitted}
               />
             );
           })}

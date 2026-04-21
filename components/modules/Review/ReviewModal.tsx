@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,6 +16,13 @@ interface ReviewModalProps {
 export default function ReviewModal({ open, onSubmit, onClose, loading, consultationId }: ReviewModalProps) {
 	const [rating, setRating] = useState(0);
 	const [comment, setComment] = useState("");
+
+	useEffect(() => {
+		if (!open) {
+			setRating(0);
+			setComment("");
+		}
+	}, [open]);
 
 	return (
 		<Dialog open={open} onOpenChange={onClose}>

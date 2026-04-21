@@ -65,6 +65,7 @@ export interface IConsultation {
   expertScheduleId: string;
   client?: IClientBasicInfo | null;
   expert?: IExpert | null;
+  expertSchedule?: IExpertSchedule | null;
   payment?: IPayment | null;
   testimonial?: ITestimonial | null;   // ✅ ADD THIS
   createdAt: string;

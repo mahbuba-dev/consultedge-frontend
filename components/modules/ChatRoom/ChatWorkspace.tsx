@@ -13,7 +13,11 @@ import { useRoomMessages } from "@/src/hooks/useRoomMessages";
 import { useTyping } from "@/src/hooks/useTyping";
 import { useWebRTCCall } from "@/src/hooks/useWebRTCCall";
 import { useChatSocketContext } from "@/src/providers/ChatSocketProvider";
-import { getParticipantDisplayName } from "@/src/services/chatRoom.service";
+import {
+  getCurrentUserReactionEmoji,
+  getOtherParticipants,
+  getParticipantDisplayName,
+} from "@/src/services/chatRoom.service";
 import CallPanel from "./CallPanel";
 import ChatEmptyState from "./ChatEmptyState";
 import ChatRoomHeader from "./ChatRoomHeader";
@@ -56,6 +60,7 @@ export default function ChatWorkspace({
     subscribeRoom,
     unsubscribeRoom,
     markRoomAsRead,
+    emit,
   } = useChatSocketContext();
   const { currentUser, getPresence } = usePresence();
   const {
@@ -144,10 +149,18 @@ export default function ChatWorkspace({
   }, [basePath, isRoomsLoading, roomsError, router, selectedRoom, selectedRoomId, visibleRooms]);
 
   const otherParticipant = useMemo(() => {
-    return selectedRoom?.participants.find(
-      (participant) => (participant.userId ?? participant.id) !== currentUser?.userId,
+    if (!selectedRoom) {
+      return null;
+    }
+
+    return (
+      getOtherParticipants({
+        participants: selectedRoom.participants,
+        currentUserId: currentUser?.userId,
+        currentUserRole: currentUser?.role,
+      })[0] ?? null
     );
-  }, [currentUser?.userId, selectedRoom]);
+  }, [currentUser?.role, currentUser?.userId, selectedRoom]);
 
   const otherParticipantPresence = getPresence(otherParticipant?.userId ?? otherParticipant?.id);
   const activeRoomId = selectedRoom?.id;
@@ -180,7 +193,9 @@ export default function ChatWorkspace({
     isLoading: isMessagesLoading,
     error: messagesError,
     refetch: refetchMessages,
+    applyOptimisticReaction,
     sendMessage,
+    toggleReaction,
     uploadAttachment,
     isSending,
     isUploading,
@@ -217,6 +232,53 @@ export default function ChatWorkspace({
       toast.success(`${file.name} uploaded successfully.`);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Attachment upload failed.");
+    }
+  };
+
+  const handleToggleReaction = async (messageId: string, emoji: string) => {
+    if (!activeRoomId || !messageId || !emoji || !currentUser?.userId) {
+      return;
+    }
+
+    const targetMessage = messages.find((message) => message.id === messageId);
+    const currentReactionEmoji = targetMessage
+      ? getCurrentUserReactionEmoji(targetMessage, currentUser.userId)
+      : null;
+
+    const rollback = applyOptimisticReaction({ messageId, emoji });
+
+    if (connectionState === "connected") {
+      if (currentReactionEmoji && currentReactionEmoji !== emoji) {
+        emit("toggle_reaction", {
+          roomId: activeRoomId,
+          messageId,
+          emoji: currentReactionEmoji,
+        });
+      }
+
+      emit("toggle_reaction", {
+        roomId: activeRoomId,
+        messageId,
+        emoji,
+      });
+      return;
+    }
+
+    try {
+      if (currentReactionEmoji && currentReactionEmoji !== emoji) {
+        await toggleReaction({ messageId, emoji: currentReactionEmoji });
+      }
+
+      await toggleReaction({ messageId, emoji });
+    } catch (error: any) {
+      rollback();
+
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Unable to update reaction right now.";
+
+      toast.error(message);
     }
   };
 
@@ -260,6 +322,7 @@ export default function ChatWorkspace({
         <ChatSidebar
           rooms={visibleRooms}
           currentUserId={currentUser?.userId}
+          currentUserRole={currentUser?.role}
           selectedRoomId={selectedRoom?.id}
           isLoading={isRoomsLoading || isCreatingRoom}
           isRefreshing={isRoomsLoading}
@@ -308,6 +371,7 @@ export default function ChatWorkspace({
               <ChatRoomHeader
                 room={selectedRoom}
                 currentUserId={currentUser?.userId}
+                currentUserRole={currentUser?.role}
                 connectionState={connectionState}
                 isFallbackPolling={isFallbackPolling}
                 isOnline={otherParticipantPresence?.isOnline ?? otherParticipant?.isOnline ?? false}
@@ -353,6 +417,7 @@ export default function ChatWorkspace({
                     currentUserId={currentUser?.userId}
                     isLoading={isMessagesLoading}
                     roomId={activeRoomId}
+                    onToggleReaction={handleToggleReaction}
                   />
                 )}
               </div>

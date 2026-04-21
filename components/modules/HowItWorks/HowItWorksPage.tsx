@@ -336,16 +336,16 @@ export default function HowItWorksPage() {
             </Button>
           </div>
 
-          <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs text-slate-500">
-            <span className="flex items-center gap-1.5">
+          <div className="text-left flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs text-slate-500">
+            <span className="flex gap-1.5">
               <CheckCircle2 className="size-3.5 text-blue-400" />
               No credit card required
             </span>
-            <span className="flex items-center gap-1.5">
+            <span className="flex mr-2  gap-1.5">
               <CheckCircle2 className="size-3.5 text-cyan-400" />
               500+ verified experts
             </span>
-            <span className="flex items-center gap-1.5">
+            <span className="flex  gap-1.5 mr-7">
               <CheckCircle2 className="size-3.5 text-sky-400" />
               Cancel any time
             </span>

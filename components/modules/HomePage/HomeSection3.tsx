@@ -8,8 +8,8 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/src/lib/utils";
 
 const engagementOptions = [
   {
@@ -133,19 +133,18 @@ export default function HomeSection3() {
                 ))}
 
 <div className="mt-2 w-full">
-  <Button
-    asChild
-    className={`w-full ${
+  <Link
+    href={option.href}
+    className={cn(
+      "inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-lg border border-transparent px-2.5 text-sm font-medium whitespace-nowrap transition-all outline-none",
       option.featured
-        ? "bg-blue-600 hover:bg-blue-700"
-        : "bg-slate-900 hover:bg-slate-800"
-    }`}
+        ? "bg-blue-600 text-white hover:bg-blue-700"
+        : "bg-slate-900 text-white hover:bg-slate-800",
+    )}
   >
-    <Link href={option.href}>
       {option.cta}
       <ArrowRight className="ml-2 size-4" />
     </Link>
-  </Button>
 </div>
  
               </CardContent>
@@ -218,7 +217,7 @@ export default function HomeSection3() {
         </Accordion>
       </section>
 
-      <section className="relative overflow-hidden rounded-[2.25rem] border border-slate-900 bg-linear-to-r from-slate-950 via-blue-950 to-cyan-950 p-6 text-white shadow-xl md:p-10">
+      <section className="relative  rounded-[2.25rem] border border-slate-900 bg-linear-to-r from-slate-950 via-blue-950 to-cyan-950 p-6 text-white shadow-xl md:p-10">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.08),transparent_35%)]" />
 
         <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
@@ -236,24 +235,24 @@ export default function HomeSection3() {
 
             <div className="flex flex-wrap gap-2 text-xs font-medium text-slate-100">
               <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1">Expert discovery</span>
-              <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1">Secure booking</span>
+              <span className="rounded-full border border-white/15 bg-white/10 px-4 py-1">Secure booking</span>
               <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1">Smart dashboards</span>
             </div>
           </div>
 
           <div className="flex flex-wrap gap-3">
-            <Button asChild className="bg-white text-slate-900 hover:bg-white/90">
-              <Link href="/register">Get started</Link>
-            </Button>
-            <Button
-              asChild
-              variant="outline"
-              className="border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white"
+            <Link
+              href="/register"
+              className="inline-flex h-8 items-center justify-center rounded-lg border border-transparent bg-white px-2.5 text-sm font-medium text-slate-900 transition-all hover:bg-white/90"
             >
-              <Link href="/contact">
-                Contact us
-              </Link>
-            </Button>
+              Get started
+            </Link>
+            <Link
+              href="/contact"
+              className="inline-flex h-8 items-center justify-center rounded-lg border border-white/30 bg-transparent px-2.5 text-sm font-medium text-white transition-all hover:bg-white/10 hover:text-white"
+            >
+              Contact us
+            </Link>
           </div>
         </div>
       </section>

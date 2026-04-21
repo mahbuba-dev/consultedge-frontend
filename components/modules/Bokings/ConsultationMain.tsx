@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import ConsultationsList from "./ConsultationsList";
@@ -13,6 +13,35 @@ import { IConsultation } from "@/src/types/booking.types";
 
 type ConsultationsMainProps = {
   consultations: IConsultation[];
+};
+
+const getConsultationEndTime = (consultation: IConsultation) => {
+  const rawConsultation = consultation as IConsultation & {
+    endDateTime?: string | null;
+    schedule?: { endDateTime?: string | null } | null;
+  };
+
+  const directEndTime =
+    consultation.expertSchedule?.schedule?.endDateTime ??
+    rawConsultation.schedule?.endDateTime ??
+    rawConsultation.endDateTime ??
+    null;
+
+  if (directEndTime) {
+    return new Date(directEndTime);
+  }
+
+  return consultation.date ? new Date(consultation.date) : null;
+};
+
+const isMissedConsultation = (consultation: IConsultation) => {
+  const endTime = getConsultationEndTime(consultation);
+
+  if (!endTime) {
+    return false;
+  }
+
+  return endTime < new Date();
 };
 
 export default function ConsultationsMain({ consultations }: ConsultationsMainProps) {
@@ -37,8 +66,8 @@ export default function ConsultationsMain({ consultations }: ConsultationsMainPr
     return [];
   }, [data]);
 
-  // Use server consultations if provided, else fallback to fetched
-  const allBookings = consultations.length > 0 ? consultations : extracted;
+  // Prefer live query data once it is available so mutations update instantly.
+  const allBookings = extracted.length > 0 || data ? extracted : consultations;
 
   // Redirect params
   const {
@@ -67,7 +96,7 @@ export default function ConsultationsMain({ consultations }: ConsultationsMainPr
   const upcoming = allBookings.filter(
     (c) =>
       ["CONFIRMED", "PENDING"].includes(c.status) &&
-      new Date(c.date) > new Date()
+      !isMissedConsultation(c)
   );
 
   const completed = allBookings.filter((c) => c.status === "COMPLETED");
@@ -75,8 +104,18 @@ export default function ConsultationsMain({ consultations }: ConsultationsMainPr
   const missed = allBookings.filter(
     (c) =>
       ["CONFIRMED", "PENDING"].includes(c.status) &&
-      new Date(c.date) < new Date()
+      isMissedConsultation(c)
   );
+
+  useEffect(() => {
+    if (activeTab !== "missed") {
+      return;
+    }
+
+    if (missed.length === 0 && upcoming.length > 0) {
+      setActiveTab("upcoming");
+    }
+  }, [activeTab, missed.length, upcoming.length]);
 
   return (
     <div className="space-y-6">
@@ -106,15 +145,22 @@ export default function ConsultationsMain({ consultations }: ConsultationsMainPr
           redirectPaymentId={paymentId}
           redirectTransactionId={transactionId}
           redirectAmount={amount}
+          onReviewSubmitted={() => setActiveTab("completed")}
         />
       )}
 
       {activeTab === "completed" && (
-        <ConsultationsList consultations={completed} />
+        <ConsultationsList
+          consultations={completed}
+          onReviewSubmitted={() => setActiveTab("completed")}
+        />
       )}
 
       {activeTab === "missed" && (
-        <ConsultationsList consultations={missed} />
+        <ConsultationsList
+          consultations={missed}
+          onReviewSubmitted={() => setActiveTab("completed")}
+        />
       )}
     </div>
   );

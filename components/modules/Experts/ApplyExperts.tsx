@@ -149,28 +149,36 @@ const mutation = useMutation({
             )}
           </form.Field>
 
-          <form.Field name="experience">
-            {(field) => (
-              <Input
-                type="number"
-                placeholder="Experience"
-                value={field.state.value}
-                onChange={(e) => field.handleChange(Number(e.target.value))}
-              />
-            )}
-          </form.Field>
+       <form.Field name="experience">
+  {(field) => (
+    <Input
+      type="number"
+      placeholder="Experience"
+      value={field.state.value === 0 ? "" : field.state.value}
+      onChange={(e) =>
+        field.handleChange(
+          e.target.value === "" ? 0 : Number(e.target.value)
+        )
+      }
+    />
+  )}
+</form.Field>
 
-          <form.Field name="consultationFee">
-            {(field) => (
-              <Input
-                type="number"
-                placeholder="Consultation Fee"
-                value={field.state.value}
-                onChange={(e) => field.handleChange(Number(e.target.value))}
-              />
-            )}
-          </form.Field>
 
+        <form.Field name="consultationFee">
+  {(field) => (
+    <Input
+      type="number"
+      placeholder="Consultation Fee"
+      value={field.state.value === 0 ? "" : field.state.value}
+      onChange={(e) =>
+        field.handleChange(
+          e.target.value === "" ? 0 : Number(e.target.value)
+        )
+      }
+    />
+  )}
+</form.Field>
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Profile Picture</label>
             <Input
