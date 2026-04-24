@@ -8,17 +8,26 @@ interface LocalizedDateTimeProps {
   end?: string | null;
 }
 
-// Parse an ISO string from the API and return a Date in the user's local timezone.
-// If the string includes a TZ (`Z` or `+hh:mm`), Date will convert to local automatically.
-// If the string has no TZ, we assume it is already in the user's local wall-clock time.
-const parseToLocal = (iso?: string | null) => {
+// Schedule slots are wall-clock values: the expert typed "8:00 PM" and we want
+// every viewer to see "8:00 PM" regardless of timezone. Some backends echo the
+// stored value with a trailing "Z" or "+00:00" which JS would then convert into
+// the viewer's local timezone, producing visible shifts (e.g. 8 PM → 4 PM).
+// Strip any timezone designator before parsing so the numbers stay literal.
+const parseWallClock = (iso?: string | null) => {
   if (!iso) return null;
+
+  const stripped = iso
+    .trim()
+    // remove trailing Z
+    .replace(/Z$/i, "")
+    // remove trailing +HH:MM / -HH:MM offset
+    .replace(/[+-]\d{2}:?\d{2}$/, "");
 
   let parsed: Date;
   try {
-    parsed = parseISO(iso);
+    parsed = parseISO(stripped);
   } catch {
-    parsed = new Date(iso);
+    parsed = new Date(stripped);
   }
 
   if (Number.isNaN(parsed.getTime())) return null;
@@ -26,8 +35,8 @@ const parseToLocal = (iso?: string | null) => {
 };
 
 const LocalizedDateTime: React.FC<LocalizedDateTimeProps> = ({ start, end }) => {
-  const startDate = parseToLocal(start);
-  const endDate = parseToLocal(end);
+  const startDate = parseWallClock(start);
+  const endDate = parseWallClock(end);
 
   if (!startDate) return <span>Date unavailable</span>;
 
