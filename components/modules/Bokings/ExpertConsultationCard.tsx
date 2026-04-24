@@ -483,7 +483,7 @@ export default function ConsultationCard({ consultation, onJoin }: Props) {
         <div className="flex flex-wrap gap-3">
           <Button asChild variant="outline">
             <Link
-              href={`/dashboard/chat?clientId=${consultation.clientId}`}
+              href={`/expert/dashboard/messages${consultation.clientId ? `?participantId=${consultation.clientId}` : ""}`}
             >
               <MessageCircleMore className="mr-2 size-4" />
               Message

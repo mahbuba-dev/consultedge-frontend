@@ -13,6 +13,27 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 
 import { httpClient } from "@/src/lib/axious/httpClient";
 
+// Translate raw backend messages into something a normal user can act on.
+const friendlyOtpMessage = (rawMessage: unknown, fallback: string) => {
+  const text = typeof rawMessage === "string" ? rawMessage.trim() : "";
+  const lower = text.toLowerCase();
+
+  if (!text) return fallback;
+  if (/expired|expiry|timed?\s?out/.test(lower))
+    return "This OTP has expired. Please request a new one.";
+  if (/invalid|incorrect|wrong|mismatch|not match/.test(lower))
+    return "The code you entered is incorrect. Please double-check and try again.";
+  if (/too many|rate limit|limit reached|429/.test(lower))
+    return "Too many attempts. Please wait a minute before trying again.";
+  if (/not found|no otp|no record/.test(lower))
+    return "We couldn't find an active OTP for this email. Please request a new one.";
+  if (/already verified|already used|used/.test(lower))
+    return "This code has already been used. Please request a new one if needed.";
+  if (/network|failed to fetch|timeout/.test(lower))
+    return "Network issue. Check your connection and try again.";
+  return text;
+};
+
 export default function VerifyEmailPage() {
   const searchParams = useSearchParams();
   const email = searchParams.get("email");
@@ -58,7 +79,8 @@ export default function VerifyEmailPage() {
       setCanResend(false);
     },
     onError: (err: any) => {
-      const message = err?.response?.data?.message || "Failed to resend OTP";
+      const raw = err?.response?.data?.message || err?.message;
+      const message = friendlyOtpMessage(raw, "Couldn't send a new code right now. Please try again.");
       setServerError(message);
       setServersuccess(null);
       toast.error(message);
@@ -86,7 +108,8 @@ export default function VerifyEmailPage() {
           window.location.href = "/login";
         }, 1500);
       } catch (err: any) {
-        const message = err?.response?.data?.message || "Invalid OTP";
+        const raw = err?.response?.data?.message || err?.message;
+        const message = friendlyOtpMessage(raw, "Invalid OTP. Please try again.");
         setServerError(message);
         toast.error(message);
       }

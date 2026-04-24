@@ -342,12 +342,57 @@ export const replyToTestimonial = async (
     throw new Error("Testimonial ID is required.");
   }
 
-  const response = await httpClient.patch<ITestimonial>(
-    `/testimonials/${testimonialId}/reply`,
-    payload
-  );
+  // Different backends expose different shapes for this endpoint. Try the
+  // common variants in sequence and return on the first success.
+  const attempts: Array<() => Promise<ApiResponse<ITestimonial>>> = [
+    () =>
+      httpClient.patch<ITestimonial>(
+        `/testimonials/${testimonialId}/reply`,
+        payload,
+        { silent: true },
+      ),
+    () =>
+      httpClient.put<ITestimonial>(
+        `/testimonials/${testimonialId}/reply`,
+        payload,
+        { silent: true },
+      ),
+    () =>
+      httpClient.post<ITestimonial>(
+        `/testimonials/${testimonialId}/reply`,
+        payload,
+        { silent: true },
+      ),
+    () =>
+      httpClient.patch<ITestimonial>(
+        `/testimonials/${testimonialId}`,
+        payload,
+        { silent: true },
+      ),
+    () =>
+      httpClient.put<ITestimonial>(
+        `/testimonials/${testimonialId}`,
+        payload,
+        { silent: true },
+      ),
+  ];
 
-  return response;
+  let lastError: unknown;
+  for (const attempt of attempts) {
+    try {
+      return await attempt();
+    } catch (error: any) {
+      const status = error?.response?.status;
+      lastError = error;
+      // Only fall through on 404/405 (route/method mismatch). Other errors are
+      // real failures (validation, auth) and should surface immediately.
+      if (status !== 404 && status !== 405) {
+        throw error;
+      }
+    }
+  }
+
+  throw lastError ?? new Error("Reply endpoint unavailable.");
 };
 
 

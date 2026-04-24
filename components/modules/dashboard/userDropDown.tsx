@@ -3,6 +3,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { UserInfo } from "@/src/types/user.types"
 import { Key, LogOut, User } from "lucide-react"
 import Link from "next/link"
+import { logoutAction } from "@/src/app/(commonLayout)/(authRouteGroup)/logOut/_action"
 
 interface UserDropdownProps{
     userInfo : UserInfo
@@ -56,9 +57,16 @@ const UserDropdown = ({ userInfo }: UserDropdownProps) => {
             <DropdownMenuSeparator/>
 
 
-            <DropdownMenuItem onClick={() => {}} className="cursor-pointer text-red-600">
-                <LogOut className="mr-2 h-4 w-4"/>
-                Logout
+            <DropdownMenuItem asChild className="cursor-pointer text-red-600">
+                <form action={logoutAction}>
+                    <button
+                        type="submit"
+                        className="flex w-full items-center text-left text-red-600"
+                    >
+                        <LogOut className="mr-2 h-4 w-4"/>
+                        Logout
+                    </button>
+                </form>
             </DropdownMenuItem>
         </DropdownMenuContent>
     </DropdownMenu>

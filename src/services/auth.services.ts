@@ -324,10 +324,15 @@ const normalizeApiBaseUrl = (rawValue?: string) => {
   return value.endsWith("/api/v1") ? value : `${value}/api/v1`;
 };
 
-const BASE_API_URL = normalizeApiBaseUrl(process.env.NEXT_PUBLIC_API_BASE_URL);
+const BASE_API_URL =
+  normalizeApiBaseUrl(process.env.NEXT_PUBLIC_API_BASE_URL) ??
+  "http://localhost:5000/api/v1";
 
-if (!BASE_API_URL) {
-  throw new Error("NEXT_PUBLIC_API_BASE_URL is not defined");
+if (!process.env.NEXT_PUBLIC_API_BASE_URL && typeof window === "undefined") {
+  console.warn(
+    "[auth.services] NEXT_PUBLIC_API_BASE_URL is not set. Using fallback:",
+    BASE_API_URL,
+  );
 }
 
 
@@ -379,62 +384,67 @@ export async function getNewTokensWithRefreshToken(refreshToken: string): Promis
 // getUserInfo (server-side, with refresh support)
 // ---------------------------------------------
 export async function getUserInfo() {
-  const cookieStore = await cookies();
+  try {
+    const cookieStore = await cookies();
 
-  let accessToken = cookieStore.get("accessToken")?.value;
-  let refreshToken = cookieStore.get("refreshToken")?.value;
-  let sessionToken =
-    cookieStore.get("better-auth.session_token")?.value ||
-    cookieStore.get("__Secure-better-auth.session_token")?.value;
+    let accessToken = cookieStore.get("accessToken")?.value;
+    let refreshToken = cookieStore.get("refreshToken")?.value;
+    let sessionToken =
+      cookieStore.get("better-auth.session_token")?.value ||
+      cookieStore.get("__Secure-better-auth.session_token")?.value;
 
-  if (!accessToken && !refreshToken && !sessionToken) {
+    if (!accessToken && !refreshToken && !sessionToken) {
+      return null;
+    }
+
+    const buildCookieHeader = () =>
+      [
+        accessToken ? `accessToken=${accessToken}` : null,
+        refreshToken ? `refreshToken=${refreshToken}` : null,
+        sessionToken ? `better-auth.session_token=${sessionToken}` : null,
+      ]
+        .filter(Boolean)
+        .join("; ");
+
+    const fetchUser = async () => {
+      return fetch(`${BASE_API_URL}/auth/me`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: buildCookieHeader(),
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        },
+        cache: "no-store",
+      });
+    };
+
+    let res = await fetchUser();
+
+    if (res.status === 401 && refreshToken) {
+      const refreshed = await refreshTokensServerAction();
+
+      if (refreshed) {
+        accessToken = refreshed.accessToken;
+        refreshToken = refreshed.refreshToken;
+        sessionToken = refreshed.sessionToken;
+
+        res = await fetchUser();
+      }
+    }
+
+    if (!res.ok) {
+      if (res.status !== 401) {
+        console.error("Failed to fetch user info:", res.status, res.statusText);
+      }
+      return null;
+    }
+
+    const { data } = await res.json();
+    return data;
+  } catch (error) {
+    console.error("getUserInfo failed:", error);
     return null;
   }
-
-  const buildCookieHeader = () =>
-    [
-      accessToken ? `accessToken=${accessToken}` : null,
-      refreshToken ? `refreshToken=${refreshToken}` : null,
-      sessionToken ? `better-auth.session_token=${sessionToken}` : null,
-    ]
-      .filter(Boolean)
-      .join("; ");
-
-  const fetchUser = async () => {
-    return fetch(`${BASE_API_URL}/auth/me`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Cookie: buildCookieHeader(),
-        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-      },
-      cache: "no-store",
-    });
-  };
-
-  let res = await fetchUser();
-
-  if (res.status === 401 && refreshToken) {
-    const refreshed = await refreshTokensServerAction();
-
-    if (refreshed) {
-      accessToken = refreshed.accessToken;
-      refreshToken = refreshed.refreshToken;
-      sessionToken = refreshed.sessionToken;
-
-      res = await fetchUser();
-    }
-  }
-
-  if (!res.ok) {
-    if (res.status !== 401) {
-      console.error("Failed to fetch user info:", res.status, res.statusText);
-    }
-    return null;
-  }
-
-  const { data } = await res.json();
-  return data;
 }
 
 // ---------------------------------------------

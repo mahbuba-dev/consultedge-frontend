@@ -16,6 +16,25 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { resetPasswordService } from "@/src/services/auth.services";
 
+// Translate raw backend messages into something a normal user can act on.
+const friendlyOtpMessage = (rawMessage: unknown, fallback: string) => {
+  const text = typeof rawMessage === "string" ? rawMessage.trim() : "";
+  const lower = text.toLowerCase();
+
+  if (!text) return fallback;
+  if (/expired|expiry|timed?\s?out/.test(lower))
+    return "This reset code has expired. Please request a new one.";
+  if (/invalid|incorrect|wrong|mismatch|not match/.test(lower))
+    return "The reset code is incorrect. Please double-check and try again.";
+  if (/too many|rate limit|limit reached|429/.test(lower))
+    return "Too many attempts. Please wait a minute before trying again.";
+  if (/not found|no otp|no record/.test(lower))
+    return "We couldn't find an active reset code for this email. Please request a new one.";
+  if (/network|failed to fetch|timeout/.test(lower))
+    return "Network issue. Check your connection and try again.";
+  return text;
+};
+
 export default function ResetPasswordForm({ email, otpSent = false }: { email: string; otpSent?: boolean }) {
   const router = useRouter();
 
@@ -47,12 +66,13 @@ export default function ResetPasswordForm({ email, otpSent = false }: { email: s
           password: value.password,
         });
       } catch (error: any) {
-        toast.error(error?.response?.data?.message || error?.message || "Failed to reset password");
+        const raw = error?.response?.data?.message || error?.message;
+        toast.error(friendlyOtpMessage(raw, "Couldn't reset your password right now. Please try again."));
         return;
       }
 
       if (!res.success) {
-        toast.error(res.message || "Failed to reset password");
+        toast.error(friendlyOtpMessage(res.message, "Couldn't reset your password right now. Please try again."));
         return;
       }
 

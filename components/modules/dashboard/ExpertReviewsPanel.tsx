@@ -129,8 +129,12 @@ export default function ExpertReviewsPanel({ profile }: Props) {
 
       toast.success("Reply published successfully");
       closeReply();
-    } catch {
-      toast.error("Failed to save reply");
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to save reply";
+      toast.error(message);
     }
   };
 
@@ -166,21 +170,23 @@ export default function ExpertReviewsPanel({ profile }: Props) {
         {/* LIST */}
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {sortedReviews.map((r) => (
-            <div key={r.id} className="space-y-3">
-              <TestimonialCard testimonial={r} compact />
+            <div key={r.id} className="flex h-full flex-col gap-3">
+              <div className="flex-1">
+                <TestimonialCard testimonial={r} compact />
+              </div>
 
-              <div className="flex gap-2">
-                <Button size="sm" onClick={() => openReply(r)}>
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" variant="outline" onClick={() => openReply(r)}>
                   <MessageSquareReply className="mr-2 size-4" />
                   Reply
                 </Button>
 
-                <Button size="sm" onClick={() => void handleCopy(r)}>
+                <Button size="sm" variant="outline" onClick={() => void handleCopy(r)}>
                   <Copy className="mr-2 size-4" />
                   Copy
                 </Button>
 
-                <Button size="sm" onClick={() => handleEmail(r)}>
+                <Button size="sm" variant="outline" onClick={() => handleEmail(r)}>
                   <Mail className="mr-2 size-4" />
                   Email
                 </Button>

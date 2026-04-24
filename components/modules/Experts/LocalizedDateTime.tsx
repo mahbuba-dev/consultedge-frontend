@@ -1,20 +1,20 @@
 "use client";
 
 import React from "react";
-import { parseISO } from "date-fns";
-import { format } from "date-fns-tz";
-import { utcToZonedTime } from "./date-tz-util";
+import { format, parseISO } from "date-fns";
 
 interface LocalizedDateTimeProps {
   start?: string | null;
   end?: string | null;
 }
 
-const getLocalDate = (iso?: string | null) => {
+// Parse an ISO string from the API and return a Date in the user's local timezone.
+// If the string includes a TZ (`Z` or `+hh:mm`), Date will convert to local automatically.
+// If the string has no TZ, we assume it is already in the user's local wall-clock time.
+const parseToLocal = (iso?: string | null) => {
   if (!iso) return null;
 
   let parsed: Date;
-
   try {
     parsed = parseISO(iso);
   } catch {
@@ -22,14 +22,12 @@ const getLocalDate = (iso?: string | null) => {
   }
 
   if (Number.isNaN(parsed.getTime())) return null;
-
-  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  return utcToZonedTime(parsed, tz);
+  return parsed;
 };
 
 const LocalizedDateTime: React.FC<LocalizedDateTimeProps> = ({ start, end }) => {
-  const startDate = getLocalDate(start);
-  const endDate = getLocalDate(end);
+  const startDate = parseToLocal(start);
+  const endDate = parseToLocal(end);
 
   if (!startDate) return <span>Date unavailable</span>;
 

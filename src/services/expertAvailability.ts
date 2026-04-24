@@ -39,6 +39,7 @@ const combineDateAndTime = (dateValue: unknown, timeValue: unknown) => {
     return "";
   }
 
+  // Already a full ISO string — pass through unchanged.
   if (dateText.includes("T")) {
     return dateText;
   }
@@ -52,6 +53,16 @@ const combineDateAndTime = (dateValue: unknown, timeValue: unknown) => {
   }
 
   const normalizedTime = /^\d{2}:\d{2}$/.test(timeText) ? `${timeText}:00` : timeText;
+
+  // Build the date in the user's LOCAL timezone, then serialize to UTC ISO so the
+  // backend stores an unambiguous instant and returns it as UTC ("...Z"). Without
+  // this, a bare "YYYY-MM-DDTHH:mm:ss" is interpreted differently by the client
+  // (local) vs the server (UTC), causing hours to shift on display.
+  const local = new Date(`${dateText}T${normalizedTime}`);
+  if (!Number.isNaN(local.getTime())) {
+    return local.toISOString();
+  }
+
   return `${dateText}T${normalizedTime}`;
 };
 
