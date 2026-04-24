@@ -34,6 +34,9 @@ interface DataTableProps<TData> {
     columns : ColumnDef<TData>[];
     actions ?: DataTableActions<TData>;
   toolbarAction?: React.ReactNode;
+    tableClassName?: string;
+    headCellClassName?: string;
+    bodyCellClassName?: string;
     emptyMessage ?: string;
     isLoading ?: boolean;
     sorting ?: {
@@ -60,7 +63,22 @@ interface DataTableProps<TData> {
 }
 
 
-const DataTable = <TData,>({ data = [] as TData[], columns, actions, toolbarAction, emptyMessage, isLoading, sorting, pagination, search, filters, meta } : DataTableProps<TData>) => {
+const DataTable = <TData,>({
+  data = [] as TData[],
+  columns,
+  actions,
+  toolbarAction,
+  tableClassName,
+  headCellClassName,
+  bodyCellClassName,
+  emptyMessage,
+  isLoading,
+  sorting,
+  pagination,
+  search,
+  filters,
+  meta,
+} : DataTableProps<TData>) => {
 
     const [hasHydrated, setHasHydrated] = useState(false);
 
@@ -220,12 +238,12 @@ const DataTable = <TData,>({ data = [] as TData[], columns, actions, toolbarActi
 
         {/* // Table */}
         <div className="rounded-lg border">
-          <Table>
+          <Table className={tableClassName}>
             <TableHeader>
               {table.getHeaderGroups().map((hg) => (
                 <TableRow key={hg.id}>
                   {hg.headers.map((header) => (
-                    <TableHead key={header.id}>
+                    <TableHead key={header.id} className={headCellClassName}>
                       {header.isPlaceholder ? null : header.column.getCanSort() ? (
                         <Button
                           variant={"ghost"}
@@ -262,7 +280,7 @@ const DataTable = <TData,>({ data = [] as TData[], columns, actions, toolbarActi
                 table.getRowModel().rows.map((row) => (
                   <TableRow key={row.id}>
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
+                      <TableCell key={cell.id} className={bodyCellClassName}>
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext(),
@@ -275,7 +293,7 @@ const DataTable = <TData,>({ data = [] as TData[], columns, actions, toolbarActi
                 <TableRow>
                   <TableCell
                     colSpan={tableColumns.length}
-                    className="h-24 text-center"
+                    className={`h-24 text-center ${bodyCellClassName ?? ""}`}
                   >
                     {emptyMessage || "No data available."}
                   </TableCell>

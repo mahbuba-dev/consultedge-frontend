@@ -65,8 +65,8 @@ import { IIndustry, IIndustryListResponse } from "@/src/types/industry.types";
 import { cn } from "@/src/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowUpDown, ShieldCheck, Sparkles, TrendingUp, Users } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useMemo } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import ExpertCard from "./ExpertCard";
 import DataTableSearch from "../shared/Table/DataTableSearch";
 
@@ -128,21 +128,45 @@ const getQuickFilterButtonClass = (isActive: boolean) =>
 
 export default function ExpertsPageClient() {
   const searchParams = useSearchParams();
-  const router = useRouter();
+  const pathname = usePathname();
+  const [queryString, setQueryString] = useState(() => searchParams.toString());
+  const currentSearchParams = useMemo(
+    () => new URLSearchParams(queryString),
+    [queryString],
+  );
 
-  const queryString = searchParams.toString();
-  const searchTerm = searchParams.get("searchTerm") ?? "";
-  const activeSortValue = `${searchParams.get("sortBy") ?? "createdAt"}:${searchParams.get("sortOrder") ?? "desc"}`;
+  useEffect(() => {
+    const nextQueryString = searchParams.toString();
+
+    setQueryString((currentValue) =>
+      currentValue === nextQueryString ? currentValue : nextQueryString,
+    );
+  }, [searchParams]);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      setQueryString(window.location.search.replace(/^\?/, ""));
+    };
+
+    window.addEventListener("popstate", handlePopState);
+
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  const searchTerm = currentSearchParams.get("searchTerm") ?? "";
+  const activeSortValue = `${currentSearchParams.get("sortBy") ?? "createdAt"}:${currentSearchParams.get("sortOrder") ?? "desc"}`;
   const hasExperienceRange = Boolean(
-    searchParams.get("experience[gte]") || searchParams.get("experience[lte]"),
+    currentSearchParams.get("experience[gte]") ||
+      currentSearchParams.get("experience[lte]"),
   );
   const hasPriceRange = Boolean(
-    searchParams.get("price[gte]") || searchParams.get("price[lte]"),
+    currentSearchParams.get("price[gte]") || currentSearchParams.get("price[lte]"),
   );
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["experts", queryString],
     queryFn: () => getExperts(queryString),
+    staleTime: 60 * 1000,
   });
 
   const { data: industries = [] } = useQuery<
@@ -159,14 +183,18 @@ export default function ExpertsPageClient() {
 
   const experts: IExpert[] = Array.isArray(data?.data) ? data.data : [];
   const meta = data?.meta;
-  const selectedIndustryId = searchParams.get("industryId") ?? "all";
-  const selectedVerification = searchParams.get("isVerified") ?? "all";
+  const selectedIndustryId = currentSearchParams.get("industryId") ?? "all";
+  const selectedVerification = currentSearchParams.get("isVerified") ?? "all";
 
   const displayedExperts = useMemo(() => {
-    const minExperience = parseOptionalNumber(searchParams.get("experience[gte]"));
-    const maxExperience = parseOptionalNumber(searchParams.get("experience[lte]"));
-    const minPrice = parseOptionalNumber(searchParams.get("price[gte]"));
-    const maxPrice = parseOptionalNumber(searchParams.get("price[lte]"));
+    const minExperience = parseOptionalNumber(
+      currentSearchParams.get("experience[gte]"),
+    );
+    const maxExperience = parseOptionalNumber(
+      currentSearchParams.get("experience[lte]"),
+    );
+    const minPrice = parseOptionalNumber(currentSearchParams.get("price[gte]"));
+    const maxPrice = parseOptionalNumber(currentSearchParams.get("price[lte]"));
     const normalizedSearch = searchTerm.trim().toLowerCase();
     const [sortBy, sortOrder] = activeSortValue.split(":") as [
       string,
@@ -260,8 +288,8 @@ export default function ExpertsPageClient() {
       });
   }, [
     activeSortValue,
+    currentSearchParams,
     experts,
-    searchParams,
     searchTerm,
     selectedIndustryId,
     selectedVerification,
@@ -290,7 +318,7 @@ export default function ExpertsPageClient() {
       updater: (params: URLSearchParams) => void,
       options?: { resetPage?: boolean },
     ) => {
-      const params = new URLSearchParams(searchParams.toString());
+      const params = new URLSearchParams(queryString);
       updater(params);
 
       if (options?.resetPage ?? true) {
@@ -298,11 +326,20 @@ export default function ExpertsPageClient() {
       }
 
       const nextQuery = params.toString();
-      router.replace(nextQuery ? `/experts?${nextQuery}` : "/experts", {
-        scroll: false,
-      });
+      const currentQuery = queryString;
+
+      if (nextQuery === currentQuery) {
+        return;
+      }
+
+      setQueryString(nextQuery);
+      window.history.replaceState(
+        null,
+        "",
+        nextQuery ? `${pathname}?${nextQuery}` : pathname,
+      );
     },
-    [router, searchParams],
+    [pathname, queryString],
   );
 
   const handleSearch = useCallback(
@@ -389,22 +426,27 @@ export default function ExpertsPageClient() {
   );
 
   const clearAllFilters = useCallback(() => {
-    router.replace("/experts", { scroll: false });
-  }, [router]);
+    if (!queryString) {
+      return;
+    }
+
+    setQueryString("");
+    window.history.replaceState(null, "", pathname);
+  }, [pathname, queryString]);
 
   const hasActiveFilters =
     Boolean(searchTerm) ||
-    Boolean(searchParams.get("industryId")) ||
-    Boolean(searchParams.get("isVerified")) ||
+    Boolean(currentSearchParams.get("industryId")) ||
+    Boolean(currentSearchParams.get("isVerified")) ||
     hasExperienceRange ||
     hasPriceRange ||
-    Boolean(searchParams.get("sortBy")) ||
-    Boolean(searchParams.get("sortOrder"));
+    Boolean(currentSearchParams.get("sortBy")) ||
+    Boolean(currentSearchParams.get("sortOrder"));
 
   const isActivePreset = (field: RangeField, preset: RangePreset) => {
     return (
-      (searchParams.get(`${field}[gte]`) ?? "") === (preset.gte ?? "") &&
-      (searchParams.get(`${field}[lte]`) ?? "") === (preset.lte ?? "")
+      (currentSearchParams.get(`${field}[gte]`) ?? "") === (preset.gte ?? "") &&
+      (currentSearchParams.get(`${field}[lte]`) ?? "") === (preset.lte ?? "")
     );
   };
 
@@ -433,7 +475,6 @@ export default function ExpertsPageClient() {
         <div className="mt-6 grid gap-3 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:items-start">
           <div className="min-w-0">
             <DataTableSearch
-              key={searchTerm}
               initialValue={searchTerm}
               placeholder="Search by name, title, or industry"
               onDebouncedChange={handleSearch}

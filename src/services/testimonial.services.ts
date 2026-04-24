@@ -1,5 +1,6 @@
 import { httpClient } from "../lib/axious/httpClient";
 import { ApiResponse } from "../types/api.types";
+import { getAllClients } from "./client.service";
 
 import type { ITestimonial } from "../types/testimonial.types";
 
@@ -123,6 +124,71 @@ const mergeTestimonialsById = (items: ITestimonial[]) => {
   return [...unique.values()];
 };
 
+const getReviewerEmail = (item: ITestimonial) =>
+  item.client?.email ?? item.client?.user?.email ?? "";
+
+const enrichTestimonialsWithClientDirectory = async (
+  items: ITestimonial[],
+): Promise<ITestimonial[]> => {
+  const missingClientIds = [...new Set(
+    items
+      .filter((item) => !getReviewerEmail(item) && Boolean(item.clientId))
+      .map((item) => item.clientId),
+  )];
+
+  if (missingClientIds.length === 0) {
+    return items;
+  }
+
+  try {
+    const clientsResponse = await getAllClients({
+      page: 1,
+      limit: 500,
+    });
+
+    const clients = Array.isArray(clientsResponse?.data) ? clientsResponse.data : [];
+    if (clients.length === 0) {
+      return items;
+    }
+
+    const clientsById = new Map(
+      clients.map((client) => [String(client.id), client]),
+    );
+
+    return items.map((item) => {
+      if (getReviewerEmail(item)) {
+        return item;
+      }
+
+      const fallbackClient = clientsById.get(String(item.clientId));
+      if (!fallbackClient) {
+        return item;
+      }
+
+      return {
+        ...item,
+        client: {
+          id: item.client?.id ?? String(fallbackClient.id),
+          fullName:
+            item.client?.fullName ??
+            fallbackClient.fullName ??
+            fallbackClient.name ??
+            fallbackClient.user?.name ??
+            undefined,
+          email:
+            item.client?.email ??
+            fallbackClient.email ??
+            fallbackClient.user?.email ??
+            undefined,
+          user: item.client?.user ?? fallbackClient.user,
+        },
+      };
+    });
+  } catch {
+    return items;
+  }
+};
+
 // ------------------------------
 // CREATE TESTIMONIAL ✅ (FIXED)
 // ------------------------------
@@ -174,39 +240,21 @@ export const getAllTestimonials = async (
 export const getAllTestimonialsForAdmin = async (
   limit = 100
 ): Promise<ITestimonial[]> => {
+  const includeRelations = ["client", "client.user", "expert", "consultation"];
+
   const params = {
     limit,
     sortBy: "createdAt",
     sortOrder: "desc",
+    include: includeRelations.join(","),
+    includes: includeRelations.join(","),
+    populate: includeRelations.join(","),
+    expand: includeRelations.join(","),
   };
-const res=  await requestTestimonials("/testimonials/admin", params);
-console.log(res);
-return res;
+
+  const testimonials = await requestTestimonials("/testimonials/admin", params);
+  return enrichTestimonialsWithClientDirectory(testimonials);
 };
-
-// ------------------------------
-// GET TESTIMONIALS BY EXPERT
-// ------------------------------
-// export const getTestimonialsByExpert = async (
-//   expertId: string
-// ): Promise<ITestimonial[]> => {
-//   if (!expertId) return [];
-
-//   try {
-//     return await requestTestimonials(`/testimonials/expert/${expertId}`);
-//   } catch (error: any) {
-//     const status = error?.response?.status;
-
-//     // ✅ treat "not found" as empty list (normal case)
-//     if (status === 404) {
-//       return [];
-//     }
-
-//     // ❌ everything else is a real error
-//     throw error;
-//   }
-// };
-
 
 export const getTestimonialsByExpert = async (
   expertId: string

@@ -24,6 +24,16 @@ export default function ExpertAvailabilityForm() {
     endTime: "",
   });
 
+  // Min attribute for <input type="date"> is today's local date (YYYY-MM-DD).
+  // Prevents picking any date before today in the browser's native calendar.
+  const todayIso = (() => {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, "0");
+    const d = String(now.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  })();
+
   // ⭐ SAFE LOCAL DATETIME BUILDER (NO UTC SHIFT)
   const buildLocalDateTime = (dateStr: string, timeStr: string) => {
     const [y, m, d] = dateStr.split("-").map(Number);
@@ -116,6 +126,23 @@ export default function ExpertAvailabilityForm() {
       return;
     }
 
+    // Block past-dated slots. Compare against the start of today so slots
+    // beginning later today are still allowed.
+    const now = new Date();
+    const startOfToday = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+    );
+    if (start < startOfToday) {
+      toast.error("You can't create slots for a date that has already passed.");
+      return;
+    }
+    if (start <= now) {
+      toast.error("The slot start time must be in the future.");
+      return;
+    }
+
     createMutation.mutate();
   };
 
@@ -141,6 +168,7 @@ export default function ExpertAvailabilityForm() {
               <Input
                 id="startDate"
                 type="date"
+                min={todayIso}
                 value={formState.startDate}
                 onChange={(e) =>
                   setFormState((p) => ({ ...p, startDate: e.target.value }))
@@ -153,6 +181,7 @@ export default function ExpertAvailabilityForm() {
               <Input
                 id="endDate"
                 type="date"
+                min={formState.startDate || todayIso}
                 value={formState.endDate}
                 onChange={(e) =>
                   setFormState((p) => ({ ...p, endDate: e.target.value }))

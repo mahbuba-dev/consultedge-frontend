@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { parseISO } from "date-fns";
 
@@ -95,27 +96,50 @@ export default function MyScheduleList() {
       ]),
   );
 
-  const now = new Date();
-
   // ---------------- SPLIT DATA ----------------
+  // Partition by actual booking status, not by time. A slot whose start has
+  // already passed today is still "Available" unless someone actually booked
+  // it. Within each group we hide deleted slots and sort upcoming ascending,
+  // past descending.
 
-  const available = schedules
+  const now = new Date();
+  const startOfToday = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+  );
+
+  const decorated = schedules
     .map((item) => {
       const start = getScheduleStart(item, scheduleLookup);
       const date = start ? parseDateTimeValue(start) : null;
       return { item, date };
     })
-    .filter((x) => x.date && x.date >= now)
-    .sort((a, b) => a.date!.getTime() - b.date!.getTime());
+    .filter((x) => !x.item.isDeleted);
 
-  const Booked = schedules
-    .map((item) => {
-      const start = getScheduleStart(item, scheduleLookup);
-      const date = start ? parseDateTimeValue(start) : null;
-      return { item, date };
-    })
-    .filter((x) => x.date && x.date < now)
-    .sort((a, b) => b.date!.getTime() - a.date!.getTime());
+  // Slots whose date is before today and were never booked are expired —
+  // hide them from the UI and auto-delete them on the server.
+  const expired = decorated.filter(
+    (x) => !x.item.isBooked && x.date != null && x.date < startOfToday,
+  );
+
+  const visible = decorated.filter((x) => !expired.includes(x));
+
+  const available = visible
+    .filter((x) => !x.item.isBooked)
+    .sort((a, b) => {
+      const ta = a.date ? a.date.getTime() : 0;
+      const tb = b.date ? b.date.getTime() : 0;
+      return ta - tb;
+    });
+
+  const Booked = visible
+    .filter((x) => x.item.isBooked)
+    .sort((a, b) => {
+      const ta = a.date ? a.date.getTime() : 0;
+      const tb = b.date ? b.date.getTime() : 0;
+      return tb - ta;
+    });
 
   // ---------------- DELETE ----------------
 
@@ -134,6 +158,34 @@ export default function MyScheduleList() {
     },
     onError: () => toast.error("Delete failed"),
   });
+
+  // Auto-cleanup: silently delete any slot whose date has already passed and
+  // was never booked. Each expired id is attempted only once per session.
+  const autoDeletedRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!expired.length) return;
+
+    expired.forEach((x) => {
+      const id = x.item.scheduleId;
+      if (!id || autoDeletedRef.current.has(id)) return;
+      autoDeletedRef.current.add(id);
+
+      // Fire-and-forget: remove from cache optimistically and hit the API.
+      queryClient.setQueryData(["expert-my-schedules"], (current: any) => {
+        if (!current?.data) return current;
+        return {
+          ...current,
+          data: current.data.filter((i: any) => i.scheduleId !== id),
+        };
+      });
+
+      deleteExpertAvailability(id).catch(() => {
+        // Silent: if the API call fails we just stop retrying this id.
+      });
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expired.map((x) => x.item.scheduleId).join(",")]);
 
   // ---------------- UI STATES ----------------
 

@@ -66,7 +66,9 @@ export default function IndustryEditForm({ industryId }: IndustryEditFormProps) 
 
     try {
       setIsSaving(true);
-      const res = await updateIndustry(industryId, payload);
+      const res = (await updateIndustry(industryId, payload)) as
+        | { success?: boolean; message?: string }
+        | undefined;
 
       if (!res?.success) {
         toast.error(res?.message || "Failed to update industry", {

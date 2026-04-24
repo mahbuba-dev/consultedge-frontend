@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { getMe, updateProfile } from "@/src/services/auth.services";
-import { ApiResponse } from "@/src/types/api.types";
 import { IUserProfile, IUpdateProfilePayload } from "@/src/types/auth.types";
 
 import { useForm } from "@tanstack/react-form";
@@ -13,6 +13,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 
 export default function EditProfile() {
+  const queryClient = useQueryClient();
+  const router = useRouter();
+
   // Fetch user
   const { data, isLoading, isError } = useQuery({
     queryKey: ["me"],
@@ -25,8 +28,24 @@ export default function EditProfile() {
   // Mutation
   const mutation = useMutation({
     mutationFn: updateProfile,
-    onsuccess: () => toast.success("Profile updated successfully"),
-    onError: () => toast.error("Failed to update profile"),
+    onSuccess: async () => {
+      toast.success("Profile updated successfully");
+      await queryClient.invalidateQueries({ queryKey: ["me"] });
+      router.push("/my-profile");
+      router.refresh();
+    },
+    onError: (error: unknown) => {
+      const message =
+        typeof error === "object" &&
+        error !== null &&
+        "response" in error &&
+        typeof (error as { response?: { data?: { message?: string } } }).response?.data?.message ===
+          "string"
+          ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+          : "Failed to update profile";
+
+      toast.error(message);
+    },
   });
 
   // TanStack Form
@@ -40,7 +59,25 @@ export default function EditProfile() {
       fullName: "",
     } satisfies IUpdateProfilePayload,
     onSubmit: async ({ value }) => {
-      mutation.mutate(value);
+      const normalizedPayload: IUpdateProfilePayload = {
+        name: value.name?.trim() || undefined,
+        email: value.email?.trim() || undefined,
+      };
+
+      if (user?.role === "EXPERT") {
+        normalizedPayload.title = value.title?.trim() || undefined;
+        normalizedPayload.industryId = value.industryId?.trim() || undefined;
+        normalizedPayload.experience =
+          typeof value.experience === "number" && Number.isFinite(value.experience)
+            ? value.experience
+            : undefined;
+      }
+
+      if (user?.role === "CLIENT") {
+        normalizedPayload.fullName = value.fullName?.trim() || undefined;
+      }
+
+      mutation.mutate(normalizedPayload);
     },
   });
 

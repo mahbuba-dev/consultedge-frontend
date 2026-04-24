@@ -11,7 +11,7 @@ import type {
 } from "../types/expert.types";
 
 const EXPERT_SCHEDULE_BASE = "/expert-schedules";
-const SCHEDULE_CATALOG_ENDPOINTS = ["/schedules", "/schedule"] as const;
+const SCHEDULE_CATALOG_ENDPOINTS = ["/schedules"] as const;
 
 const toArray = (value: unknown, nestedKeys: string[] = []): any[] => {
   if (Array.isArray(value)) {

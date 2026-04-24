@@ -209,20 +209,17 @@ export function ChatSocketProvider({ children }: { children: React.ReactNode }) 
       return;
     }
 
+    client.setUserId(currentUser.userId);
+
     const handleConnectionStateChange = (nextState: ChatSocketConnectionState) => {
       const previous = previousConnectionStateRef.current;
       previousConnectionStateRef.current = nextState;
       setConnectionState(nextState);
 
-      if (nextState === "connected" && (previous === "reconnecting" || previous === "disconnected")) {
+      // Only announce a successful reconnection after we were previously connected.
+      if (nextState === "connected" && previous === "reconnecting") {
         toast.success("Realtime connected", {
           description: "Live chat updates are active again.",
-        });
-      }
-
-      if (nextState === "reconnecting" && previous !== "reconnecting") {
-        toast.warning("Realtime reconnecting", {
-          description: "Switching to polling fallback until the socket recovers.",
         });
       }
     };
@@ -413,24 +410,45 @@ export function ChatSocketProvider({ children }: { children: React.ReactNode }) 
 
     const handleChatError = (payload: any) => {
       const message = String(payload?.message || "A realtime chat error occurred.");
-      const statusCode = Number(payload?.status ?? payload?.code ?? 0);
+      const statusCode = Number(payload?.status ?? 0);
+      const ablyCode = Number(payload?.code ?? 0);
 
-      if (
-        statusCode === 401 ||
-        /token expired|unauthorized|invalid token/i.test(message)
-      ) {
-        toast.error("Your session expired", {
-          description: "Please log in again to continue realtime chat.",
-        });
+      // Ably channel capability denial (code 40160) reports statusCode 401 but
+      // is NOT a user session problem — it means the realtime token didn't
+      // grant access to the requested channel. Ignore these; the backend owns
+      // fixing the capability. Logging only.
+      const isAblyCapabilityError =
+        ablyCode === 40160 || /denied access based on given capability/i.test(message);
 
-        if (typeof window !== "undefined") {
-          window.location.href = "/login";
+      if (isAblyCapabilityError) {
+        if (process.env.NODE_ENV !== "production") {
+          console.warn("[realtime] capability denied:", message);
         }
-
         return;
       }
 
-      toast.error(message);
+      // Treat as session expiry only when the app's own token endpoint returns
+      // 401, not when Ably returns 401 for channel capability.
+      const isTokenEndpointAuthError =
+        /realtime token request failed \(401\)/i.test(message) ||
+        /token expired|invalid token/i.test(message);
+
+      if (isTokenEndpointAuthError) {
+        // Don't kick the user out — realtime chat can fail for many reasons
+        // (backend /realtime/token not reachable, missing ABLY_API_KEY, etc.)
+        // that are NOT actual session expiry. The HTTP layer will handle real
+        // auth failures on regular API calls.
+        if (process.env.NODE_ENV !== "production") {
+          console.warn("[realtime] token endpoint auth error:", message);
+        }
+        return;
+      }
+
+      // Everything else: stay silent in production (transient reconnect errors
+      // are noisy). Only surface during development.
+      if (process.env.NODE_ENV !== "production") {
+        console.warn("[realtime]", message, { statusCode, ablyCode });
+      }
     };
 
     client.onStateChange(handleConnectionStateChange);

@@ -2,6 +2,10 @@ import { getAllIndustries } from "@/src/services/industry.services";
 import type { IIndustry } from "@/src/types/industry.types";
 import Image from "next/image";
 
+// Render on-demand so build doesn't fail if the backend is unreachable
+// during the Vercel build (e.g. Render cold start).
+export const dynamic = "force-dynamic";
+
 export default async function IndustriesPage() {
   const industriesResponse = await getAllIndustries();
   const industries: IIndustry[] = Array.isArray(industriesResponse?.data)

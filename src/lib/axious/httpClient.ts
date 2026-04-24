@@ -77,54 +77,7 @@
 // // - headers: Default headers for all requests
 // // ---------------------------------------------
 
-const axiousInstance = async () => {
-  let cookieHeader = "";
-  let accessTokenHeader = "";
-
-  if (typeof window === "undefined") {
-    // SSR: use next/headers
-    const serverContext = await getServerRequestContext();
-    if (serverContext) {
-      const { cookieStore, requestHeaders } = serverContext;
-      const accessToken = cookieStore.get("accessToken")?.value;
-      const refreshToken = cookieStore.get("refreshToken")?.value;
-      if (accessToken && refreshToken) {
-        await tryRefreshToken(accessToken, refreshToken, requestHeaders);
-      }
-      if (accessToken) {
-        accessTokenHeader = `Bearer ${accessToken}`;
-      }
-      cookieHeader = cookieStore
-        .getAll()
-        .map((cookie) => `${cookie.name}=${cookie.value}`)
-        .join("; ");
-    }
-  } else {
-    // Client: read from document.cookie
-    const getCookie = (name) => {
-      const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-      return match ? match[2] : undefined;
-    };
-    const accessToken = getCookie("accessToken");
-    if (accessToken) {
-      accessTokenHeader = `Bearer ${accessToken}`;
-    }
-    // Optionally, set cookieHeader if you want to send all cookies (rarely needed on client)
-  }
-
-  const instance = axios.create({
-    baseURL: API_BASE_URL,
-    timeout: 30000,
-    headers: {
-      "Content-Type": "application/json",
-      ...(cookieHeader ? { Cookie: cookieHeader } : {}),
-      ...(accessTokenHeader ? { Authorization: accessTokenHeader } : {}),
-    },
-    withCredentials: true,
-  });
-
-  return instance;
-};
+// (Legacy axiousInstance implementation removed — see working httpClient below.)
 
 
 
@@ -324,6 +277,14 @@ const getServerRequestContext = async (): Promise<ServerRequestContext | null> =
 // ---------------------------------------------
 // Axios Instance Factory (SSR + Client Safe)
 // ---------------------------------------------
+const readCookieFromDocument = (name: string): string | undefined => {
+  if (typeof document === "undefined") return undefined;
+  const match = document.cookie.match(
+    new RegExp("(?:^|; )" + name.replace(/([.$?*|{}()\[\]\\\/\+^])/g, "\\$1") + "=([^;]*)")
+  );
+  return match ? decodeURIComponent(match[1]) : undefined;
+};
+
 const axiosInstance = async () => {
   let cookieHeader = "";
   let accessTokenHeader = "";
@@ -343,6 +304,14 @@ const axiosInstance = async () => {
       .getAll()
       .map((cookie: any) => `${cookie.name}=${cookie.value}`)
       .join("; ");
+  } else if (typeof window !== "undefined") {
+    // Browser: read accessToken from document.cookie so that cross-origin
+    // requests (e.g. Vercel frontend → Render backend) still carry auth even
+    // when SameSite cookie rules would otherwise block them.
+    const accessToken = readCookieFromDocument("accessToken");
+    if (accessToken) {
+      accessTokenHeader = `Bearer ${accessToken}`;
+    }
   }
 
   return axios.create({

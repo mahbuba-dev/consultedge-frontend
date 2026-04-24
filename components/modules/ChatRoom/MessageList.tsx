@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -25,23 +26,30 @@ export default function MessageList({
   onToggleReaction,
 }: MessageListProps) {
   const endRef = useRef<HTMLDivElement | null>(null);
-  const [localMessages, setLocalMessages] = useState(messages);
-
-  useEffect(() => {
-    setLocalMessages(messages);
-  }, [messages]);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [localMessages.length]);
+  }, [messages.length]);
 
   const handleDelete = async (id: string) => {
     if (!roomId) return;
+
+    const queryKey = ["chat-room-messages", roomId];
+    const previous = queryClient.getQueryData<ChatMessage[]>(queryKey) ?? [];
+
+    // Optimistically remove from the query cache so it stays removed even
+    // after subsequent refetches or incoming messages merge into the cache.
+    queryClient.setQueryData<ChatMessage[]>(queryKey, (current = []) =>
+      current.filter((msg) => msg.id !== id),
+    );
+
     try {
       await deleteRoomMessage(roomId, id);
-      setLocalMessages((msgs) => msgs.filter((msg) => msg.id !== id));
       toast.success("Message deleted");
     } catch (err: any) {
+      // Restore the cache on failure.
+      queryClient.setQueryData<ChatMessage[]>(queryKey, previous);
       toast.error(err?.message || "Failed to delete message");
     }
   };
@@ -58,12 +66,12 @@ export default function MessageList({
               <Skeleton className="h-20 w-[75%] rounded-2xl" />
             </div>
           ))
-        ) : localMessages.length === 0 ? (
+        ) : messages.length === 0 ? (
           <div className="rounded-2xl border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
             No messages yet. Start the conversation below.
           </div>
         ) : (
-          localMessages.map((message) => (
+          messages.map((message) => (
             <MessageBubble
               key={message.id}
               message={message}

@@ -6,6 +6,9 @@ import QueryProviders from "@/src/providers/QueryProvider"
 
 import React from "react"
 
+// Dashboard pages depend on auth cookies / live API data — never prerender.
+export const dynamic = "force-dynamic";
+
 const RootDashboardLayout = async ({children} : {children: React.ReactNode}) => {
   return (
     <QueryProviders>

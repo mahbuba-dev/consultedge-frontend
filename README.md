@@ -189,6 +189,137 @@ The application is structured around route groups for different product contexts
 - socket.io-client available in the dependency graph
 - native WebRTC for calls
 
+## System Architecture Diagram
+
+```mermaid
+graph TB
+    subgraph Browser["Browser (Client Device)"]
+        UI["Next.js Frontend\nReact 19 · App Router"]
+    end
+
+    subgraph Frontend_Layers["Frontend Layers"]
+        direction TB
+        Pages["Pages & Route Groups\n(commonLayout · dashboardLayout)"]
+        Components["UI Components\n(shadcn/ui · Radix · Tailwind)"]
+        Hooks["Custom Hooks\n(useRoomMessages · useWebRTCCall\nusePresence · useTyping)"]
+        Providers["Providers\n(QueryProvider · ChatSocketProvider\nThemeProvider)"]
+        Services["Service Layer\n(auth · bookings · chatRoom\nexpertAvailability · testimonials)"]
+        ReactQuery["TanStack React Query\n(server state · caching · optimistic UI)"]
+    end
+
+    subgraph Realtime["Realtime Transport"]
+        WS["WebSocket\n/ws/chat\nHeartbeat · Reconnect · Backoff"]
+        Poll["REST Polling\nFallback 4s interval"]
+    end
+
+    subgraph Backend["Backend API\n(Node.js · Express · TypeScript)"]
+        REST["REST API\n/api/v1/**"]
+        SocketServer["Socket.io Server\nRoom subscriptions · Events"]
+        DB["PostgreSQL\n(Prisma ORM)"]
+        Auth["JWT Auth\nAccess + Refresh tokens"]
+    end
+
+    subgraph External["External Services"]
+        Stripe["Stripe\nPayment processing"]
+        Cloudinary["Cloudinary\nImage hosting"]
+        STUN["Google STUN\nWebRTC peer discovery"]
+    end
+
+    UI --> Pages
+    Pages --> Components
+    Pages --> Hooks
+    Hooks --> Services
+    Hooks --> ReactQuery
+    Services --> ReactQuery
+    UI --> Providers
+    Providers --> WS
+    WS -->|"events: message_new\nmessage_reaction_updated\ntyping · presence"| SocketServer
+    Services -->|"HTTP REST"| REST
+    REST --> DB
+    REST --> Auth
+    SocketServer --> DB
+    WS -.->|"fallback when\ndisconnected"| Poll
+    Poll --> REST
+    Services -->|"payment initiation"| Stripe
+    Services -->|"image uploads"| Cloudinary
+    Hooks -->|"SDP signaling\nover WebSocket"| WS
+    Hooks -->|"ICE negotiation"| STUN
+```
+
+## Feature Flow Diagram
+
+### Consultation Lifecycle
+
+```mermaid
+flowchart TD
+    A([Client visits /experts]) --> B[Browse & filter experts]
+    B --> C[View expert profile]
+    C --> D{Book consultation}
+    D -->|Pay now| E[Initiate Stripe payment]
+    D -->|Pay later| F[Book with UNPAID status]
+    E --> G{Payment result}
+    G -->|Success| H[Consultation CONFIRMED]
+    G -->|Failed / Cancel| I[Payment failed page]
+    F --> H
+    H --> J[Chat room opens\nbetween client and expert]
+    J --> K{Session time arrives}
+    K --> L[Join session modal\nunlocks 2 min before start]
+    L --> M[WebRTC call initiated]
+    M --> N[Active consultation call\nCallPanel · local + remote video]
+    N --> O{Expert ends session}
+    O --> P[Consultation COMPLETED]
+    P --> Q[Review prompt shown to client]
+    Q --> R[Client submits review\nrating + comment]
+    R --> S[Review PENDING moderation]
+    S -->|Admin approves| T[Review APPROVED · visible publicly]
+    S -->|Admin hides| U[Review HIDDEN]
+    T --> V[Expert can reply to review]
+```
+
+### Realtime Chat Flow
+
+```mermaid
+flowchart TD
+    A([User opens chat room]) --> B[ChatSocketProvider\nmounts and connects]
+    B --> C{WebSocket\nconnection state}
+    C -->|connected| D[Subscribe to room\ntoggle_reaction · send via socket]
+    C -->|reconnecting| E[Exponential backoff\n1s → 2s → 4s → 20s max]
+    C -->|disconnected| F[Fallback: REST poll\nevery 4 seconds]
+    E --> C
+    F --> G[getRoomMessages via HTTP]
+
+    D --> H[User types message]
+    H --> I[Optimistic message added\nto cache instantly]
+    I --> J[POST /chat/rooms/:id/messages]
+    J -->|success| K[Confirmed message\nreplaces optimistic]
+    J -->|fail| L[Optimistic rolled back]
+
+    D --> M[User clicks emoji reaction]
+    M --> N[Optimistic reaction\napplied to cache]
+    N -->|socket connected| O[emit toggle_reaction\nroomId · messageId · emoji]
+    N -->|socket down| P[POST /messages/:id/reactions]
+    O --> Q[Server broadcasts\nmessage_reaction_updated]
+    Q --> R[Cache updated with\nserver-confirmed reactions]
+    P -->|fail| S[Reaction rolled back\ntoast error shown]
+```
+
+### Admin Moderation Flow
+
+```mermaid
+flowchart LR
+    A([Expert registers]) --> B[Applies as expert\n/apply-expert]
+    B --> C[Status: PENDING]
+    C --> D[Admin reviews at\nexpert-verification page]
+    D -->|Approves| E[Status: APPROVED\nExpert visible in listings]
+    D -->|Rejects| F[Status: REJECTED\nOptional admin note]
+
+    G([Client submits review]) --> H[Status: PENDING]
+    H --> I[Admin views at\nreviews-management page]
+    I -->|Approves| J[Status: APPROVED\nVisible on expert profile]
+    I -->|Hides| K[Status: HIDDEN\nNot visible publicly]
+    J --> L[Expert can reply\nto approved review]
+```
+
 ## Project Structure
 
 This repository is the frontend application. The codebase is organized around reusable modules, route groups, hooks, providers, and service layers.
@@ -361,4 +492,3 @@ No explicit license is defined in this frontend repository. Add one if the proje
 
 Mahbuba Akter  
 Full-Stack Web Developer  
-Founder and Developer of ConsultEdge

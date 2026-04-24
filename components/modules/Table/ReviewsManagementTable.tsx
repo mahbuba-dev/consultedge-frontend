@@ -1,9 +1,3 @@
-// 
-
-
-
-
-
 "use client";
 
 import { useMemo, useState } from "react";
@@ -15,7 +9,6 @@ import { toast } from "sonner";
 
 import ReviewSummaryCards from "@/components/modules/shared/ReviewSummaryCards";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,11 +20,96 @@ import {
 import type { ITestimonial } from "@/src/types/testimonial.types";
 import Table, { type DataTableFilterValues } from "./Table";
 
-const getReviewerName = (review: ITestimonial) =>
-  review.client?.fullName || review.client?.user?.name || "Verified Client";
+type TestimonialWithFallbacks = ITestimonial & {
+  fullName?: string | null;
+  clientName?: string | null;
+  reviewerName?: string | null;
+  email?: string | null;
+  clientEmail?: string | null;
+  reviewerEmail?: string | null;
+  user?: {
+    email?: string | null;
+    name?: string | null;
+  } | null;
+  consultationStatus?: string | null;
+  sessionStatus?: string | null;
+  bookingStatus?: string | null;
+  consultationDate?: string | null;
+  sessionDate?: string | null;
+  date?: string | null;
+};
 
-const getReviewerEmail = (review: ITestimonial) =>
-  review.client?.email || review.client?.user?.email || "";
+const getReviewerName = (review: ITestimonial) => {
+  const rawReview = review as TestimonialWithFallbacks;
+
+  return (
+    review.client?.fullName ||
+    review.client?.user?.name ||
+    rawReview.clientName ||
+    rawReview.reviewerName ||
+    rawReview.fullName ||
+    rawReview.user?.name ||
+    "Verified Client"
+  );
+};
+
+const getReviewerEmail = (review: ITestimonial) => {
+  const rawReview = review as TestimonialWithFallbacks;
+
+  return (
+    review.client?.email ||
+    review.client?.user?.email ||
+    rawReview.clientEmail ||
+    rawReview.reviewerEmail ||
+    rawReview.email ||
+    rawReview.user?.email ||
+    ""
+  );
+};
+
+const getSessionStatus = (review: ITestimonial) => {
+  const rawReview = review as TestimonialWithFallbacks;
+
+  return (
+    review.consultation?.status ||
+    rawReview.consultationStatus ||
+    rawReview.sessionStatus ||
+    rawReview.bookingStatus ||
+    review.status ||
+    rawReview.moderationStatus ||
+    "PENDING"
+  );
+};
+
+const getSessionDate = (review: ITestimonial) => {
+  const rawReview = review as TestimonialWithFallbacks;
+
+  return (
+    review.consultation?.date ||
+    rawReview.consultationDate ||
+    rawReview.sessionDate ||
+    rawReview.date ||
+    review.createdAt
+  );
+};
+
+const getVisibilityStatus = (review: ITestimonial) => {
+  const rawReview = review as TestimonialWithFallbacks;
+
+  if (review.status) {
+    return review.status;
+  }
+
+  if (rawReview.moderationStatus === "APPROVED" || rawReview.moderationStatus === "HIDDEN") {
+    return rawReview.moderationStatus;
+  }
+
+  if (typeof review.isHidden === "boolean") {
+    return review.isHidden ? "HIDDEN" : "APPROVED";
+  }
+
+  return "PENDING";
+};
 
 const formatDateTime = (value?: string) => {
   if (!value) return "—";
@@ -41,7 +119,7 @@ const formatDateTime = (value?: string) => {
 
 const truncateText = (value?: string | null, maxLength = 120) => {
   if (!value) return "No written feedback provided.";
-  return value.length > maxLength ? `${value.slice(0, maxLength)}…` : value;
+  return value.length > maxLength ? `${value.slice(0, maxLength)}...` : value;
 };
 
 const getErrorMessage = (error: unknown, fallback: string) => {
@@ -105,6 +183,7 @@ const getVisibilityBadge = (status?: string) => {
       </Badge>
     );
   }
+
   if (status === "APPROVED") {
     return (
       <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
@@ -112,6 +191,7 @@ const getVisibilityBadge = (status?: string) => {
       </Badge>
     );
   }
+
   return <Badge variant="secondary">{status || "Unknown"}</Badge>;
 };
 
@@ -124,9 +204,11 @@ const columns: ColumnDef<ITestimonial>[] = [
       const reviewerEmail = getReviewerEmail(review);
 
       return (
-        <div className="space-y-1">
-          <p className="font-medium text-foreground">{getReviewerName(review)}</p>
-          <p className="text-xs text-muted-foreground">{reviewerEmail || "Email unavailable"}</p>
+        <div className="space-y-1 min-w-0">
+          <p className="font-medium text-foreground whitespace-normal wrap-break-word">{getReviewerName(review)}</p>
+          <p className="text-xs text-muted-foreground whitespace-normal break-all">
+            {reviewerEmail || "Email unavailable"}
+          </p>
         </div>
       );
     },
@@ -139,13 +221,13 @@ const columns: ColumnDef<ITestimonial>[] = [
   {
     accessorKey: "status",
     header: "Visibility",
-    cell: ({ row }) => getVisibilityBadge(row.original.status),
+    cell: ({ row }) => getVisibilityBadge(getVisibilityStatus(row.original)),
   },
   {
     accessorKey: "comment",
     header: "Feedback",
     cell: ({ row }) => (
-      <p className="max-w-md text-sm text-muted-foreground">
+      <p className="max-w-xs text-sm text-muted-foreground whitespace-normal wrap-break-word">
         {truncateText(row.original.comment)}
       </p>
     ),
@@ -156,11 +238,9 @@ const columns: ColumnDef<ITestimonial>[] = [
     cell: ({ row }) => {
       const review = row.original;
       return (
-        <div className="space-y-1">
-          <p className="text-sm font-medium text-foreground">
-            {formatDateTime(review.consultation?.date)}
-          </p>
-          {getConsultationStatusBadge(review.consultation?.status)}
+        <div className="space-y-1 min-w-0">
+          <p className="text-sm font-medium text-foreground">{formatDateTime(getSessionDate(review))}</p>
+          {getConsultationStatusBadge(getSessionStatus(review))}
         </div>
       );
     },
@@ -215,11 +295,12 @@ export default function ReviewsManagementTable() {
       const matchesRating =
         !ratingFilter || Number(Math.round(review.rating || 0)) === Number(ratingFilter);
 
+      const visibilityStatus = getVisibilityStatus(review);
       const matchesVisibility =
         !visibilityFilter ||
         (visibilityFilter === "hidden"
-          ? review.status === "HIDDEN"
-          : review.status !== "HIDDEN");
+          ? visibilityStatus === "HIDDEN"
+          : visibilityStatus !== "HIDDEN");
 
       const matchesTimeframe =
         !timeframeFilter ||
@@ -316,6 +397,9 @@ export default function ReviewsManagementTable() {
             <Table
               data={filteredReviews}
               columns={columns}
+              tableClassName="table-fixed w-full"
+              headCellClassName="whitespace-normal wrap-break-word align-top"
+              bodyCellClassName="whitespace-normal wrap-break-word align-top"
               isLoading={isLoading || isFetching}
               emptyMessage={
                 hasActiveFilters
@@ -381,9 +465,10 @@ export default function ReviewsManagementTable() {
                 },
 
                 items: (review) => {
-                  const isHidden = review.status === "HIDDEN";
-                  const isApproved = review.status === "APPROVED";
-                  const isPending = review.status === "PENDING";
+                  const visibilityStatus = getVisibilityStatus(review);
+                  const isHidden = visibilityStatus === "HIDDEN";
+                  const isApproved = visibilityStatus === "APPROVED";
+                  const isPending = visibilityStatus === "PENDING";
 
                   return [
                     ...(isPending || isHidden
@@ -392,7 +477,7 @@ export default function ReviewsManagementTable() {
                             label: "Approve review",
                             onClick: () =>
                               updateStatusMutation.mutate({
-                                testimonialId: review.id!,
+                                testimonialId: review.id,
                                 status: "APPROVED",
                               }),
                             disabled: updateStatusMutation.isPending,
@@ -406,7 +491,7 @@ export default function ReviewsManagementTable() {
                             label: "Hide review",
                             onClick: () =>
                               updateStatusMutation.mutate({
-                                testimonialId: review.id!,
+                                testimonialId: review.id,
                                 status: "HIDDEN",
                               }),
                             disabled: updateStatusMutation.isPending,
@@ -420,7 +505,7 @@ export default function ReviewsManagementTable() {
                             label: "Unhide review",
                             onClick: () =>
                               updateStatusMutation.mutate({
-                                testimonialId: review.id!,
+                                testimonialId: review.id,
                                 status: "APPROVED",
                               }),
                             disabled: updateStatusMutation.isPending,
