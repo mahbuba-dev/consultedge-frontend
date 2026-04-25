@@ -32,7 +32,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { logoutAction } from "@/src/app/(commonLayout)/(authRouteGroup)/logOut/_action";
+import LogoutButton from "@/components/modules/auth/LogoutButton";
 
 interface NavItem {
   label: string;
@@ -196,17 +196,10 @@ const NavbarClient = ({
                   </Tooltip>
 
                   {/* Logout */}
-                  <form action={logoutAction}>
-                    <Button
-                      type="submit"
-                      variant="ghost"
-                      size="sm"
-                      className="h-9 rounded-full border border-slate-200/80 bg-white/80 px-3 text-xs font-medium text-slate-600 backdrop-blur hover:bg-red-50 hover:text-red-600 dark:border-white/10 dark:bg-slate-900/70 dark:text-slate-300 dark:hover:bg-red-950/40 dark:hover:text-red-400"
-                    >
-                      <LogOut className="mr-1.5 size-3.5" />
-                      Log out
-                    </Button>
-                  </form>
+                  <LogoutButton className="inline-flex h-9 items-center justify-center rounded-full border border-slate-200/80 bg-white/80 px-3 text-xs font-medium text-slate-600 backdrop-blur transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-60 dark:border-white/10 dark:bg-slate-900/70 dark:text-slate-300 dark:hover:bg-red-950/40 dark:hover:text-red-400">
+                    <LogOut className="mr-1.5 size-3.5" />
+                    Log out
+                  </LogoutButton>
                 </>
               ) : (
                 <>
@@ -321,15 +314,10 @@ const NavbarClient = ({
                         </Button>
                       </SheetClose>
 
-                      <form action={logoutAction}>
-                        <Button
-                          type="submit"
-                          className="w-full rounded-full bg-linear-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600"
-                        >
-                          <LogOut className="mr-2 size-4" />
-                          Logout
-                        </Button>
-                      </form>
+                      <LogoutButton className="inline-flex h-10 w-full items-center justify-center rounded-full bg-linear-to-r from-blue-600 to-cyan-500 text-sm font-medium text-white transition-colors hover:from-blue-700 hover:to-cyan-600 disabled:opacity-60">
+                        <LogOut className="mr-2 size-4" />
+                        Logout
+                      </LogoutButton>
                     </>
                   ) : (
                     <>

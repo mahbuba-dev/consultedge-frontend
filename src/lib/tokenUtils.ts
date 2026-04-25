@@ -95,18 +95,28 @@ export const setTokenInCookies = async (
     token : string,
     fallbackMaxAgeInSeconds = 60 * 60 * 24 // 1 days
 ) => {
+    // 🧹 Always evict any orphan duplicates of this cookie that were written
+    // previously with different attributes (path / secure / httpOnly).
+    // Without this sweep, the new write only shadows matching variants and
+    // the browser keeps the stale ones forever — which is how two different
+    // users' tokens can co-exist in `Application → Cookies`.
+    await purgeCookieEverywhere(name);
+
+    // If the caller didn't actually have a token (e.g. the backend's email/
+    // password login response omits the BetterAuth `token` field), we MUST
+    // bail out *after* the purge so we don't write a literal "undefined"
+    // string back into the cookie. Skipping the purge would leave the
+    // previous user's session token in place — which is exactly the
+    // "logged in as expert but acts like client" bug.
+    if (!token || typeof token !== "string") {
+        return;
+    }
+
     let maxAgeInSeconds;
 
     if (name !== "better-auth.session_token"){
         maxAgeInSeconds = getTokenSecondsRemaining(token);
     }
-
-    // 🧹 Evict any orphan duplicates of this cookie that were written
-    // previously with different attributes (path / secure / httpOnly).
-    // Without this, the new write only shadows matching variants and the
-    // browser keeps the stale ones forever — which is how two different
-    // users' tokens can co-exist in `Application → Cookies`.
-    await purgeCookieEverywhere(name);
 
     await setCookie(name, token, maxAgeInSeconds || fallbackMaxAgeInSeconds);
 }
