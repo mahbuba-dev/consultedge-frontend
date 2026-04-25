@@ -38,11 +38,15 @@ const getSlotStartDateTime = (slot: IExpertAvailability) => {
   return slot.schedule?.startDateTime ?? rawSlot.startDateTime ?? "";
 };
 
+const stripTimezone = (value: string) =>
+  value.trim().replace(/Z$/i, "").replace(/[+-]\d{2}:?\d{2}$/, "");
+
 const parseDateSafe = (value: string) => {
-  const iso = parseISO(value);
+  const cleaned = stripTimezone(value);
+  const iso = parseISO(cleaned);
   if (!Number.isNaN(iso.getTime())) return iso;
 
-  const fallback = new Date(value);
+  const fallback = new Date(cleaned);
   if (!Number.isNaN(fallback.getTime())) return fallback;
 
   return null;

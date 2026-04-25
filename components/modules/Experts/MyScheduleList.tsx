@@ -48,11 +48,15 @@ const getScheduleEnd = (item: IExpertAvailability, lookup?: Map<string, any>) =>
   );
 };
 
+const stripTimezone = (value: string) =>
+  value.trim().replace(/Z$/i, "").replace(/[+-]\d{2}:?\d{2}$/, "");
+
 const parseDateTimeValue = (value: string) => {
-  let parsed = parseISO(value);
+  const cleaned = stripTimezone(value);
+  let parsed = parseISO(cleaned);
   if (!Number.isNaN(parsed.getTime())) return parsed;
 
-  const fallback = new Date(value);
+  const fallback = new Date(cleaned);
   if (!Number.isNaN(fallback.getTime())) return fallback;
 
   return null;

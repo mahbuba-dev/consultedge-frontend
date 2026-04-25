@@ -24,15 +24,25 @@ const getEndDateTime = (slot: IExpertAvailability) => {
   return slot.schedule?.endDateTime ?? rawSlot.endDateTime ?? null;
 };
 
+// Strip any TZ designator so wall-clock numbers ("20:00") are rendered as-is,
+// regardless of how the backend serializes the value. Without this, a stored
+// "2026-04-24T20:00:00Z" would be shifted into the viewer's local timezone.
+const stripTimezone = (value: string) =>
+  value.trim().replace(/Z$/i, "").replace(/[+-]\d{2}:?\d{2}$/, "");
+
+const parseWallClock = (value: string) => parseISO(stripTimezone(value));
+
 const formatSlotTime = (slot: IExpertAvailability) => {
   const startValue = getStartDateTime(slot);
   if (!startValue) return "Time unavailable";
 
-  const start = parseISO(startValue);
+  const start = parseWallClock(startValue);
   const endValue = getEndDateTime(slot);
-  const end = endValue ? parseISO(endValue) : null;
+  const end = endValue ? parseWallClock(endValue) : null;
 
-  return end
+  if (Number.isNaN(start.getTime())) return "Time unavailable";
+
+  return end && !Number.isNaN(end.getTime())
     ? `${format(start, "h:mm a")} - ${format(end, "h:mm a")}`
     : format(start, "h:mm a");
 };
