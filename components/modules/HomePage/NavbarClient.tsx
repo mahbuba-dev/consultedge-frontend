@@ -226,9 +226,9 @@ const NavbarClient = ({
                   <Button
                     asChild
                     size="sm"
-                    className="rounded-full bg-linear-to-r from-blue-600 to-cyan-500 px-4 text-xs font-semibold hover:from-blue-700 hover:to-cyan-600"
+                    className="rounded-full bg-linear-to-r from-blue-600 to-cyan-500 px-4 text-xs font-semibold text-white hover:from-blue-700 hover:to-cyan-600"
                   >
-                    <Link href="/register">
+                    <Link href="/register" className="text-white">
                       Get Started
                       <ArrowRight className="ml-1.5 size-3.5" />
                     </Link>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,7 +27,17 @@ export default function IndustryTicker({ industries }: IndustryTickerProps) {
             Start with the industries clients search most often, then move into expert profiles built for strategy, growth, operations, and decision support.
           </p>
         </div>
-  
+
+        <Button
+          asChild
+          variant="outline"
+          className="h-11 w-full rounded-full border-blue-200 bg-white/80 px-5 text-sm font-medium text-slate-900 shadow-sm hover:bg-blue-50 sm:w-auto dark:border-white/15 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
+        >
+          <Link href="/industries">
+            All industries
+            <ArrowRight className="ml-2 size-4" />
+          </Link>
+        </Button>
       </div>
 
       {tickerItems.length > 0 ? (

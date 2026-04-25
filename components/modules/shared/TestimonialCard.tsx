@@ -58,16 +58,16 @@ const TestimonialCard = ({ testimonial, compact = false }: TestimonialCardProps)
         </p>
 
         {testimonial.expertReply ? (
-          <div className="rounded-2xl border border-blue-200/70 bg-blue-50/70 p-3 dark:border-blue-500/20 dark:bg-blue-500/10">
+          <div className="rounded-2xl border border-blue-200/70 bg-blue-50/70 p-3 dark:border-cyan-400/25 dark:bg-cyan-500/10">
             <div className="flex items-center justify-between gap-2">
-              <p className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-blue-700">
+              <p className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-blue-700 dark:text-cyan-200">
                 <MessageSquareReply className="size-3.5" />
                 Expert reply
               </p>
-              {replyDate ? <span className="text-xs text-muted-foreground">{replyDate}</span> : null}
+              {replyDate ? <span className="text-xs text-muted-foreground dark:text-slate-400">{replyDate}</span> : null}
             </div>
 
-            <p className="mt-2 text-sm leading-6 text-foreground/90">{testimonial.expertReply}</p>
+            <p className="mt-2 text-sm leading-6 text-foreground/90 dark:text-slate-100">{testimonial.expertReply}</p>
           </div>
         ) : null}
 

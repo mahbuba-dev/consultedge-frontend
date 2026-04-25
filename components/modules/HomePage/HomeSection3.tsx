@@ -136,14 +136,14 @@ export default function HomeSection3() {
   <Link
     href={option.href}
     className={cn(
-      "inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-lg border border-transparent px-2.5 text-sm font-medium whitespace-nowrap transition-all outline-none",
+      "group inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-full px-4 text-sm font-semibold whitespace-nowrap transition-all outline-none",
       option.featured
-        ? "bg-blue-600 text-white hover:bg-blue-700"
-        : "bg-slate-900 text-white hover:bg-slate-800",
+        ? "bg-linear-to-r from-blue-600 to-cyan-500 text-white shadow-[0_10px_30px_-12px_rgba(34,211,238,0.55)] hover:from-blue-700 hover:to-cyan-600"
+        : "border border-blue-200 bg-white text-slate-900 hover:border-cyan-300 hover:bg-cyan-50 dark:border-white/15 dark:bg-white/5 dark:text-white dark:hover:border-cyan-400/40 dark:hover:bg-white/10",
     )}
   >
       {option.cta}
-      <ArrowRight className="ml-2 size-4" />
+      <ArrowRight className="ml-1 size-4 transition-transform group-hover:translate-x-0.5" />
     </Link>
 </div>
  
@@ -215,46 +215,6 @@ export default function HomeSection3() {
             </AccordionItem>
           ))}
         </Accordion>
-      </section>
-
-      <section className="relative  rounded-[2.25rem] border border-slate-900 bg-linear-to-r from-slate-950 via-blue-950 to-cyan-950 p-6 text-white shadow-xl md:p-10">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.08),transparent_35%)]" />
-
-        <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-          <div className="space-y-3">
-            <Badge className="border-white/15 bg-white/10 text-white hover:bg-white/10">
-              Start today
-            </Badge>
-            <h2 className="text-2xl font-bold tracking-tight md:text-3xl">
-              Ready to turn expert insight into momentum?
-            </h2>
-            <p className="max-w-2xl text-slate-200">
-              Join a platform designed to connect insight seekers with the right industry experts through a fast,
-              modern, and more confident consultation experience.
-            </p>
-
-            <div className="flex flex-wrap gap-2 text-xs font-medium text-slate-100">
-              <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1">Expert discovery</span>
-              <span className="rounded-full border border-white/15 bg-white/10 px-4 py-1">Secure booking</span>
-              <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1">Smart dashboards</span>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-3">
-            <Link
-              href="/register"
-              className="inline-flex h-8 items-center justify-center rounded-lg border border-transparent bg-white px-2.5 text-sm font-medium text-slate-900 transition-all hover:bg-white/90"
-            >
-              Get started
-            </Link>
-            <Link
-              href="/contact"
-              className="inline-flex h-8 items-center justify-center rounded-lg border border-white/30 bg-transparent px-2.5 text-sm font-medium text-white transition-all hover:bg-white/10 hover:text-white"
-            >
-              Contact us
-            </Link>
-          </div>
-        </div>
       </section>
     </>
   );

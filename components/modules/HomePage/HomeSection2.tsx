@@ -22,37 +22,37 @@ const audiences = [
     title: "Entrepreneurs",
     description: "Turn bold ideas into executable strategies with guidance from proven business leaders.",
     icon: Lightbulb,
-    accent: "text-blue-600 bg-blue-50 dark:bg-blue-950/50",
+    accent: "text-blue-600 bg-blue-50 dark:bg-blue-500/15 dark:text-blue-300",
   },
   {
     title: "Small Business Owners",
     description: "Get practical, actionable advice on operations, growth, and scaling your business.",
     icon: Building2,
-    accent: "text-sky-600 bg-sky-50 dark:bg-sky-950/50",
+    accent: "text-sky-600 bg-sky-50 dark:bg-sky-500/15 dark:text-sky-300",
   },
   {
     title: "Startup Founders",
     description: "Move faster with investor-ready insights, product strategy, and go-to-market expertise.",
     icon: Rocket,
-    accent: "text-cyan-600 bg-cyan-50 dark:bg-cyan-950/50",
+    accent: "text-cyan-600 bg-cyan-50 dark:bg-cyan-500/15 dark:text-cyan-300",
   },
   {
     title: "Students & Career Seekers",
     description: "Get mentorship on internships, career pivots, and navigating competitive industries.",
     icon: BookOpen,
-    accent: "text-indigo-600 bg-indigo-50 dark:bg-indigo-950/50",
+    accent: "text-indigo-600 bg-indigo-50 dark:bg-indigo-500/15 dark:text-indigo-300",
   },
   {
     title: "Working Professionals",
     description: "Access senior experts for quick, high-value answers to complex professional challenges.",
     icon: Briefcase,
-    accent: "text-blue-700 bg-blue-50 dark:bg-blue-950/50",
+    accent: "text-blue-700 bg-blue-50 dark:bg-blue-500/15 dark:text-blue-300",
   },
   {
     title: "Anyone Seeking Expertise",
     description: "Whatever your question, find a verified professional who can answer it with clarity.",
     icon: Zap,
-    accent: "text-sky-700 bg-sky-50 dark:bg-sky-950/50",
+    accent: "text-sky-700 bg-sky-50 dark:bg-sky-500/15 dark:text-sky-300",
   },
 ];
 

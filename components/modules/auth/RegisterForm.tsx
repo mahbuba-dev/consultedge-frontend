@@ -98,15 +98,23 @@ const RegisterForm = ({ redirectPath }: RegisterFormProps) => {
   });
 
   return (
-    <Card className="w-full max-w-md mx-auto shadow-md">
-      <CardHeader className="text-center">
+    <Card className="relative w-full max-w-md mx-auto overflow-hidden rounded-3xl border border-white/40 bg-white/55 shadow-[0_30px_80px_-30px_rgba(15,23,42,0.45)] backdrop-blur-2xl backdrop-saturate-150 dark:border-white/10 dark:bg-slate-950/55">
+      <div
+        aria-hidden
+        className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-blue-600 via-cyan-500 to-teal-400"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 rounded-3xl bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.55),transparent_55%)] opacity-70 mix-blend-overlay dark:opacity-20"
+      />
+      <CardHeader className="relative text-center">
         <CardTitle className="text-2xl font-bold">Create an Account</CardTitle>
         <CardDescription>
           Fill in your details to create your account.
         </CardDescription>
       </CardHeader>
 
-      <CardContent>
+      <CardContent className="relative">
         <form
           method="POST"
           noValidate
@@ -200,10 +208,10 @@ const RegisterForm = ({ redirectPath }: RegisterFormProps) => {
         {/* Divider */}
         <div className="relative my-6">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300"></div>
+            <div className="w-full border-t border-slate-200/70 dark:border-white/10"></div>
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">
+            <span className="rounded-full border border-white/40 bg-white/60 px-3 py-0.5 text-xs font-medium text-muted-foreground backdrop-blur dark:border-white/10 dark:bg-slate-950/60">
               Or continue with
             </span>
           </div>
@@ -212,7 +220,7 @@ const RegisterForm = ({ redirectPath }: RegisterFormProps) => {
         {/* Google Signup */}
         <Button
           variant="outline"
-          className="w-full"
+          className="w-full rounded-full border-slate-200 bg-white/70 backdrop-blur hover:bg-white dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
           type="button"
           onClick={handleGoogleAuth}
         >
@@ -238,7 +246,7 @@ const RegisterForm = ({ redirectPath }: RegisterFormProps) => {
         </Button>
       </CardContent>
 
-      <CardFooter className="justify-center border-t pt-4">
+      <CardFooter className="relative justify-center border-t border-white/40 pt-4 dark:border-white/10">
         <p className="text-sm text-muted-foreground">
           Already have an account?{" "}
           <Link
