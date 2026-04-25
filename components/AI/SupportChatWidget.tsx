@@ -71,7 +71,13 @@ export default function SupportChatWidget() {
   };
 
   return (
-    <div className="fixed bottom-4 right-4 z-70 flex max-w-[calc(100vw-1rem)] flex-col items-end gap-3 sm:bottom-5 sm:right-5">
+    // The outer container is sized by its tallest child (the always-rendered
+    // 78vh chat panel), so it ends up covering the whole bottom-right of the
+    // viewport. We MUST mark it `pointer-events-none` here, otherwise it
+    // silently blocks clicks on every CTA in that area (Browse experts,
+    // Get started, Contact us, footer links, Book now, etc.). Each
+    // interactive child re-enables pointer events on itself below.
+    <div className="pointer-events-none fixed bottom-4 right-4 z-70 flex max-w-[calc(100vw-1rem)] flex-col items-end gap-3 sm:bottom-5 sm:right-5">
       <div
         className={cn(
           "origin-bottom-right transition-all duration-300 ease-out",
@@ -264,7 +270,7 @@ export default function SupportChatWidget() {
         <button
           type="button"
           onClick={() => { setShowGreeting(false); setIsOpen(true); }}
-          className="animate-in fade-in slide-in-from-bottom-2 duration-300 flex items-start gap-2.5 rounded-2xl border border-blue-200/80 bg-white px-4 py-3 text-sm text-slate-700 shadow-[0_8px_32px_-8px_rgba(37,99,235,0.35)] backdrop-blur-sm transition hover:border-blue-300 hover:shadow-[0_8px_32px_-4px_rgba(37,99,235,0.45)] dark:border-white/10 dark:bg-slate-900 dark:text-slate-200"
+          className="pointer-events-auto animate-in fade-in slide-in-from-bottom-2 duration-300 flex items-start gap-2.5 rounded-2xl border border-blue-200/80 bg-white px-4 py-3 text-sm text-slate-700 shadow-[0_8px_32px_-8px_rgba(37,99,235,0.35)] backdrop-blur-sm transition hover:border-blue-300 hover:shadow-[0_8px_32px_-4px_rgba(37,99,235,0.45)] dark:border-white/10 dark:bg-slate-900 dark:text-slate-200"
         >
           <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-blue-600 to-cyan-500">
             <Bot className="size-3.5 text-white" />
@@ -290,7 +296,7 @@ export default function SupportChatWidget() {
       <Button
         type="button"
         onClick={() => { setShowGreeting(false); setIsOpen((current) => !current); }}
-        className="h-12 rounded-full bg-linear-to-r from-blue-600 via-cyan-500 to-sky-500 px-4 text-white shadow-[0_16px_40px_-16px_rgba(37,99,235,0.7)] transition hover:scale-[1.02] hover:opacity-95"
+        className="pointer-events-auto h-12 rounded-full bg-linear-to-r from-blue-600 via-cyan-500 to-sky-500 px-4 text-white shadow-[0_16px_40px_-16px_rgba(37,99,235,0.7)] transition hover:scale-[1.02] hover:opacity-95"
       >
         <MessageCircleMore className="mr-2 size-5" />
         {isOpen ? "Close" : "Ask AI"}
