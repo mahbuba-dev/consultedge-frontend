@@ -13,22 +13,47 @@ export default async function IndustriesPage() {
     : [];
 
   return (
-    <main className="min-h-screen bg-linear-to-b from-white to-gray-50 py-12 px-4 md:px-12">
+    <main className="relative min-h-screen overflow-hidden py-12 px-4 md:px-12">
+      {/* Decorative background — works in both themes */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-176 bg-[radial-gradient(circle_at_15%_15%,rgba(37,99,235,0.18),transparent_45%),radial-gradient(circle_at_85%_25%,rgba(34,211,238,0.18),transparent_45%)]"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10 bg-linear-to-b from-white via-blue-50/40 to-cyan-50/30 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900"
+      />
+
       <section className="max-w-6xl mx-auto">
-        <h1 className="text-4xl md:text-5xl font-bold text-center mb-8 text-gray-900">
-          Explore All Industries
-        </h1>
-        <p className="text-center text-lg text-gray-600 mb-12">
-          Discover a wide range of industries and find the right experts for your needs.
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+        <div className="mx-auto mb-12 max-w-2xl text-center">
+          <span className="mb-4 inline-flex items-center gap-2 rounded-full border border-blue-200/70 bg-white/70 px-3 py-1 text-xs font-medium text-blue-700 backdrop-blur dark:border-white/10 dark:bg-white/5 dark:text-cyan-200">
+            Industries
+          </span>
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground">
+            Explore All{" "}
+            <span className="bg-linear-to-r from-blue-600 via-cyan-500 to-teal-400 bg-clip-text text-transparent">
+              Industries
+            </span>
+          </h1>
+          <p className="mt-4 text-lg text-muted-foreground">
+            Discover a wide range of industries and find the right experts for your needs.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {industries.map((industry) => (
             <div
               key={industry.id}
-              className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 p-6 flex flex-col items-center text-center border border-gray-100 group"
+              className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-[0_18px_45px_-30px_rgba(15,23,42,0.25)] transition duration-300 hover:-translate-y-1 hover:border-cyan-300 hover:shadow-[0_28px_70px_-26px_rgba(34,211,238,0.45)] dark:border-white/10 dark:bg-slate-900/70 dark:backdrop-blur-xl dark:hover:border-cyan-400/40 dark:hover:bg-slate-900/90"
             >
+              {/* Top accent bar */}
+              <div
+                aria-hidden
+                className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-blue-500 via-cyan-400 to-teal-400 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+              />
+
               {industry.icon && (
-                <div className="w-20 h-20 mb-4 flex items-center justify-center rounded-full bg-gray-50 group-hover:bg-blue-50 transition-colors">
+                <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-linear-to-br from-blue-50 to-cyan-50 ring-1 ring-blue-100/70 transition-colors group-hover:from-blue-100 group-hover:to-cyan-100 dark:from-blue-500/10 dark:to-cyan-500/10 dark:ring-white/10 dark:group-hover:from-blue-500/20 dark:group-hover:to-cyan-500/20">
                   <Image
                     src={industry.icon}
                     alt={industry.name}
@@ -38,13 +63,12 @@ export default async function IndustriesPage() {
                   />
                 </div>
               )}
-              <h2 className="text-xl font-semibold text-gray-800 mb-2 group-hover:text-blue-600 transition-colors">
+              <h2 className="mb-2 text-xl font-semibold text-foreground transition-colors group-hover:text-blue-600 dark:group-hover:text-cyan-300">
                 {industry.name}
               </h2>
-              <p className="text-gray-500 text-sm mb-4 line-clamp-3 min-h-15">
+              <p className="line-clamp-3 min-h-15 text-sm text-muted-foreground">
                 {industry.description}
               </p>
-              
             </div>
           ))}
         </div>

@@ -141,13 +141,17 @@ export default function PaymentSuccessContent() {
 
   return (
     <div className="space-y-6">
-      <Card className="border-emerald-200/70 bg-linear-to-r from-emerald-50 via-white to-cyan-50 shadow-sm">
-        <CardHeader>
-          <Badge className="mb-2 w-fit bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
+      <Card className="relative overflow-hidden border-emerald-200/70 bg-linear-to-r from-emerald-50 via-white to-cyan-50 shadow-sm dark:border-emerald-500/20 dark:from-slate-900 dark:via-slate-900/80 dark:to-slate-950">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 hidden bg-[radial-gradient(circle_at_top_right,rgba(16,185,129,0.18),transparent_55%),radial-gradient(circle_at_bottom_left,rgba(34,211,238,0.16),transparent_55%)] dark:block"
+        />
+        <CardHeader className="relative">
+          <Badge className="mb-2 w-fit border-emerald-200/60 bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-400/30 dark:bg-emerald-500/15 dark:text-emerald-200 dark:hover:bg-emerald-500/15">
             <Sparkles className="mr-1 size-3.5" />
             Consultation payment
           </Badge>
-          <CardTitle className="text-2xl">Payment completed</CardTitle>
+          <CardTitle className="text-2xl text-foreground">Payment completed</CardTitle>
           <CardDescription>
             {hasRedirectData
               ? "Your booking and payment details are being refreshed from the backend now."
@@ -194,8 +198,8 @@ export default function PaymentSuccessContent() {
             </div>
           ) : selectedConsultation ? (
             <div className="grid gap-3 md:grid-cols-3">
-              <div className="rounded-2xl border bg-blue-50/70 p-4">
-                <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">
+              <div className="rounded-2xl border border-blue-200/60 bg-blue-50/70 p-4 dark:border-blue-500/20 dark:bg-blue-500/10">
+                <p className="text-xs font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-300">
                   Expert
                 </p>
                 <p className="mt-2 text-sm font-semibold text-foreground">
@@ -206,8 +210,8 @@ export default function PaymentSuccessContent() {
                 </p>
               </div>
 
-              <div className="rounded-2xl border bg-cyan-50/70 p-4">
-                <p className="text-xs font-semibold uppercase tracking-wide text-cyan-700">
+              <div className="rounded-2xl border border-cyan-200/60 bg-cyan-50/70 p-4 dark:border-cyan-500/20 dark:bg-cyan-500/10">
+                <p className="text-xs font-semibold uppercase tracking-wide text-cyan-700 dark:text-cyan-300">
                   Consultation status
                 </p>
                 <p className="mt-2 text-sm font-semibold text-foreground">
@@ -218,8 +222,8 @@ export default function PaymentSuccessContent() {
                 </p>
               </div>
 
-              <div className="rounded-2xl border bg-emerald-50/70 p-4">
-                <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">
+              <div className="rounded-2xl border border-emerald-200/60 bg-emerald-50/70 p-4 dark:border-emerald-500/20 dark:bg-emerald-500/10">
+                <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
                   Amount paid
                 </p>
                 <p className="mt-2 text-sm font-semibold text-foreground">

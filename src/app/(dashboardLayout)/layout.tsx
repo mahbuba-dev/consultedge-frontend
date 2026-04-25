@@ -22,7 +22,7 @@ const RootDashboardLayout = async ({children} : {children: React.ReactNode}) => 
                 <DashboardSidebar />
 
                 {/* Dashboard Content */}
-                <main className="flex-1 overflow-y-auto bg-muted/10 p-4 md:p-6">
+                <main className="flex-1 overflow-y-auto bg-linear-to-b from-slate-50 via-white to-blue-50/30 p-4 md:p-6 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900">
                     <div>
                         {children}
                     </div>
