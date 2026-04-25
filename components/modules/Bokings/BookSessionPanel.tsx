@@ -157,8 +157,8 @@ export default function BookSessionPanel({
 
         <CardContent className="grid gap-4 md:grid-cols-2">
           {/* NEXT SLOT */}
-          <div className="rounded-2xl border bg-blue-50/70 p-4">
-            <div className="mb-2 flex items-center gap-2 text-blue-700">
+          <div className="rounded-2xl border bg-blue-50/70 p-4 dark:border-blue-500/20 dark:bg-blue-500/10">
+            <div className="mb-2 flex items-center gap-2 text-blue-700 dark:text-blue-300">
               <CalendarDays className="size-4" />
               <span className="text-xs font-semibold uppercase">
                 Next available
@@ -179,8 +179,8 @@ export default function BookSessionPanel({
           </div>
 
           {/* ACCESS */}
-          <div className="rounded-2xl border bg-cyan-50/70 p-4">
-            <div className="mb-2 flex items-center gap-2 text-cyan-700">
+          <div className="rounded-2xl border bg-cyan-50/70 p-4 dark:border-cyan-500/20 dark:bg-cyan-500/10">
+            <div className="mb-2 flex items-center gap-2 text-cyan-700 dark:text-cyan-300">
               <LockKeyhole className="size-4" />
               <span className="text-xs font-semibold uppercase">
                 Access
@@ -203,7 +203,7 @@ export default function BookSessionPanel({
           <div ref={bookingPanelRef} className="w-full px-4">
             <Card
               id="booking-calendar-panel"
-              className="mx-auto mt-20 w-full max-w-3xl rounded-xl bg-white p-6 shadow-xl"
+              className="mx-auto mt-20 w-full max-w-3xl rounded-xl bg-white p-6 shadow-xl dark:bg-slate-900 dark:border-white/10"
             >
               <Button
                 variant="outline"

@@ -238,9 +238,9 @@ export default function ExpertDetails({
       </section>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Card className="border-blue-200/70 bg-linear-to-br from-blue-50 to-white shadow-sm">
+        <Card className="border-blue-200/70 bg-linear-to-br from-blue-50 to-white shadow-sm dark:border-blue-500/20 dark:from-blue-500/10 dark:to-slate-900/80">
           <CardContent className="flex items-center gap-3 p-5">
-            <div className="rounded-full bg-blue-100 p-2 text-blue-700">
+            <div className="rounded-full bg-blue-100 p-2 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300">
               <BriefcaseBusiness className="size-5" />
             </div>
             <div>
@@ -250,9 +250,9 @@ export default function ExpertDetails({
           </CardContent>
         </Card>
 
-        <Card className="border-sky-200/70 bg-linear-to-br from-sky-50 to-white shadow-sm">
+        <Card className="border-sky-200/70 bg-linear-to-br from-sky-50 to-white shadow-sm dark:border-sky-500/20 dark:from-sky-500/10 dark:to-slate-900/80">
           <CardContent className="flex items-center gap-3 p-5">
-            <div className="rounded-full bg-sky-100 p-2 text-sky-700">
+            <div className="rounded-full bg-sky-100 p-2 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300">
               <Star className="size-5" />
             </div>
             <div>
@@ -262,9 +262,9 @@ export default function ExpertDetails({
           </CardContent>
         </Card>
 
-        <Card className="border-emerald-200/70 bg-linear-to-br from-emerald-50 to-white shadow-sm">
+        <Card className="border-emerald-200/70 bg-linear-to-br from-emerald-50 to-white shadow-sm dark:border-emerald-500/20 dark:from-emerald-500/10 dark:to-slate-900/80">
           <CardContent className="flex items-center gap-3 p-5">
-            <div className="rounded-full bg-emerald-100 p-2 text-emerald-700">
+            <div className="rounded-full bg-emerald-100 p-2 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
               <TrendingUp className="size-5" />
             </div>
             <div>
@@ -274,9 +274,9 @@ export default function ExpertDetails({
           </CardContent>
         </Card>
 
-        <Card className="border-cyan-200/70 bg-linear-to-br from-cyan-50 to-white shadow-sm">
+        <Card className="border-cyan-200/70 bg-linear-to-br from-cyan-50 to-white shadow-sm dark:border-cyan-500/20 dark:from-cyan-500/10 dark:to-slate-900/80">
           <CardContent className="flex items-center gap-3 p-5">
-            <div className="rounded-full bg-cyan-100 p-2 text-cyan-700">
+            <div className="rounded-full bg-cyan-100 p-2 text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-300">
               <ShieldCheck className="size-5" />
             </div>
             <div>
@@ -301,15 +301,15 @@ export default function ExpertDetails({
             </p>
 
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-2xl border bg-blue-50/50 p-4">
-                <p className="text-xs uppercase tracking-wide text-blue-700">Best fit for</p>
+              <div className="rounded-2xl border bg-blue-50/50 p-4 dark:border-blue-500/20 dark:bg-blue-500/10">
+                <p className="text-xs uppercase tracking-wide text-blue-700 dark:text-blue-300">Best fit for</p>
                 <p className="mt-1 font-medium text-foreground">
                   {expert.industry?.name || "Business and strategy"} planning, decisions, and growth conversations
                 </p>
               </div>
 
-              <div className="rounded-2xl border bg-cyan-50/50 p-4">
-                <p className="text-xs uppercase tracking-wide text-cyan-700">Clients can expect</p>
+              <div className="rounded-2xl border bg-cyan-50/50 p-4 dark:border-cyan-500/20 dark:bg-cyan-500/10">
+                <p className="text-xs uppercase tracking-wide text-cyan-700 dark:text-cyan-300">Clients can expect</p>
                 <p className="mt-1 font-medium text-foreground">
                   Focused 1:1 guidance, clear next steps, and a smooth booking flow
                 </p>
@@ -324,7 +324,7 @@ export default function ExpertDetails({
             <CardDescription>A modern snapshot to help clients decide faster.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="rounded-2xl border bg-muted/30 p-4">
+            <div className="rounded-2xl border bg-muted/30 p-4 dark:border-white/10 dark:bg-white/5">
               <p className="text-xs uppercase tracking-wide text-muted-foreground">Industry</p>
               <p className="mt-1 font-medium text-foreground">
                 {expert.industry?.name || "General consulting"}
@@ -334,7 +334,7 @@ export default function ExpertDetails({
               ) : null}
             </div>
 
-            <div className="rounded-2xl border bg-muted/30 p-4">
+            <div className="rounded-2xl border bg-muted/30 p-4 dark:border-white/10 dark:bg-white/5">
               <p className="text-xs uppercase tracking-wide text-muted-foreground">Contact</p>
               <p className="mt-1 font-medium text-foreground break-all">{expert.email}</p>
               <p className="text-sm text-muted-foreground">{expert.phone || "Phone not provided"}</p>
@@ -347,7 +347,7 @@ export default function ExpertDetails({
 
       <section className="space-y-4">
         <div>
-          <Badge variant="secondary" className="mb-2 bg-cyan-100 text-cyan-700">
+          <Badge variant="secondary" className="mb-2 bg-cyan-100 text-cyan-700 dark:bg-cyan-500/15 dark:text-cyan-200">
             Book a session
           </Badge>
           <h2 className="text-2xl font-bold tracking-tight">Live availability & booking</h2>
@@ -370,7 +370,7 @@ export default function ExpertDetails({
 
       <section className="space-y-4">
         <div>
-          <Badge variant="secondary" className="mb-2 bg-blue-100 text-blue-700">
+          <Badge variant="secondary" className="mb-2 bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-200">
             Reviews
           </Badge>
           <h2 className="text-2xl font-bold tracking-tight">Client feedback</h2>

@@ -53,8 +53,8 @@ export default function ChatRoomListItem({
       className={cn(
         "flex w-full items-start gap-3 rounded-2xl border px-3 py-3 text-left transition-all duration-200",
         isActive
-          ? "border-blue-300 bg-blue-50 shadow-sm"
-          : "border-transparent bg-transparent hover:border-blue-200 hover:bg-blue-50/60",
+          ? "border-blue-300 bg-blue-50 shadow-sm dark:border-cyan-400/40 dark:bg-cyan-500/10"
+          : "border-transparent bg-transparent hover:border-blue-200 hover:bg-blue-50/60 dark:hover:border-white/10 dark:hover:bg-white/5",
       )}
     >
       <Avatar className="size-10 border bg-background">

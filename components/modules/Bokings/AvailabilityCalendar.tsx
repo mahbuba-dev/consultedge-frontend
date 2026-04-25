@@ -214,9 +214,9 @@ export default function AvailabilityCalendar({
 
   return (
     <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-      <Card className="border-blue-200/70 shadow-lg shadow-blue-500/5" id="availability-calendar">
+      <Card className="border-blue-200/70 shadow-lg shadow-blue-500/5 dark:border-white/10" id="availability-calendar">
         <CardHeader>
-          <Badge className="w-fit bg-blue-100 text-blue-700 hover:bg-blue-100">
+          <Badge className="w-fit bg-blue-100 text-blue-700 hover:bg-blue-100 dark:bg-blue-500/15 dark:text-blue-200 dark:hover:bg-blue-500/15">
             <Sparkles className="mr-1 size-3.5" />
             Availability Calendar
           </Badge>
@@ -229,7 +229,7 @@ export default function AvailabilityCalendar({
         <CardContent className="space-y-6">
           {sortedAvailability.length > 0 ? (
             <>
-              <div className="rounded-3xl border bg-linear-to-br from-blue-50 via-white to-cyan-50 p-3">
+              <div className="rounded-3xl border bg-linear-to-br from-blue-50 via-white to-cyan-50 p-3 dark:border-white/10 dark:from-blue-500/10 dark:via-slate-900/60 dark:to-cyan-500/10">
                 <Calendar
                   mode="single"
                   selected={selectedDate}
@@ -256,7 +256,7 @@ export default function AvailabilityCalendar({
                   </div>
 
                   {nextAvailableSlot && getSlotStartDateTime(nextAvailableSlot) ? (
-                    <div className="max-w-full rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 wrap-break-word">
+                    <div className="max-w-full rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 wrap-break-word dark:border-emerald-500/30 dark:bg-emerald-500/15 dark:text-emerald-200">
                       Next open: {format(parseDateSafe(getSlotStartDateTime(nextAvailableSlot)) as Date, "MMM d, h:mm a")}
                     </div>
                   ) : null}
@@ -281,8 +281,8 @@ export default function AvailabilityCalendar({
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-2xl border bg-blue-50/60 p-4">
-                  <div className="mb-1 flex items-center gap-2 text-blue-700">
+                <div className="rounded-2xl border bg-blue-50/60 p-4 dark:border-blue-500/20 dark:bg-blue-500/10">
+                  <div className="mb-1 flex items-center gap-2 text-blue-700 dark:text-blue-300">
                     <CalendarDays className="size-4" />
                     <span className="text-xs font-semibold uppercase tracking-wide">
                       Flexible booking
@@ -293,8 +293,8 @@ export default function AvailabilityCalendar({
                   </p>
                 </div>
 
-                <div className="rounded-2xl border bg-sky-50/60 p-4">
-                  <div className="mb-1 flex items-center gap-2 text-sky-700">
+                <div className="rounded-2xl border bg-sky-50/60 p-4 dark:border-sky-500/20 dark:bg-sky-500/10">
+                  <div className="mb-1 flex items-center gap-2 text-sky-700 dark:text-sky-300">
                     <Clock3 className="size-4" />
                     <span className="text-xs font-semibold uppercase tracking-wide">
                       Quick confirmation
@@ -307,7 +307,7 @@ export default function AvailabilityCalendar({
               </div>
             </>
           ) : (
-            <div className="rounded-3xl border border-dashed bg-muted/20 px-5 py-10 text-center">
+            <div className="rounded-3xl border border-dashed bg-muted/20 px-5 py-10 text-center dark:border-white/10 dark:bg-white/5">
               <p className="text-lg font-semibold text-foreground">No availability yet</p>
               <p className="mt-2 text-sm text-muted-foreground">
                 Once this expert adds open time slots, they will appear here for booking.

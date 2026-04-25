@@ -62,13 +62,13 @@ export default function MessageBubble({
               className={cn(
                 "space-y-2 rounded-2xl border px-4 py-3 shadow-sm relative cursor-pointer",
                 isOwnMessage
-                  ? "border-blue-500 bg-blue-600 text-white"
-                  : "border-border/60 bg-background",
+                  ? "border-blue-500 bg-linear-to-br from-blue-600 to-cyan-500 text-white"
+                  : "border-border/60 bg-background dark:border-white/10 dark:bg-slate-900/70",
               )}
               onClick={() => setPopoverOpen(true)}
             >
               {!isOwnMessage ? (
-                <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">
+                <p className="text-xs font-semibold uppercase tracking-wide text-blue-700 dark:text-cyan-300">
                   {getParticipantDisplayName(message.sender)}
                 </p>
               ) : null}
@@ -116,8 +116,8 @@ export default function MessageBubble({
                   className={cn(
                     "inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-60",
                     hasCurrentUserReaction(reaction)
-                      ? "border-blue-300 bg-blue-50 text-blue-700"
-                      : "border-border/60 bg-background text-foreground hover:border-blue-200 hover:bg-blue-50/60",
+                      ? "border-blue-300 bg-blue-50 text-blue-700 dark:border-cyan-400/40 dark:bg-cyan-500/15 dark:text-cyan-200"
+                      : "border-border/60 bg-background text-foreground hover:border-blue-200 hover:bg-blue-50/60 dark:border-white/10 dark:bg-white/5 dark:hover:border-cyan-400/30 dark:hover:bg-white/10",
                   )}
                   onClick={(event) => {
                     event.stopPropagation();

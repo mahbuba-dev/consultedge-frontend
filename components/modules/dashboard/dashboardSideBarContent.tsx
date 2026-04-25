@@ -82,7 +82,7 @@ const DashboardSidebarContent = ({dashboardHome, navItems, userInfo} : Dashboard
                   className={cn(
                     "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all",
                     isActive
-                      ? "bg-blue-600 text-white"
+                      ? "bg-linear-to-r from-blue-600 to-cyan-500 text-white shadow-md shadow-cyan-500/25"
                       : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                   )}
                 >
@@ -107,7 +107,7 @@ const DashboardSidebarContent = ({dashboardHome, navItems, userInfo} : Dashboard
       className={cn(
         "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all",
         isActive
-          ? "bg-blue-600 text-white"
+          ? "bg-linear-to-r from-blue-600 to-cyan-500 text-white shadow-md shadow-cyan-500/25"
           : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
       )}
     >

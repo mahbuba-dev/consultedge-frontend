@@ -132,9 +132,9 @@ const formatMoney = (booking: IConsultation) => {
 const getStatusBadge = (status?: ConsultationStatus) => {
   switch (status) {
     case "CONFIRMED":
-      return <Badge className="bg-sky-100 text-sky-700 hover:bg-sky-100">Confirmed</Badge>;
+      return <Badge className="bg-sky-100 text-sky-700 hover:bg-sky-100 dark:bg-sky-500/15 dark:text-sky-200 dark:hover:bg-sky-500/15">Confirmed</Badge>;
     case "COMPLETED":
-      return <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">Completed</Badge>;
+      return <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-500/15 dark:text-emerald-200 dark:hover:bg-emerald-500/15">Completed</Badge>;
     case "CANCELLED":
       return <Badge variant="destructive">Cancelled</Badge>;
     default:
@@ -145,7 +145,7 @@ const getStatusBadge = (status?: ConsultationStatus) => {
 const getPaymentBadge = (status?: PaymentStatus) => {
   switch (status) {
     case "PAID":
-      return <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">Paid</Badge>;
+      return <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-500/15 dark:text-emerald-200 dark:hover:bg-emerald-500/15">Paid</Badge>;
     case "FAILED":
       return <Badge variant="destructive">Failed</Badge>;
     case "REFUNDED":
@@ -158,13 +158,13 @@ const getPaymentBadge = (status?: PaymentStatus) => {
 const getHeaderTone = (paymentStatus?: PaymentStatus) => {
   switch (paymentStatus) {
     case "PAID":
-      return "from-emerald-500/15 via-cyan-500/10 to-white";
+      return "from-emerald-500/15 via-cyan-500/10 to-white dark:from-emerald-500/15 dark:via-cyan-500/10 dark:to-slate-900/80";
     case "FAILED":
-      return "from-rose-500/15 via-orange-500/10 to-white";
+      return "from-rose-500/15 via-orange-500/10 to-white dark:from-rose-500/20 dark:via-orange-500/10 dark:to-slate-900/80";
     case "REFUNDED":
-      return "from-slate-500/10 via-blue-500/10 to-white";
+      return "from-slate-500/10 via-blue-500/10 to-white dark:from-slate-500/15 dark:via-blue-500/10 dark:to-slate-900/80";
     default:
-      return "from-blue-500/15 via-cyan-500/10 to-white";
+      return "from-blue-500/15 via-cyan-500/10 to-white dark:from-blue-500/15 dark:via-cyan-500/10 dark:to-slate-900/80";
   }
 };
 
@@ -315,7 +315,7 @@ export default function ConsultationCard({
               </div>
             </div>
 
-            <div className="rounded-full border bg-white/80 px-3 py-1 text-xs font-medium text-foreground backdrop-blur">
+            <div className="rounded-full border border-slate-200 bg-white/80 px-3 py-1 text-xs font-medium text-foreground backdrop-blur dark:border-white/15 dark:bg-white/10">
               {formatMoney(booking)}
             </div>
           </div>
@@ -323,24 +323,24 @@ export default function ConsultationCard({
 
         <CardContent className="space-y-4 p-5">
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            <div className="rounded-2xl border bg-blue-50/70 p-3">
-              <div className="mb-1 flex items-center gap-2 text-blue-700">
+            <div className="rounded-2xl border border-blue-200/60 bg-blue-50/70 p-3 dark:border-blue-500/20 dark:bg-blue-500/10">
+              <div className="mb-1 flex items-center gap-2 text-blue-700 dark:text-blue-300">
                 <CalendarDays className="size-4" />
                 <span className="text-xs font-semibold uppercase tracking-wide">Session date</span>
               </div>
               <p className="text-sm font-semibold text-foreground">{formatDateTime(booking.date)}</p>
             </div>
 
-            <div className="rounded-2xl border bg-cyan-50/70 p-3">
-              <div className="mb-1 flex items-center gap-2 text-cyan-700">
+            <div className="rounded-2xl border border-cyan-200/60 bg-cyan-50/70 p-3 dark:border-cyan-500/20 dark:bg-cyan-500/10">
+              <div className="mb-1 flex items-center gap-2 text-cyan-700 dark:text-cyan-300">
                 <Clock3 className="size-4" />
                 <span className="text-xs font-semibold uppercase tracking-wide">Booked on</span>
               </div>
               <p className="text-sm font-semibold text-foreground">{formatDateTime(booking.createdAt)}</p>
             </div>
 
-            <div className="rounded-2xl border bg-emerald-50/70 p-3 md:col-span-2 xl:col-span-1">
-              <div className="mb-1 flex items-center gap-2 text-emerald-700">
+            <div className="rounded-2xl border border-emerald-200/60 bg-emerald-50/70 p-3 dark:border-emerald-500/20 dark:bg-emerald-500/10 md:col-span-2 xl:col-span-1">
+              <div className="mb-1 flex items-center gap-2 text-emerald-700 dark:text-emerald-300">
                 <ShieldCheck className="size-4" />
                 <span className="text-xs font-semibold uppercase tracking-wide">Payment state</span>
               </div>
@@ -348,7 +348,7 @@ export default function ConsultationCard({
             </div>
           </div>
 
-          <div className="rounded-2xl border bg-muted/20 p-3 text-sm text-muted-foreground">
+          <div className="rounded-2xl border bg-muted/20 p-3 text-sm text-muted-foreground dark:border-white/10 dark:bg-white/5">
             <div className="grid gap-2 sm:grid-cols-2">
               <p>
                 <span className="font-medium text-foreground">Consultation ID:</span> {booking.id}
@@ -405,7 +405,7 @@ export default function ConsultationCard({
   )}
 
   {isCompleted && hasReview && (
-    <Badge className="w-full text-center bg-emerald-100 text-emerald-700 text-sm font-semibold p-4">
+    <Badge className="w-full text-center bg-emerald-100 text-emerald-700 text-sm font-semibold p-4 dark:bg-emerald-500/15 dark:text-emerald-200">
       Feedback Submitted
     </Badge>
   )}
