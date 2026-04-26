@@ -238,59 +238,69 @@ export default function ExpertDetails({
       </section>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Card className="border-blue-200/70 bg-linear-to-br from-blue-50 to-white shadow-sm dark:border-blue-500/20 dark:from-blue-500/10 dark:to-slate-900/80">
+        <Card className="group relative overflow-hidden border-blue-200/70 bg-linear-to-br from-blue-50 to-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-blue-500/20 dark:from-blue-500/10 dark:to-slate-900/80">
+          <div className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-blue-600 to-cyan-500" />
           <CardContent className="flex items-center gap-3 p-5">
-            <div className="rounded-full bg-blue-100 p-2 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300">
+            <div className="flex size-11 items-center justify-center rounded-2xl bg-linear-to-br from-blue-600 to-cyan-500 text-white shadow-md shadow-cyan-500/25 transition-transform group-hover:scale-110">
               <BriefcaseBusiness className="size-5" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Experience</p>
-              <p className="text-lg font-semibold text-foreground">{expert.experience}+ years</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Experience</p>
+              <p className="text-lg font-bold text-foreground">{expert.experience}+ years</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-sky-200/70 bg-linear-to-br from-sky-50 to-white shadow-sm dark:border-sky-500/20 dark:from-sky-500/10 dark:to-slate-900/80">
+        <Card className="group relative overflow-hidden border-amber-200/70 bg-linear-to-br from-amber-50 to-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-amber-500/20 dark:from-amber-500/10 dark:to-slate-900/80">
+          <div className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-amber-500 to-orange-500" />
           <CardContent className="flex items-center gap-3 p-5">
-            <div className="rounded-full bg-sky-100 p-2 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300">
+            <div className="flex size-11 items-center justify-center rounded-2xl bg-linear-to-br from-amber-500 to-orange-500 text-white shadow-md shadow-amber-500/25 transition-transform group-hover:scale-110">
               <Star className="size-5" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Client reviews</p>
-              <p className="text-lg font-semibold text-foreground">{reviewCount} review{reviewCount === 1 ? "" : "s"}</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Client reviews</p>
+              <p className="text-lg font-bold text-foreground">{reviewCount} review{reviewCount === 1 ? "" : "s"}</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-emerald-200/70 bg-linear-to-br from-emerald-50 to-white shadow-sm dark:border-emerald-500/20 dark:from-emerald-500/10 dark:to-slate-900/80">
+        <Card className="group relative overflow-hidden border-emerald-200/70 bg-linear-to-br from-emerald-50 to-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-emerald-500/20 dark:from-emerald-500/10 dark:to-slate-900/80">
+          <div className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-emerald-500 to-teal-500" />
           <CardContent className="flex items-center gap-3 p-5">
-            <div className="rounded-full bg-emerald-100 p-2 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
+            <div className="flex size-11 items-center justify-center rounded-2xl bg-linear-to-br from-emerald-500 to-teal-500 text-white shadow-md shadow-emerald-500/25 transition-transform group-hover:scale-110">
               <TrendingUp className="size-5" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Session fee</p>
-              <p className="text-lg font-semibold text-foreground">{consultationFee}</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Session fee</p>
+              <p className="text-lg font-bold text-foreground">{consultationFee}</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-cyan-200/70 bg-linear-to-br from-cyan-50 to-white shadow-sm dark:border-cyan-500/20 dark:from-cyan-500/10 dark:to-slate-900/80">
+        <Card className="group relative overflow-hidden border-cyan-200/70 bg-linear-to-br from-cyan-50 to-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-cyan-500/20 dark:from-cyan-500/10 dark:to-slate-900/80">
+          <div className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-cyan-500 to-sky-500" />
           <CardContent className="flex items-center gap-3 p-5">
-            <div className="rounded-full bg-cyan-100 p-2 text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-300">
+            <div className="flex size-11 items-center justify-center rounded-2xl bg-linear-to-br from-cyan-500 to-sky-500 text-white shadow-md shadow-cyan-500/25 transition-transform group-hover:scale-110">
               <ShieldCheck className="size-5" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Availability</p>
-              <p className="text-lg font-semibold text-foreground">{availableSlots} open slots</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Availability</p>
+              <p className="text-lg font-bold text-foreground">{availableSlots} open slots</p>
             </div>
           </CardContent>
         </Card>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <Card className="shadow-sm">
+        <Card className="relative overflow-hidden border-border/60 bg-white/90 shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-900/70">
+          <div className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-blue-600 via-cyan-500 to-teal-400" />
           <CardHeader>
-            <CardTitle>About this expert</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <span className="inline-flex size-8 items-center justify-center rounded-full bg-linear-to-br from-blue-600 to-cyan-500 text-white shadow-md shadow-cyan-500/25">
+                <BriefcaseBusiness className="size-4" />
+              </span>
+              About this expert
+            </CardTitle>
             <CardDescription>
               Learn more about the expert’s background, focus, and consulting approach.
             </CardDescription>
@@ -301,15 +311,17 @@ export default function ExpertDetails({
             </p>
 
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-2xl border bg-blue-50/50 p-4 dark:border-blue-500/20 dark:bg-blue-500/10">
-                <p className="text-xs uppercase tracking-wide text-blue-700 dark:text-blue-300">Best fit for</p>
+              <div className="relative overflow-hidden rounded-2xl border border-blue-200/60 bg-linear-to-br from-blue-50 via-white to-cyan-50 p-4 dark:border-blue-500/20 dark:from-blue-500/10 dark:via-slate-900/40 dark:to-cyan-500/10">
+                <div className="absolute inset-x-0 top-0 h-0.5 bg-linear-to-r from-blue-600 to-cyan-500" />
+                <p className="text-xs font-semibold uppercase tracking-wider text-blue-700 dark:text-cyan-300">Best fit for</p>
                 <p className="mt-1 font-medium text-foreground">
                   {expert.industry?.name || "Business and strategy"} planning, decisions, and growth conversations
                 </p>
               </div>
 
-              <div className="rounded-2xl border bg-cyan-50/50 p-4 dark:border-cyan-500/20 dark:bg-cyan-500/10">
-                <p className="text-xs uppercase tracking-wide text-cyan-700 dark:text-cyan-300">Clients can expect</p>
+              <div className="relative overflow-hidden rounded-2xl border border-cyan-200/60 bg-linear-to-br from-cyan-50 via-white to-teal-50 p-4 dark:border-cyan-500/20 dark:from-cyan-500/10 dark:via-slate-900/40 dark:to-teal-500/10">
+                <div className="absolute inset-x-0 top-0 h-0.5 bg-linear-to-r from-cyan-500 to-teal-500" />
+                <p className="text-xs font-semibold uppercase tracking-wider text-cyan-700 dark:text-cyan-300">Clients can expect</p>
                 <p className="mt-1 font-medium text-foreground">
                   Focused 1:1 guidance, clear next steps, and a smooth booking flow
                 </p>
@@ -318,15 +330,21 @@ export default function ExpertDetails({
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm">
+        <Card className="relative overflow-hidden border-border/60 bg-white/90 shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-900/70">
+          <div className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-cyan-500 via-sky-500 to-blue-500" />
           <CardHeader>
-            <CardTitle>Quick profile summary</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <span className="inline-flex size-8 items-center justify-center rounded-full bg-linear-to-br from-cyan-500 to-sky-500 text-white shadow-md shadow-cyan-500/25">
+                <Star className="size-4" />
+              </span>
+              Quick profile summary
+            </CardTitle>
             <CardDescription>A modern snapshot to help clients decide faster.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="rounded-2xl border bg-muted/30 p-4 dark:border-white/10 dark:bg-white/5">
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">Industry</p>
-              <p className="mt-1 font-medium text-foreground">
+            <div className="rounded-2xl border border-border/60 bg-muted/40 p-4 dark:border-white/10 dark:bg-white/5">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Industry</p>
+              <p className="mt-1 font-semibold text-foreground">
                 {expert.industry?.name || "General consulting"}
               </p>
               {expert.industry?.description ? (
@@ -334,13 +352,11 @@ export default function ExpertDetails({
               ) : null}
             </div>
 
-            <div className="rounded-2xl border bg-muted/30 p-4 dark:border-white/10 dark:bg-white/5">
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">Contact</p>
-              <p className="mt-1 font-medium text-foreground break-all">{expert.email}</p>
+            <div className="rounded-2xl border border-border/60 bg-muted/40 p-4 dark:border-white/10 dark:bg-white/5">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Contact</p>
+              <p className="mt-1 font-semibold text-foreground break-all">{expert.email}</p>
               <p className="text-sm text-muted-foreground">{expert.phone || "Phone not provided"}</p>
             </div>
-
-           
           </CardContent>
         </Card>
       </div>

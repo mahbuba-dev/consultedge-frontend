@@ -22,37 +22,43 @@ const audiences = [
     title: "Entrepreneurs",
     description: "Turn bold ideas into executable strategies with guidance from proven business leaders.",
     icon: Lightbulb,
-    accent: "text-blue-600 bg-blue-50 dark:bg-blue-500/15 dark:text-blue-300",
+    accent: "from-blue-500 to-cyan-500",
+    glow: "shadow-cyan-500/20",
   },
   {
     title: "Small Business Owners",
     description: "Get practical, actionable advice on operations, growth, and scaling your business.",
     icon: Building2,
-    accent: "text-sky-600 bg-sky-50 dark:bg-sky-500/15 dark:text-sky-300",
+    accent: "from-sky-500 to-blue-500",
+    glow: "shadow-sky-500/20",
   },
   {
     title: "Startup Founders",
     description: "Move faster with investor-ready insights, product strategy, and go-to-market expertise.",
     icon: Rocket,
-    accent: "text-cyan-600 bg-cyan-50 dark:bg-cyan-500/15 dark:text-cyan-300",
+    accent: "from-cyan-500 to-teal-500",
+    glow: "shadow-cyan-500/20",
   },
   {
     title: "Students & Career Seekers",
     description: "Get mentorship on internships, career pivots, and navigating competitive industries.",
     icon: BookOpen,
-    accent: "text-indigo-600 bg-indigo-50 dark:bg-indigo-500/15 dark:text-indigo-300",
+    accent: "from-blue-600 to-indigo-500",
+    glow: "shadow-blue-500/20",
   },
   {
     title: "Working Professionals",
     description: "Access senior experts for quick, high-value answers to complex professional challenges.",
     icon: Briefcase,
-    accent: "text-blue-700 bg-blue-50 dark:bg-blue-500/15 dark:text-blue-300",
+    accent: "from-teal-500 to-emerald-500",
+    glow: "shadow-emerald-500/20",
   },
   {
     title: "Anyone Seeking Expertise",
     description: "Whatever your question, find a verified professional who can answer it with clarity.",
     icon: Zap,
-    accent: "text-sky-700 bg-sky-50 dark:bg-sky-500/15 dark:text-sky-300",
+    accent: "from-amber-500 to-rose-500",
+    glow: "shadow-rose-500/20",
   },
 ];
 
@@ -92,10 +98,20 @@ export default function HomeSection2({ testimonials }: HomeSection2Props) {
               <Card
                 key={item.title}
                 style={{ animationDelay: `${120 + index * 70}ms` }}
-                className="consultedge-reveal--visible consultedge-card-glow group border-border/60 bg-white/90 shadow-sm dark:border-white/10 dark:bg-slate-900/80"
+                className="consultedge-reveal--visible group relative overflow-hidden border-border/60 bg-white/90 shadow-sm transition-all hover:-translate-y-1 hover:border-blue-300 hover:shadow-lg dark:border-white/10 dark:bg-slate-900/80 dark:hover:border-cyan-400/30 dark:hover:shadow-cyan-500/10"
               >
-                <CardContent className="space-y-3 p-5">
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${item.accent}`}>
+                <div
+                  aria-hidden
+                  className={`pointer-events-none absolute inset-x-0 top-0 h-1 bg-linear-to-r ${item.accent} opacity-80`}
+                />
+                <div
+                  aria-hidden
+                  className={`pointer-events-none absolute -right-12 -top-12 size-32 rounded-full bg-linear-to-br ${item.accent} opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-20`}
+                />
+                <CardContent className="relative space-y-3 p-6">
+                  <div
+                    className={`flex size-11 items-center justify-center rounded-2xl bg-linear-to-br ${item.accent} text-white shadow-md ${item.glow} transition-transform group-hover:scale-110`}
+                  >
                     <Icon className="size-5" />
                   </div>
                   <p className="font-semibold text-foreground">{item.title}</p>
@@ -135,7 +151,7 @@ export default function HomeSection2({ testimonials }: HomeSection2Props) {
               </Link>
               <Link
                 href="/register"
-                className="px-10 inline-flex h-11 items-center gap-2 rounded-full border border-white/20 bg-transparent px-5 text-sm font-medium text-white transition-all hover:bg-white/10"
+                className="inline-flex h-11 items-center gap-2 rounded-full border border-white/20 bg-transparent px-10 text-sm font-medium text-white transition-all hover:bg-white/10"
               >
                 Create account
               </Link>
@@ -159,16 +175,19 @@ export default function HomeSection2({ testimonials }: HomeSection2Props) {
           </div>
 
           <div className="grid gap-3 sm:grid-cols-3">
-            <div className="rounded-2xl border border-border/60 bg-white px-4 py-3 text-center dark:border-white/10 dark:bg-slate-800/70">
-              <p className="text-lg font-semibold text-foreground">Real</p>
+            <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-white/90 px-4 py-3 text-center shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-900/70">
+              <div className="absolute inset-x-0 top-0 h-0.5 bg-linear-to-r from-blue-500 to-cyan-500" />
+              <p className="bg-linear-to-r from-blue-600 to-cyan-500 bg-clip-text text-lg font-bold text-transparent">Real</p>
               <p className="text-xs text-muted-foreground">Client feedback</p>
             </div>
-            <div className="rounded-2xl border border-border/60 bg-white px-4 py-3 text-center dark:border-white/10 dark:bg-slate-800/70">
-              <p className="text-lg font-semibold text-foreground">Fast</p>
+            <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-white/90 px-4 py-3 text-center shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-900/70">
+              <div className="absolute inset-x-0 top-0 h-0.5 bg-linear-to-r from-cyan-500 to-teal-500" />
+              <p className="bg-linear-to-r from-cyan-500 to-teal-500 bg-clip-text text-lg font-bold text-transparent">Fast</p>
               <p className="text-xs text-muted-foreground">Booking experience</p>
             </div>
-            <div className="rounded-2xl border border-border/60 bg-white px-4 py-3 text-center dark:border-white/10 dark:bg-slate-800/70">
-              <p className="text-lg font-semibold text-foreground">Clear</p>
+            <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-white/90 px-4 py-3 text-center shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-900/70">
+              <div className="absolute inset-x-0 top-0 h-0.5 bg-linear-to-r from-teal-500 to-emerald-500" />
+              <p className="bg-linear-to-r from-teal-500 to-emerald-500 bg-clip-text text-lg font-bold text-transparent">Clear</p>
               <p className="text-xs text-muted-foreground">Consultation flow</p>
             </div>
           </div>

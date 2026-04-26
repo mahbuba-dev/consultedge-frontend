@@ -71,19 +71,19 @@ const supportHighlights = [
     title: "Secure payments",
     description: "A cleaner checkout and booking confirmation experience.",
     icon: ShieldCheck,
-    tone: "text-emerald-700 bg-emerald-100",
+    accent: "from-emerald-500 to-teal-500",
   },
   {
     title: "Smart dashboards",
     description: "Keep consultations, schedules, and progress in one place.",
     icon: Layers3,
-    tone: "text-blue-700 bg-blue-100",
+    accent: "from-blue-600 to-cyan-500",
   },
   {
     title: "Human support",
     description: "Reach out when you need extra help or a tailored setup.",
     icon: HeadphonesIcon,
-    tone: "text-cyan-700 bg-cyan-100",
+    accent: "from-cyan-500 to-sky-500",
   },
 ];
 
@@ -173,43 +173,50 @@ export default function HomeSection3() {
               const Icon = item.icon;
 
               return (
-      <div
-  key={item.title}
-  className="flex items-center gap-3 rounded-2xl border bg-white/80 p-3
-             dark:border-white/10 dark:bg-slate-950/70"
->
-  <div
-    className={`
-      flex shrink-0 items-center justify-center rounded-xl
-      h-10 w-10 sm:h-11 sm:w-11 md:h-12 md:w-12
-      ${item.tone}
-    `}
-  >
-    <Icon className="h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7" />
-  </div>
+                <div
+                  key={item.title}
+                  className="group relative flex items-center gap-3 overflow-hidden rounded-2xl border border-border/60 bg-white/85 p-3.5 shadow-sm backdrop-blur transition-all hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md dark:border-white/10 dark:bg-slate-950/70 dark:hover:border-cyan-400/30"
+                >
+                  <div
+                    className={`flex size-12 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br ${item.accent} text-white shadow-md shadow-cyan-500/20 transition-transform group-hover:scale-110`}
+                  >
+                    <Icon className="size-5" />
+                  </div>
 
-  <div className="flex flex-col">
-    <p className="font-semibold leading-tight text-foreground">
-      {item.title}
-    </p>
-    <p className="text-sm leading-snug text-muted-foreground">
-      {item.description}
-    </p>
-  </div>
-</div>
-
+                  <div className="flex flex-col">
+                    <p className="font-semibold leading-tight text-foreground">
+                      {item.title}
+                    </p>
+                    <p className="text-sm leading-snug text-muted-foreground">
+                      {item.description}
+                    </p>
+                  </div>
+                </div>
               );
             })}
           </div>
         </div>
 
-        <Accordion type="single" collapsible className="w-full rounded-2xl border bg-background/80 p-4 dark:border-white/10 dark:bg-slate-950/80">
+        <Accordion
+          type="single"
+          collapsible
+          className="w-full space-y-3 rounded-2xl border border-border/60 bg-white/80 p-4 shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-950/80"
+        >
           {faqItems.map((item, index) => (
-            <AccordionItem key={item.question} value={`faq-${index}`}>
-              <AccordionTrigger className="text-left text-base font-semibold">
-                {item.question}
+            <AccordionItem
+              key={item.question}
+              value={`faq-${index}`}
+              className="rounded-xl border border-border/50 bg-white/70 px-4 transition-colors hover:border-blue-300 dark:border-white/5 dark:bg-slate-900/60 dark:hover:border-cyan-400/30"
+            >
+              <AccordionTrigger className="text-left text-base font-semibold hover:no-underline">
+                <span className="flex items-center gap-3">
+                  <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-blue-600 to-cyan-500 text-xs font-bold text-white">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  {item.question}
+                </span>
               </AccordionTrigger>
-              <AccordionContent className="text-muted-foreground">
+              <AccordionContent className="pl-10 text-muted-foreground">
                 {item.answer}
               </AccordionContent>
             </AccordionItem>
