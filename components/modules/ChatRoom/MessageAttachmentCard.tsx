@@ -11,9 +11,9 @@ interface MessageAttachmentCardProps {
 
 export default function MessageAttachmentCard({ attachment }: MessageAttachmentCardProps) {
   return (
-    <Card className="border-border/60 bg-background/70 shadow-none">
-      <CardContent className="flex items-center justify-between gap-3 p-3">
-        <div className="flex min-w-0 items-center gap-3">
+    <Card className="min-w-0 max-w-full border-border/60 bg-background/70 shadow-none">
+      <CardContent className="flex min-w-0 items-center justify-between gap-3 p-3">
+        <div className="flex min-w-0 flex-1 items-center gap-3">
           <div className="rounded-xl bg-blue-100 p-2 text-blue-700">
             <FileText className="size-4" />
           </div>
@@ -24,7 +24,7 @@ export default function MessageAttachmentCard({ attachment }: MessageAttachmentC
           </div>
         </div>
 
-        <Button asChild size="sm" variant="outline">
+        <Button asChild size="sm" variant="outline" className="shrink-0">
           <Link href={attachment.url} target="_blank" rel="noreferrer">
             <Download className="mr-2 size-4" />
             Open
