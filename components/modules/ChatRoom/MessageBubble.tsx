@@ -54,13 +54,13 @@ export default function MessageBubble({
   }
 
   return (
-    <div className={cn("flex", isOwnMessage ? "justify-end" : "justify-start")}>
+    <div className={cn("flex w-full min-w-0", isOwnMessage ? "justify-end" : "justify-start")}>
       <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-        <div className="flex max-w-[85%] flex-col gap-2 md:max-w-[70%]">
+        <div className="flex min-w-0 max-w-[78%] flex-col gap-2 sm:max-w-[85%] md:max-w-[70%]">
           <PopoverTrigger asChild>
             <div
               className={cn(
-                "space-y-2 rounded-2xl border px-4 py-3 shadow-sm relative cursor-pointer",
+                "space-y-2 rounded-2xl border px-4 py-3 shadow-sm relative cursor-pointer min-w-0 max-w-full",
                 isOwnMessage
                   ? "border-blue-500 bg-linear-to-br from-blue-600 to-cyan-500 text-white"
                   : "border-border/60 bg-background dark:border-white/10 dark:bg-slate-900/70",

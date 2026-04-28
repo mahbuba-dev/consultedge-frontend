@@ -320,8 +320,8 @@ export default function ChatWorkspace({
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-4 xl:grid-cols-[340px_minmax(0,1fr)]">
-        <div className={hasActiveRoom ? "hidden xl:block" : "block"}>
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[340px_minmax(0,1fr)]">
+        <div className={`min-w-0 ${hasActiveRoom ? "hidden xl:block" : "block"}`}>
           <ChatSidebar
             rooms={visibleRooms}
             currentUserId={currentUser?.userId}
@@ -338,7 +338,7 @@ export default function ChatWorkspace({
         </div>
 
         <div
-          className={`min-h-[70vh] flex-col rounded-2xl border bg-background shadow-sm xl:flex ${
+          className={`min-h-[70vh] min-w-0 flex-col overflow-hidden rounded-2xl border bg-background shadow-sm xl:flex ${
             hasActiveRoom ? "flex" : "hidden xl:flex"
           }`}
         >

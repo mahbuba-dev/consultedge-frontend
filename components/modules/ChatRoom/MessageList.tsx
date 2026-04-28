@@ -55,8 +55,8 @@ export default function MessageList({
   };
 
   return (
-    <ScrollArea className="h-full">
-      <div className="space-y-4 px-4 py-4 md:px-6">
+    <ScrollArea className="h-full w-full">
+      <div className="w-full min-w-0 space-y-4 px-3 py-4 sm:px-4 md:px-6">
         {isLoading ? (
           Array.from({ length: 6 }).map((_, index) => (
             <div
