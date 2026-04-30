@@ -15,7 +15,7 @@ export default function IndustriesPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
+    <div className="max-w-360 mx-auto p-6">
       {/* Page Header */}
       <div className="mb-8 text-center">
         <h1 className="text-3xl font-bold">Industries</h1>

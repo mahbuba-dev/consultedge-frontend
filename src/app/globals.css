@@ -348,3 +348,48 @@
     display: none;
   }
 }
+
+/* -- Theme toggle glassy burst ----------------------------------- */
+.theme-burst {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  pointer-events: none;
+  overflow: hidden;
+}
+.theme-burst::before,
+.theme-burst::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: radial-gradient(circle at center,
+    rgba(125, 211, 252, 0.85),
+    rgba(34, 211, 238, 0.45) 38%,
+    rgba(59, 130, 246, 0.18) 62%,
+    transparent 78%);
+  backdrop-filter: blur(8px);
+  transform: scale(0);
+  opacity: 0;
+  animation: theme-burst-out 750ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.theme-burst::after {
+  animation-delay: 80ms;
+  animation-duration: 850ms;
+  background: radial-gradient(circle at center,
+    rgba(255,255,255,0.55),
+    rgba(255,255,255,0.0) 60%);
+}
+@keyframes theme-burst-out {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  60% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: scale(8);
+    opacity: 0;
+  }
+}

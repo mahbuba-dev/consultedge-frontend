@@ -5,6 +5,8 @@ import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
 import QueryProviders from "../providers/QueryProvider";
+import LenisProvider from "../providers/LenisProvider";
+import ScrollToTop from "@/components/modules/shared/ScrollToTop";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,15 +34,20 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} min-h-full flex flex-col antialiased`}
       >
+        <div className="mx-auto w-full max-w-360 flex min-h-screen flex-col">
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
-          <QueryProviders>{children}</QueryProviders>
+          <LenisProvider>
+            <QueryProviders>{children}</QueryProviders>
+            <ScrollToTop />
+          </LenisProvider>
           <Toaster richColors />
         </ThemeProvider>
+        </div>
       </body>
     </html>
   );

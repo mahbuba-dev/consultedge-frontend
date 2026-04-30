@@ -106,7 +106,7 @@ export default function Footer() {
         }
       `}</style>
 
-      <div ref={footerRef} className="mx-auto w-full max-w-7xl px-4 pt-4 md:px-6">
+      <div ref={footerRef} className="mx-auto w-full max-w-360 px-4 pt-4 md:px-6">
         {/* CTA SECTION */}
         <div className="relative overflow-hidden rounded-[2.1rem] border border-cyan-400/20 bg-linear-to-r from-blue-950 via-slate-900 to-cyan-950 p-6 shadow-[0_24px_70px_-30px_rgba(34,211,238,0.3)] md:p-8 lg:p-10">
           <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
@@ -157,7 +157,7 @@ export default function Footer() {
       </div>
 
       {/* MAIN FOOTER */}
-      <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-12 md:grid-cols-[1.2fr_0.7fr_0.7fr_0.95fr] md:px-6">
+      <div className="mx-auto grid w-full max-w-360 gap-10 px-4 py-12 md:grid-cols-[1.2fr_0.7fr_0.7fr_0.95fr] md:px-6">
 
         {/* BRAND */}
         <div className="space-y-5">
@@ -246,7 +246,7 @@ export default function Footer() {
 
       {/* BOTTOM BAR */}
       <div className="border-t border-white/10">
-        <div className="mx-auto flex max-w-7xl flex-col justify-between gap-2 px-4 py-4 text-sm text-slate-400 md:flex-row md:px-6">
+        <div className="mx-auto flex max-w-360 flex-col justify-between gap-2 px-4 py-4 text-sm text-slate-400 md:flex-row md:px-6">
           <p>© {new Date().getFullYear()} ConsultEdge</p>
           <div className="flex gap-4">
             <Link href="/experts" className="hover:text-white">Browse experts</Link>

@@ -193,7 +193,7 @@ export default function HomeSection2({ testimonials }: HomeSection2Props) {
           </div>
         </div>
 
-        <div className="grid gap-5 lg:grid-cols-3">
+        <div className="grid gap-5 grid-cols-1 md:grid-cols-2 xl:grid-cols-4">
           {testimonials.map((testimonial) => (
             <TestimonialCard key={testimonial.id} testimonial={testimonial} />
           ))}

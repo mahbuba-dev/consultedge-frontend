@@ -215,7 +215,7 @@ export default function HowItWorksPage() {
           </h2>
         </div>
 
-        <div className="grid gap-5 md:grid-cols-2">
+        <div className="grid gap-5 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-4">
           {steps.map(({ number, icon: Icon, color, glow, title, description, highlights }) => (
             <div
               key={number}

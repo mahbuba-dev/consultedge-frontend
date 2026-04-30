@@ -76,7 +76,10 @@ const HomePage = async () => {
       <div className="pointer-events-none absolute inset-x-0 top-[40rem] -z-10 h-[48rem] bg-[radial-gradient(circle_at_center,rgba(16,185,129,0.08),transparent_26%),radial-gradient(circle_at_80%_30%,rgba(56,189,248,0.08),transparent_24%)]" />
       <Banner />
 
-      <div className="mt-10 space-y-8 md:mt-14 md:space-y-10 lg:mt-16 lg:space-y-12">
+      <div
+        id="home-after-hero"
+        className="mt-10 scroll-mt-24 space-y-8 md:mt-14 md:space-y-10 lg:mt-16 lg:space-y-12"
+      >
         <InViewReveal delay={40}>
           <IndustryTicker industries={featuredIndustries} />
         </InViewReveal>

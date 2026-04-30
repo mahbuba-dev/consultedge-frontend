@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { MessageSquareReply, Quote, Star } from "lucide-react";
+import { Quote, Star } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -25,11 +25,10 @@ const getFormattedDate = (value?: string) => {
 const TestimonialCard = ({ testimonial, compact = false }: TestimonialCardProps) => {
   const reviewerName = getReviewerName(testimonial);
   const reviewDate = getFormattedDate(testimonial.createdAt) || "Recently";
-  const replyDate = getFormattedDate(testimonial.repliedAt);
 
   return (
     <Card className="h-full border-border/60 bg-card/95 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg dark:border-white/10 dark:bg-slate-900/85 dark:shadow-black/20">
-      <CardContent className={compact ? "space-y-3 p-4" : "space-y-4 p-5"}>
+      <CardContent className={compact ? "space-y-3 p-4" : "space-y-3 p-5"}>
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="font-semibold text-foreground">{reviewerName}</p>
@@ -53,23 +52,9 @@ const TestimonialCard = ({ testimonial, compact = false }: TestimonialCardProps)
           </span>
         </div>
 
-        <p className="text-sm leading-6 text-muted-foreground">
+        <p className="line-clamp-4 text-sm leading-6 text-muted-foreground">
           {testimonial.comment || "A positive consultation experience shared by the client."}
         </p>
-
-        {testimonial.expertReply ? (
-          <div className="rounded-2xl border border-blue-200/70 bg-blue-50/70 p-3 dark:border-cyan-400/25 dark:bg-cyan-500/10">
-            <div className="flex items-center justify-between gap-2">
-              <p className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-blue-700 dark:text-cyan-200">
-                <MessageSquareReply className="size-3.5" />
-                Expert reply
-              </p>
-              {replyDate ? <span className="text-xs text-muted-foreground dark:text-slate-400">{replyDate}</span> : null}
-            </div>
-
-            <p className="mt-2 text-sm leading-6 text-foreground/90 dark:text-slate-100">{testimonial.expertReply}</p>
-          </div>
-        ) : null}
 
         <div className="flex flex-wrap gap-2">
           {testimonial.expert?.fullName ? (

@@ -19,7 +19,7 @@ import { ILoginPayload, loginZodSchema } from "@/src/zod/auth.validation";
 import { getFriendlyAuthErrorMessage } from "@/src/lib/authErrorMessages";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -28,6 +28,11 @@ interface LoginFormProps {
   redirectPath?: string;
   passwordReset?: boolean;
 }
+
+const DEMO_CLIENT_EMAIL =
+  process.env.NEXT_PUBLIC_DEMO_CLIENT_EMAIL || "client@consultedge.demo";
+const DEMO_CLIENT_PASSWORD =
+  process.env.NEXT_PUBLIC_DEMO_CLIENT_PASSWORD || "Demo@1234";
 
 const LoginForm = ({ redirectPath, passwordReset = false }: LoginFormProps) => {
   // Track server-side error messages
@@ -209,6 +214,20 @@ const LoginForm = ({ redirectPath, passwordReset = false }: LoginFormProps) => {
               <AlertDescription>{serverError}</AlertDescription>
             </Alert>
           )}
+
+          {/* Demo client account auto-fill */}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              form.setFieldValue("email", DEMO_CLIENT_EMAIL);
+              form.setFieldValue("password", DEMO_CLIENT_PASSWORD);
+            }}
+            className="w-full justify-center gap-2 rounded-full border-blue-200 bg-blue-50/70 text-blue-700 hover:bg-blue-100 hover:text-blue-800 dark:border-cyan-400/30 dark:bg-cyan-500/10 dark:text-cyan-200 dark:hover:bg-cyan-500/15"
+          >
+            <Sparkles className="size-4" aria-hidden="true" />
+            Use demo client account
+          </Button>
 
           {/* Submit Button */}
           <form.Subscribe selector={(s) => [s.canSubmit, s.isSubmitting] as const}>

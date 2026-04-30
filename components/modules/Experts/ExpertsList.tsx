@@ -661,7 +661,7 @@ export default function ExpertsPageClient() {
             ) : null}
           </div>
 
-          <div className="animate-in fade-in-0 slide-in-from-bottom-2 grid grid-cols-1 gap-4 duration-500 md:grid-cols-2 xl:grid-cols-3">
+          <div className="animate-in fade-in-0 slide-in-from-bottom-2 grid grid-cols-1 gap-4 duration-500 md:grid-cols-2 xl:grid-cols-4">
             {displayedExperts.map((expert) => (
               <ExpertCard key={expert.id} expert={expert} />
             ))}

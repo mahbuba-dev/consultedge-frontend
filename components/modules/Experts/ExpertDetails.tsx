@@ -81,7 +81,7 @@ export default function ExpertDetails({
   };
 
   return (
-    <div className="mx-auto max-w-7xl space-y-8 px-4 py-6 md:px-6 lg:py-8">
+    <div className="mx-auto max-w-360 space-y-8 px-4 py-6 md:px-6 lg:py-8">
       <Link
         href="/experts"
         className="inline-flex items-center gap-2 text-sm font-medium text-blue-700 transition hover:text-blue-900"

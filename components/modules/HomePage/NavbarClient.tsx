@@ -81,7 +81,17 @@ const NavbarClient = ({
   const isDarkMode = mounted && resolvedTheme === "dark";
   const themeLabel = isDarkMode ? "Light mode" : "Dark mode";
 
-  const handleThemeToggle = () => {
+  const handleThemeToggle = (e?: React.MouseEvent<HTMLButtonElement>) => {
+    const button = e?.currentTarget;
+    if (button) {
+      // remove any prior burst, then trigger a fresh one
+      const prev = button.querySelector(".theme-burst");
+      if (prev) prev.remove();
+      const burst = document.createElement("span");
+      burst.className = "theme-burst";
+      button.appendChild(burst);
+      window.setTimeout(() => burst.remove(), 950);
+    }
     setTheme(isDarkMode ? "light" : "dark");
   };
 
@@ -89,7 +99,7 @@ const NavbarClient = ({
     <header
       className="sticky top-0 z-50 border-b border-slate-200/70 bg-white/45 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/35"
     >
-      <div className="mx-auto w-full max-w-7xl px-4 py-3 md:px-6">
+      <div className="mx-auto w-full max-w-360 px-4 py-3 md:px-6">
         <div className="relative flex items-center justify-between gap-3 rounded-[1.35rem] border border-white/60 bg-white/80 px-3 py-2.5 shadow-[0_20px_45px_-28px_rgba(15,23,42,0.45)] backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/70 overflow-hidden">
           <div className="navbar-gradient-motion" aria-hidden="true" />
           <Link href="/" className="group flex min-w-0 items-center gap-3">
@@ -147,7 +157,7 @@ const NavbarClient = ({
                     variant="ghost"
                     size="icon"
                     onClick={handleThemeToggle}
-                    className="size-9 rounded-full border border-slate-200/80 bg-white/80 text-slate-600 backdrop-blur hover:bg-blue-50 hover:text-blue-700 dark:border-white/10 dark:bg-slate-900/70 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-blue-300"
+                    className="relative size-9 overflow-hidden rounded-full border border-slate-200/80 bg-white/80 text-slate-600 backdrop-blur transition-transform duration-300 hover:scale-110 hover:bg-blue-50 hover:text-blue-700 dark:border-white/10 dark:bg-slate-900/70 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-blue-300"
                   >
                     {isDarkMode ? <Sun className="size-4" /> : <Moon className="size-4" />}
                   </Button>
@@ -297,7 +307,7 @@ const NavbarClient = ({
                     type="button"
                     variant="outline"
                     onClick={handleThemeToggle}
-                    className="w-full justify-center rounded-full dark:border-white/10 dark:bg-slate-950/70 dark:text-slate-100"
+                    className="relative w-full justify-center overflow-hidden rounded-full dark:border-white/10 dark:bg-slate-950/70 dark:text-slate-100"
                   >
                     {isDarkMode ? <Sun className="mr-2 size-4" /> : <Moon className="mr-2 size-4" />}
                     {themeLabel}

@@ -25,13 +25,20 @@ export const setCookie = async (
   // The refresh token stays httpOnly — it is only used server-side.
   const isBrowserReadable = name === "accessToken";
 
-  cookieStore.set(name, value, {
-    httpOnly: !isBrowserReadable, // 🔒 Still httpOnly for refresh token / session
-    secure: isProduction, // 🔐 HTTPS only in production
-    sameSite: "lax",    // ✅ works better for OAuth redirects
-    path: "/",           // 🌍 Cookie available across the entire site
-    maxAge: maxAgeInSeconds, // ⏳ Expiration time
-  });
+  try {
+    cookieStore.set(name, value, {
+      httpOnly: !isBrowserReadable, // 🔒 Still httpOnly for refresh token / session
+      secure: isProduction, // 🔐 HTTPS only in production
+      sameSite: "lax", // ✅ works better for OAuth redirects
+      path: "/", // 🌍 Cookie available across the entire site
+      maxAge: maxAgeInSeconds, // ⏳ Expiration time
+    });
+  } catch {
+    // Server Components cannot mutate cookies. Refresh-token rotation may be
+    // attempted from a Server Component render (e.g. Navbar) — in that case
+    // we silently skip persisting the new token. A subsequent Server Action
+    // / Route Handler / middleware pass will write the rotated token.
+  }
 };
 
 /**

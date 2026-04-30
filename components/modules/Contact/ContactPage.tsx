@@ -112,7 +112,7 @@ export default function ContactPage() {
   return (
     <div className="space-y-16 pb-16">
       {/* ── Hero ────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden rounded-[32px] border border-white/10 bg-linear-to-br from-slate-950 via-blue-950 to-cyan-900 px-6 py-16 text-center text-white shadow-[0_40px_100px_-30px_rgba(34,211,238,0.4)] md:px-12 md:py-20">
+      <section className="relative overflow-hidden rounded-[32px] border border-white/10 bg-linear-to-br from-slate-950 via-blue-950 to-cyan-900 px-6 py-10 text-center text-white shadow-[0_40px_100px_-30px_rgba(34,211,238,0.4)] md:px-12 md:py-12">
         <div
           aria-hidden
           className="pointer-events-none absolute -left-24 -top-24 size-80 rounded-full bg-blue-500/30 blur-[100px]"
@@ -132,14 +132,14 @@ export default function ContactPage() {
             We&apos;d love to hear from you
           </span>
 
-          <h1 className="text-4xl font-extrabold leading-tight tracking-tight md:text-5xl">
+          <h1 className="text-2xl font-extrabold leading-tight tracking-tight md:text-3xl">
             Let&apos;s start a{" "}
             <span className="bg-linear-to-r from-cyan-300 via-sky-300 to-blue-300 bg-clip-text text-transparent">
               conversation
             </span>
           </h1>
 
-          <p className="mx-auto max-w-lg text-base text-white/70 md:text-lg">
+          <p className="mx-auto max-w-lg text-sm text-white/70 md:text-base">
             Whether you have a question, feedback, or a partnership idea — drop us a line and the
             right person will get back to you fast.
           </p>

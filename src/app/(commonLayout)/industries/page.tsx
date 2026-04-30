@@ -1,6 +1,8 @@
 import { getAllIndustries } from "@/src/services/industry.services";
 import type { IIndustry } from "@/src/types/industry.types";
 import Image from "next/image";
+import Link from "next/link";
+import { ArrowUpRight } from "lucide-react";
 
 // Render on-demand so build doesn't fail if the backend is unreachable
 // during the Vercel build (e.g. Render cold start).
@@ -42,14 +44,16 @@ export default async function IndustriesPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {industries.map((industry) => (
-            <div
+            <Link
               key={industry.id}
-              className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-[0_18px_45px_-30px_rgba(15,23,42,0.25)] transition duration-300 hover:-translate-y-1 hover:border-cyan-300 hover:shadow-[0_28px_70px_-26px_rgba(34,211,238,0.45)] dark:border-white/10 dark:bg-slate-900/70 dark:backdrop-blur-xl dark:hover:border-cyan-400/40 dark:hover:bg-slate-900/90"
+              href={`/industries/${industry.id}`}
+              aria-label={`Explore ${industry.name} industry`}
+              className="group relative flex h-full min-h-65 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-[0_18px_45px_-30px_rgba(15,23,42,0.25)] transition duration-300 hover:-translate-y-1 hover:border-cyan-300 hover:shadow-[0_28px_70px_-26px_rgba(34,211,238,0.45)] focus-visible:-translate-y-1 focus-visible:border-cyan-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 dark:border-white/10 dark:bg-slate-900/70 dark:backdrop-blur-xl dark:hover:border-cyan-400/40 dark:hover:bg-slate-900/90 dark:focus-visible:ring-offset-slate-950"
             >
               {/* Top accent bar */}
               <div
                 aria-hidden
-                className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-blue-500 via-cyan-400 to-teal-400 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-blue-500 via-cyan-400 to-teal-400 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100"
               />
 
               {industry.icon && (
@@ -69,7 +73,12 @@ export default async function IndustriesPage() {
               <p className="line-clamp-3 min-h-15 text-sm text-muted-foreground">
                 {industry.description}
               </p>
-            </div>
+
+              <span className="mt-auto inline-flex items-center justify-center gap-1 pt-4 text-sm font-medium text-blue-600 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100 dark:text-cyan-300">
+                Explore industry
+                <ArrowUpRight className="size-4" aria-hidden="true" />
+              </span>
+            </Link>
           ))}
         </div>
       </section>

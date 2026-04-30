@@ -2,17 +2,17 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
   CalendarRange,
-  Clock3,
-  Layers3,
+  ChevronDown,
   ShieldCheck,
   Sparkles,
   Users,
 } from "lucide-react";
+import gsap from "gsap";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,88 +22,79 @@ const carouselSlides = [
   {
     image: "/banner/banner1.jpg",
     eyebrow: "Smart expert guidance",
-    title: "Make better decisions with the right expert beside you.",
+    title: "Better decisions with the right expert beside you.",
     description:
-      "A clean modern consultation experience for discovery, booking, and confident next steps.",
+      "Discover, book, and act — a clean consultation flow built for confident next steps.",
   },
   {
     image: "/banner/image.jpg",
-    eyebrow: "Smooth booking flow",
-    title: "Simple, secure, and fast from first click to booked session.",
+    eyebrow: "Smooth booking",
+    title: "From first click to booked session in seconds.",
     description:
-      "Explore trusted specialists, choose the right slot, and keep everything organized in one place.",
+      "Trusted specialists, real-time availability, and one place to manage every conversation.",
   },
   {
     image: "/banner/image (1).jpg",
-    eyebrow: "Future-ready platform",
-    title: "Modern consulting for teams that want clarity and momentum.",
+    eyebrow: "Future-ready",
+    title: "Modern consulting for teams that move fast.",
     description:
-      "ConsultEdge brings expert insight, smart dashboards, and a premium platform feel into one journey.",
+      "Expert insight, smart dashboards, and a premium feel — all in one journey.",
   },
 ];
 
 const trustCards = [
-  {
-    title: "Verified experts",
-    subtitle: "Trusted profiles",
-    icon: Users,
-  },
-  {
-    title: "Secure booking",
-    subtitle: "Smooth payment flow",
-    icon: ShieldCheck,
-  },
-  {
-    title: "Fast scheduling",
-    subtitle: "Clear next steps",
-    icon: CalendarRange,
-  },
-];
-
-const heroStats = [
-  {
-    value: "24/7",
-    label: "Expert discovery",
-    icon: Clock3,
-  },
-  {
-    value: "1 hub",
-    label: "Booking and follow-up",
-    icon: Layers3,
-  },
-  {
-    value: "100%",
-    label: "Guided workflow feel",
-    icon: ShieldCheck,
-  },
+  { title: "Verified experts", subtitle: "Trusted profiles", icon: Users },
+  { title: "Secure booking", subtitle: "Smooth payments", icon: ShieldCheck },
+  { title: "Fast scheduling", subtitle: "Clear next steps", icon: CalendarRange },
 ];
 
 const AUTO_PLAY_DELAY = 6000;
 
 export default function Banner() {
   const [activeSlide, setActiveSlide] = useState(0);
+  const copyRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
       setActiveSlide((current) => (current + 1) % carouselSlides.length);
     }, AUTO_PLAY_DELAY);
-
     return () => window.clearInterval(intervalId);
   }, []);
 
+  // GSAP intro/transition animation on slide change
+  useEffect(() => {
+    const node = copyRef.current;
+    if (!node) return;
+    const targets = node.querySelectorAll<HTMLElement>("[data-anim]");
+    if (!targets.length) return;
+
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        targets,
+        { y: 28, opacity: 0, filter: "blur(8px)" },
+        {
+          y: 0,
+          opacity: 1,
+          filter: "blur(0px)",
+          duration: 0.9,
+          ease: "power3.out",
+          stagger: 0.08,
+        },
+      );
+    }, node);
+
+    return () => ctx.revert();
+  }, [activeSlide]);
+
   const currentSlide = carouselSlides[activeSlide];
 
-  const goToPrevious = () => {
-    setActiveSlide((current) => (current === 0 ? carouselSlides.length - 1 : current - 1));
-  };
-
-  const goToNext = () => {
-    setActiveSlide((current) => (current + 1) % carouselSlides.length);
-  };
+  const goToPrevious = () =>
+    setActiveSlide((c) => (c === 0 ? carouselSlides.length - 1 : c - 1));
+  const goToNext = () => setActiveSlide((c) => (c + 1) % carouselSlides.length);
 
   return (
-    <section className="relative -mx-4 -mt-6 overflow-hidden rounded-b-[2.25rem] border-b border-slate-800/80 bg-slate-950 shadow-[0_30px_80px_-30px_rgba(34,211,238,0.35)] md:-mx-6 lg:-mt-8 lg:rounded-b-[2.75rem]">
-      <div className="relative min-h-168 overflow-hidden md:min-h-188 lg:min-h-196">
+    <section className="relative -mx-4 -mt-6 overflow-hidden rounded-b-[2rem] border-b border-slate-800/80 bg-slate-950 shadow-[0_30px_80px_-30px_rgba(34,211,238,0.35)] md:-mx-6 lg:-mt-8 lg:rounded-b-[2.5rem]">
+      <div className="relative h-120 overflow-hidden md:h-130 lg:h-140">
         {carouselSlides.map((slide, index) => (
           <div
             key={slide.title}
@@ -119,175 +110,153 @@ export default function Banner() {
               sizes="100vw"
               className={`object-cover ${index === activeSlide ? "consultedge-carousel-image" : ""}`}
             />
-
-            <div className="absolute inset-0 bg-linear-to-r from-slate-950/90 via-slate-950/65 to-slate-950/20" />
-            <div className="absolute inset-0 bg-linear-to-t from-slate-950/90 via-slate-950/10 to-slate-950/30" />
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-size-[34px_34px] opacity-20" />
+            <div className="absolute inset-0 bg-linear-to-r from-slate-950/95 via-slate-950/70 to-slate-950/30" />
+            <div className="absolute inset-0 bg-linear-to-t from-slate-950/90 via-transparent to-slate-950/30" />
           </div>
         ))}
 
-        <div className="relative z-10 mx-auto flex h-full w-full max-w-7xl flex-col justify-between px-5 py-6 text-white md:px-8 md:py-8 lg:px-10 lg:py-10">
-          <div className="grid gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)] lg:items-end">
-            <div className="max-w-3xl space-y-5 pt-3 md:space-y-6 md:pt-6 lg:pt-10">
-              <Badge className="border-white/20 bg-white/10 text-white hover:bg-white/10">
+        <div className="relative z-10 mx-auto flex h-full w-full max-w-360 flex-col justify-between px-5 py-6 text-white md:px-8 md:py-7 lg:px-10 lg:py-8">
+          <div className="grid h-full gap-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(280px,0.75fr)] lg:items-center">
+            {/* LEFT: copy */}
+            <div ref={copyRef} className="max-w-2xl space-y-4">
+              <Badge
+                data-anim
+                className="border-white/20 bg-white/10 text-white hover:bg-white/10"
+              >
                 <Sparkles className="mr-1 size-3.5" />
                 Premium consultation platform
               </Badge>
 
-              <div key={currentSlide.title} className="consultedge-banner-copy space-y-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.32em] text-cyan-200 md:text-sm">
-                  {currentSlide.eyebrow}
-                </p>
-                <h1 className="max-w-2xl text-4xl font-bold tracking-tight text-balance md:text-5xl lg:text-6xl xl:text-[4.25rem] xl:leading-[1.02]">
-                  {currentSlide.title}
-                </h1>
-                <p className="max-w-2xl text-sm leading-7 text-slate-200 md:text-lg md:leading-8">
-                  {currentSlide.description}
-                </p>
-              </div>
+              <p
+                data-anim
+                className="text-[10px] font-semibold uppercase tracking-[0.32em] text-cyan-200 md:text-xs"
+              >
+                {currentSlide.eyebrow}
+              </p>
 
-              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              <h1
+                data-anim
+                className="text-2xl font-bold leading-[1.1] tracking-tight text-balance md:text-3xl lg:text-4xl xl:text-5xl"
+              >
+                {currentSlide.title}
+              </h1>
+
+              <p
+                data-anim
+                className="max-w-xl text-sm leading-6 text-slate-200/90 md:text-base md:leading-7"
+              >
+                {currentSlide.description}
+              </p>
+
+              <div data-anim className="flex flex-wrap gap-3 pt-1">
                 <Link
                   href="/experts"
                   className={cn(
-                    "inline-flex h-11 items-center justify-center rounded-full border border-transparent px-5 text-sm font-medium transition-all",
+                    "inline-flex h-10 items-center justify-center rounded-full px-5 text-sm font-medium transition-all",
                     "bg-white text-slate-900 hover:bg-white/90",
                   )}
                 >
-                    Explore experts
-                    <ArrowRight className="ml-2 size-4" />
+                  Explore experts
+                  <ArrowRight className="ml-2 size-4" />
                 </Link>
                 <Link
                   href="/apply-expert"
                   className={cn(
-                    "inline-flex h-11 items-center justify-center rounded-full border px-5 text-sm font-medium transition-all",
-                    "border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white",
+                    "inline-flex h-10 items-center justify-center rounded-full border px-5 text-sm font-medium transition-all",
+                    "border-white/30 bg-transparent text-white hover:bg-white/10",
                   )}
                 >
-                    Become an expert
+                  Become an expert
                 </Link>
-              </div>
-
-              <div className="grid gap-3 sm:grid-cols-3">
-                {heroStats.map((item) => {
-                  const Icon = item.icon;
-
-                  return (
-                    <div
-                      key={item.label}
-                      className="rounded-2xl border border-white/12 bg-white/8 px-4 py-3 backdrop-blur-md"
-                    >
-                      <div className="mb-2 flex items-center gap-2 text-cyan-200">
-                        <Icon className="size-4" />
-                        <span className="text-[11px] uppercase tracking-[0.18em] text-white/70">
-                          {item.label}
-                        </span>
-                      </div>
-                      <p className="text-xl font-semibold text-white md:text-2xl">{item.value}</p>
-                    </div>
-                  );
-                })}
               </div>
             </div>
 
+            {/* RIGHT: compact trust panel */}
             <div className="hidden lg:block">
-              <div className="rounded-[2rem] border border-white/12 bg-white/10 p-5 backdrop-blur-xl shadow-[0_28px_80px_-34px_rgba(15,23,42,0.75)]">
-                <div className="mb-5 flex items-center justify-between gap-3">
+              <div className="rounded-3xl border border-white/12 bg-white/8 p-4 backdrop-blur-xl">
+                <div className="mb-3 flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-xs uppercase tracking-[0.24em] text-cyan-200">Why it feels premium</p>
-                    <p className="mt-2 text-2xl font-semibold text-white">Designed for faster expert decisions</p>
+                    <p className="text-[10px] uppercase tracking-[0.24em] text-cyan-200">
+                      Why it feels premium
+                    </p>
+                    <p className="mt-1 text-base font-semibold text-white">
+                      Designed for faster expert decisions
+                    </p>
                   </div>
-                  <div className="rounded-2xl border border-white/10 bg-white/10 p-3 text-cyan-200">
-                    <Sparkles className="size-5" />
+                  <div className="rounded-xl border border-white/10 bg-white/10 p-2 text-cyan-200">
+                    <Sparkles className="size-4" />
                   </div>
                 </div>
-
-                <div className="space-y-3">
-                  {trustCards.map((item) => {
-                    const Icon = item.icon;
-
-                    return (
-                      <div
-                        key={item.title}
-                        className="flex items-start gap-3 rounded-2xl border border-white/10 bg-slate-950/30 p-4"
-                      >
-                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-cyan-200">
-                          <Icon className="size-5" />
-                        </div>
-                        <div>
-                          <p className="font-semibold text-white">{item.title}</p>
-                          <p className="text-sm text-slate-300">{item.subtitle}</p>
-                        </div>
+                <div className="space-y-2">
+                  {trustCards.map(({ title, subtitle, icon: Icon }) => (
+                    <div
+                      key={title}
+                      className="flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-950/40 px-3 py-2"
+                    >
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/10 text-cyan-200">
+                        <Icon className="size-4" />
                       </div>
-                    );
-                  })}
+                      <div>
+                        <p className="text-sm font-semibold text-white">{title}</p>
+                        <p className="text-[11px] text-slate-300">{subtitle}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="space-y-4 pt-6 md:pt-8">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2 px-1">
-                {carouselSlides.map((slide, index) => (
-                  <button
-                    key={slide.image}
-                    type="button"
-                    aria-label={`Go to slide ${index + 1}`}
-                    onClick={() => setActiveSlide(index)}
-                    className={`rounded-full transition-all ${
-                      index === activeSlide
-                        ? "h-2.5 w-8 bg-white"
-                        : "h-2.5 w-2.5 bg-white/50 hover:bg-white/75"
-                    }`}
-                  />
-                ))}
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Button
+          {/* Carousel controls */}
+          <div className="flex items-center justify-between gap-3 pt-3">
+            <div className="flex items-center gap-1.5">
+              {carouselSlides.map((slide, index) => (
+                <button
+                  key={slide.image}
                   type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={goToPrevious}
-                  className="rounded-full border-white/25 bg-white/10 text-white hover:bg-white/20 hover:text-white"
-                >
-                  <ArrowLeft className="size-4" />
-                  <span className="sr-only">Previous slide</span>
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={goToNext}
-                  className="rounded-full border-white/25 bg-white/10 text-white hover:bg-white/20 hover:text-white"
-                >
-                  <ArrowRight className="size-4" />
-                  <span className="sr-only">Next slide</span>
-                </Button>
-              </div>
+                  aria-label={`Go to slide ${index + 1}`}
+                  onClick={() => setActiveSlide(index)}
+                  className={`rounded-full transition-all ${
+                    index === activeSlide
+                      ? "h-2 w-7 bg-white"
+                      : "h-2 w-2 bg-white/45 hover:bg-white/75"
+                  }`}
+                />
+              ))}
             </div>
 
-            <div className="grid gap-3 md:grid-cols-3 lg:hidden">
-              {trustCards.map((item, index) => {
-                const Icon = item.icon;
-
-                return (
-                  <div
-                    key={item.title}
-                    className={`consultedge-card-glow rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-md ${index % 2 === 0 ? "consultedge-float" : "consultedge-float consultedge-float--delay"}`}
-                  >
-                    <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-cyan-200">
-                      <Icon className="size-4" />
-                    </div>
-                    <p className="font-semibold text-white">{item.title}</p>
-                    <p className="text-sm text-slate-200">{item.subtitle}</p>
-                  </div>
-                );
-              })}
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={goToPrevious}
+                className="size-9 rounded-full border-white/25 bg-white/10 text-white hover:bg-white/20 hover:text-white"
+              >
+                <ArrowLeft className="size-4" />
+                <span className="sr-only">Previous slide</span>
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={goToNext}
+                className="size-9 rounded-full border-white/25 bg-white/10 text-white hover:bg-white/20 hover:text-white"
+              >
+                <ArrowRight className="size-4" />
+                <span className="sr-only">Next slide</span>
+              </Button>
             </div>
           </div>
         </div>
+
+        <a
+          href="#home-after-hero"
+          aria-label="Scroll to next section"
+          className="group absolute inset-x-0 bottom-2 z-10 mx-auto flex w-fit flex-col items-center gap-0.5 text-white/60 transition hover:text-white"
+        >
+          <ChevronDown className="size-5 animate-bounce" aria-hidden="true" />
+        </a>
       </div>
     </section>
   );
