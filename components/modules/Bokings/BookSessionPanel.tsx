@@ -7,6 +7,7 @@ import { CalendarDays, LockKeyhole, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 import AvailabilityCalendar from "./AvailabilityCalendar";
+import PredictiveCoupon from "@/components/AI/PredictiveCoupon";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,6 +25,7 @@ type BookSessionPanelProps = {
   expertName: string;
   expertTitle?: string | null;
   consultationFee?: number | null;
+  industryName?: string | null;
   availability?: IExpertAvailability[];
   isLoggedIn?: boolean;
   userRole?: string | null;
@@ -57,6 +59,7 @@ export default function BookSessionPanel({
   expertName,
   expertTitle,
   consultationFee,
+  industryName,
   availability = [],
   isLoggedIn = false,
   userRole,
@@ -156,6 +159,12 @@ export default function BookSessionPanel({
         </CardHeader>
 
         <CardContent className="grid gap-4 md:grid-cols-2">
+          <div className="md:col-span-2">
+            <PredictiveCoupon
+              industryName={industryName}
+              consultationFee={consultationFee}
+            />
+          </div>
           {/* NEXT SLOT */}
           <div className="rounded-2xl border bg-blue-50/70 p-4 dark:border-blue-500/20 dark:bg-blue-500/10">
             <div className="mb-2 flex items-center gap-2 text-blue-700 dark:text-blue-300">

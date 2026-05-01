@@ -1,9 +1,12 @@
 import Banner from "@/components/modules/HomePage/Banner";
-import ExpertAnimated from "@/components/modules/HomePage/ExpertAnimated";
+import ExpertsShowcase from "@/components/modules/HomePage/ExpertsShowcase";
 import HomeSection2 from "@/components/modules/HomePage/HomeSection2";
 import HomeSection3 from "@/components/modules/HomePage/HomeSection3";
 import InViewReveal from "@/components/modules/HomePage/InViewReveal";
 import IndustryTicker from "@/components/modules/HomePage/IndustryTicker";
+import TrendingExperts from "@/components/modules/HomePage/TrendingExperts";
+import ContentSuggestions from "@/components/modules/HomePage/ContentSuggestions";
+import SmartNewsletter from "@/components/modules/HomePage/SmartNewsletter";
 
 import { getExperts } from "@/src/services/expert.services";
 import { getAllIndustries } from "@/src/services/industry.services";
@@ -55,15 +58,17 @@ const HomePage = async () => {
     getAllTestimonials(3),
   ]);
 
-  const featuredExperts: IExpert[] =
+  const allExperts: IExpert[] =
     expertsResult.status === "fulfilled" && Array.isArray(expertsResult.value?.data)
-      ? expertsResult.value.data.slice(0, 3)
+      ? expertsResult.value.data
       : [];
 
-  const featuredIndustries: IIndustry[] =
+  const allIndustries: IIndustry[] =
     industriesResult.status === "fulfilled" && Array.isArray(industriesResult.value?.data)
-      ? industriesResult.value.data.slice(0, 6)
+      ? industriesResult.value.data
       : [];
+
+  const featuredIndustries: IIndustry[] = allIndustries.slice(0, 6);
 
   const featuredTestimonials: ITestimonial[] =
     testimonialsResult.status === "fulfilled" && testimonialsResult.value.length > 0
@@ -84,13 +89,22 @@ const HomePage = async () => {
           <IndustryTicker industries={featuredIndustries} />
         </InViewReveal>
         <InViewReveal delay={80}>
-          <ExpertAnimated experts={featuredExperts} />
+          <ExpertsShowcase experts={allExperts} limit={4} />
+        </InViewReveal>
+        <InViewReveal delay={110}>
+          <TrendingExperts experts={allExperts} />
+        </InViewReveal>
+        <InViewReveal delay={130}>
+          <ContentSuggestions industries={allIndustries} />
         </InViewReveal>
         <InViewReveal delay={120}>
           <HomeSection2 testimonials={featuredTestimonials} />
         </InViewReveal>
         <InViewReveal delay={160}>
           <HomeSection3 />
+        </InViewReveal>
+        <InViewReveal delay={180}>
+          <SmartNewsletter industries={allIndustries} />
         </InViewReveal>
       </div>
     </div>

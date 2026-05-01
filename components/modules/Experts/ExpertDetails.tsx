@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/card";
 import type { IExpert, IExpertAvailability } from "@/src/types/expert.types";
 import type { ITestimonial } from "@/src/types/testimonial.types";
+import { trackExpertView } from "@/src/lib/aiPersonalization";
 
 type ExpertDetailsProps = {
   expert: IExpert;
@@ -68,6 +69,14 @@ export default function ExpertDetails({
   const availableSlots = availability.filter((slot) => !slot.isBooked && !slot.isDeleted).length;
   const reviewCount = testimonials.length;
   const consultationFee = formatCurrency(expert.consultationFee ?? expert.price);
+
+  useEffect(() => {
+    trackExpertView({
+      id: expert.id,
+      industryId: expert.industryId,
+      industry: expert.industry,
+    });
+  }, [expert.id, expert.industryId, expert.industry]);
 
   const handleOpenBookingFromHero = () => {
     setOpenBookingSignal((previous) => previous + 1);
@@ -377,6 +386,7 @@ export default function ExpertDetails({
           expertName={expert.fullName}
           expertTitle={expert.title}
           consultationFee={expert.consultationFee ?? expert.price}
+          industryName={expert.industry?.name ?? null}
           availability={availability}
           isLoggedIn={isLoggedIn}
           userRole={userRole}

@@ -4,14 +4,15 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import type {
-  AiSupportApiPayload,
-  AiSupportApiResponse,
   QuickActionChip,
   SupportChatContext,
   SupportChatMessage,
   SupportHistoryItem,
 } from "./types";
-import { SUPPORT_QUICK_ACTIONS } from "./types";
+import {
+  SUPPORT_QUICK_ACTIONS,
+} from "./types";
+import { aiSupport } from "@/src/services/ai.service";
 
 const STORAGE_KEY = "consultedge-support-chat:messages";
 const OPEN_KEY = "consultedge-support-chat:open";
@@ -19,11 +20,6 @@ const MAX_HISTORY_ITEMS = 8;
 
 const createId = () =>
   `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-
-const buildApiBaseUrl = (rawValue?: string) => {
-  const base = (rawValue || "http://localhost:5000").trim().replace(/\/+$/, "");
-  return base.endsWith("/api/v1") ? base : `${base}/api/v1`;
-};
 
 const createWelcomeMessage = (): SupportChatMessage => ({
   id: "support-welcome",
@@ -112,31 +108,23 @@ export function useAiSupportChat(initialContext: SupportChatContext = "homepage"
       setContext(resolvedContext);
       setIsLoading(true);
 
+      // Try the on-device FAQ heuristics first — they handle the most common
+      // questions without a network round-trip. Only fall through to the
+      // backend when no rule matches with sufficient confidence.
+      // Heuristic FAQ matcher removed in favour of the backend `/ai/support`
+      // endpoint which now owns the routing. We still keep a safety fallback
+      // for offline / 5xx scenarios via aiSupport's graceful error path.
+
       try {
-        const payload: AiSupportApiPayload = {
+        const { data, error } = await aiSupport({
           message: trimmed,
           context: resolvedContext,
           history,
-        };
+        });
 
-        const response = await fetch(
-          `${buildApiBaseUrl(process.env.NEXT_PUBLIC_API_BASE_URL)}/ai/chat`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            credentials: "include",
-            body: JSON.stringify(payload),
-          },
-        );
-
-        if (!response.ok) {
-          throw new Error("Support is unavailable right now. Please try again.");
+        if (error) {
+          throw new Error(error.message);
         }
-
-        const result = (await response.json()) as AiSupportApiResponse;
-        const data = result.data;
 
         const assistantMessage: SupportChatMessage = {
           id: createId(),

@@ -1,20 +1,24 @@
 import Link from "next/link";
-import { ArrowUpRight, BadgeCheck, CalendarDays } from "lucide-react";
+import {
+  ArrowRight,
+  BadgeCheck,
+  BriefcaseBusiness,
+  CalendarDays,
+  Wallet,
+} from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { IExpert } from "@/src/types/expert.types";
 
-const getInitials = (name: string) => {
-  return name
+const getInitials = (name: string) =>
+  name
     .split(" ")
     .map((part) => part[0])
     .join("")
     .slice(0, 2)
     .toUpperCase();
-};
 
 const formatCurrency = (value?: number) =>
   typeof value === "number"
@@ -23,75 +27,83 @@ const formatCurrency = (value?: number) =>
         currency: "USD",
         maximumFractionDigits: 0,
       }).format(value)
-    : "Contact for pricing";
+    : "Contact";
+
+const fallbackBio =
+  "Focused 1:1 guidance for strategy, growth, operations, and decision-making support.";
 
 export default function ExpertCard({ expert }: { expert: IExpert }) {
   const expertPrice = expert.price ?? expert.consultationFee;
-  const shortBio = expert.bio?.trim()
-    ? expert.bio
-    : "Focused 1:1 guidance for strategy, growth, operations, and decision-making support.";
+  const bio = expert.bio?.trim() || fallbackBio;
 
   return (
-    <Card className="group flex h-full flex-col overflow-visible border-blue-200/70 bg-white/92 shadow-[0_20px_50px_-24px_rgba(37,99,235,0.35)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_28px_80px_-28px_rgba(37,99,235,0.5)] dark:border-white/10 dark:bg-slate-900/92 dark:shadow-[0_22px_60px_-30px_rgba(15,23,42,0.9)]">
-      <div className="relative overflow-visible border-b border-blue-100/70 bg-linear-to-br from-slate-950 via-blue-950 to-cyan-900 p-3.5 text-white dark:border-white/10">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.16),transparent_0%,transparent_42%)]" />
-        <div className="relative space-y-3">
+    <Card className="consultedge-card-glow group relative h-full overflow-hidden border border-slate-200 bg-white shadow-[0_20px_50px_-30px_rgba(15,23,42,0.25)] transition duration-300 hover:-translate-y-1 hover:border-cyan-400 hover:shadow-[0_28px_70px_-26px_rgba(34,211,238,0.45)] dark:border-white/10 dark:bg-slate-900/80 dark:shadow-black/20 dark:hover:border-cyan-400/40">
+      <CardContent className="flex h-full flex-col gap-3 p-4">
+        <div
+          className="-mx-4 -mt-4 mb-1 h-1.5 bg-linear-to-r from-blue-500 via-cyan-400 to-teal-400"
+          aria-hidden="true"
+        />
 
-          <div className="flex items-start gap-3">
-            <div className="relative flex flex-col items-center">
-              <div className="relative">
-                <Avatar size="default" className="border-2 border-white/20 ring-2 ring-white/10">
-                  {expert.profilePhoto ? (
-                    <AvatarImage src={expert.profilePhoto} alt={expert.fullName} />
-                  ) : null}
-                  <AvatarFallback className="font-semibold text-slate-900">
-                    {getInitials(expert.fullName)}
-                  </AvatarFallback>
-                </Avatar>
-                {/* Animated Active icon, attached inside bottom-left of avatar */}
-                <span className="absolute z-20 bottom-0 left-0.5 flex items-end justify-start">
-                  <span className="inline-flex h-3 w-3 items-center justify-center rounded-full bg-emerald-900/90 ring-2 ring-white/70 shadow-lg">
-                    <span className="relative flex h-2 w-2">
-                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
-                      <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400 shadow" />
-                    </span>
-                  </span>
-                </span>
-              </div>
-            </div>
-            <div className="min-w-0 flex-1 space-y-1">
-              <div className="flex items-center gap-1.5">
-                <h2 className="truncate text-base font-semibold leading-tight tracking-tight text-white">
-                  {expert.fullName}
-                </h2>
-                {expert.isVerified && (
-                  <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-900/60 ring-1 ring-white/20">
-                    <BadgeCheck className="size-3.5 text-emerald-300" />
-                  </span>
-                )}
-              </div>
-              <p className="line-clamp-1 text-[11px] text-white/75">{expert.title}</p>
-            </div>
-            <div className="ml-1 shrink-0 rounded-full border border-white/15 bg-white/10 px-2.5 py-0.5 text-[11px] font-semibold text-white backdrop-blur">
-              {formatCurrency(expertPrice)}
-            </div>
+        <div className="flex items-center gap-3">
+          <div className="relative flex items-center justify-center">
+            <Avatar
+              size="default"
+              className="size-12 border-2 border-cyan-100 ring-2 ring-cyan-50 dark:border-white/15 dark:ring-white/10"
+            >
+              {expert.profilePhoto ? (
+                <AvatarImage src={expert.profilePhoto} alt={expert.fullName} />
+              ) : null}
+              <AvatarFallback className="text-slate-900">
+                {getInitials(expert.fullName)}
+              </AvatarFallback>
+            </Avatar>
+            <span className="absolute -bottom-0.5 -right-0.5 z-20 flex">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900" />
+              </span>
+            </span>
           </div>
 
-          <div className="flex flex-wrap gap-1.5">
-            <Badge className="border-white/15 bg-white/10 px-2 py-0.5 text-[10px] font-medium text-white hover:bg-white/10">
-              {expert.industry?.name || "General consulting"}
-            </Badge>
-            <Badge className="border-white/15 bg-white/10 px-2 py-0.5 text-[10px] font-medium text-white hover:bg-white/10">
-              {expert.experience}+ yrs
-            </Badge>
+          <div className="min-w-0 flex-1 space-y-0.5">
+            <h3 className="line-clamp-1 flex items-center gap-1.5 text-sm font-semibold text-foreground">
+              {expert.fullName}
+              {expert.isVerified ? (
+                <BadgeCheck className="size-3.5 shrink-0 text-cyan-600 dark:text-cyan-300" />
+              ) : null}
+            </h3>
+            <p className="line-clamp-1 text-xs text-muted-foreground">{expert.title}</p>
+            {expert.industry?.name ? (
+              <p className="line-clamp-1 text-[11px] font-medium text-cyan-700 dark:text-cyan-300">
+                {expert.industry.name}
+              </p>
+            ) : null}
           </div>
         </div>
-      </div>
 
-      <CardContent className="flex flex-1 flex-col gap-4 p-4">
-        <p className="line-clamp-2 text-xs leading-5 text-muted-foreground dark:text-slate-300/80">
-          {shortBio}
-        </p>
+        <p className="line-clamp-2 text-sm text-gray-600 dark:text-gray-300">{bio}</p>
+
+        <div className="grid grid-cols-2 gap-2">
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-white/10 dark:bg-white/5">
+            <div className="mb-0.5 flex items-center gap-1 text-cyan-700 dark:text-cyan-300">
+              <BriefcaseBusiness className="size-3" />
+              <span className="text-[9px] font-medium uppercase tracking-wide">Exp</span>
+            </div>
+            <p className="text-xs font-semibold text-foreground">
+              {expert.experience} {Number(expert.experience) === 1 ? "yr" : "yrs"}
+            </p>
+          </div>
+
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-white/10 dark:bg-white/5">
+            <div className="mb-0.5 flex items-center gap-1 text-cyan-700 dark:text-cyan-300">
+              <Wallet className="size-3" />
+              <span className="text-[9px] font-medium uppercase tracking-wide">Fee</span>
+            </div>
+            <p className="text-xs font-semibold text-foreground">
+              {formatCurrency(expertPrice)}
+            </p>
+          </div>
+        </div>
 
         <div className="mt-auto grid gap-2 sm:grid-cols-2">
           <Button
@@ -101,7 +113,7 @@ export default function ExpertCard({ expert }: { expert: IExpert }) {
           >
             <Link href={`/experts/${expert.id}`}>
               View profile
-              <ArrowUpRight className="ml-1.5 size-3.5" />
+              <ArrowRight className="ml-1.5 size-3.5" />
             </Link>
           </Button>
 

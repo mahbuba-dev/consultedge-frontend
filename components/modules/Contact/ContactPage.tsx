@@ -18,6 +18,8 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import SmartAutofillBanner from "@/components/AI/SmartAutofillBanner";
+import { rememberAutofill } from "@/src/lib/autofillStore";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -103,6 +105,7 @@ export default function ContactPage() {
     }
     setLoading(true);
     await new Promise((r) => setTimeout(r, 1200));
+    rememberAutofill({ name: form.name, email: form.email });
     setLoading(false);
     setSent(true);
     setForm(INITIAL_FORM);
@@ -270,6 +273,13 @@ export default function ContactPage() {
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-6">
+                <SmartAutofillBanner
+                  fields={["name", "email"]}
+                  onApply={(values) => {
+                    if (values.name) handleChange("name", values.name);
+                    if (values.email) handleChange("email", values.email);
+                  }}
+                />
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <span className="inline-flex size-8 items-center justify-center rounded-full bg-linear-to-br from-blue-600 to-cyan-500 text-white shadow-md shadow-cyan-500/25">

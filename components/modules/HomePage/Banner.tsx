@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -17,8 +17,17 @@ import gsap from "gsap";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/src/lib/utils";
+import { getBehavior, hasPersonalSignal } from "@/src/lib/aiPersonalization";
 
-const carouselSlides = [
+interface BannerSlide {
+  image: string;
+  eyebrow: string;
+  title: string;
+  description: string;
+  personalized?: boolean;
+}
+
+const carouselSlides: BannerSlide[] = [
   {
     image: "/banner/banner1.jpg",
     eyebrow: "Smart expert guidance",
@@ -52,14 +61,42 @@ const AUTO_PLAY_DELAY = 6000;
 
 export default function Banner() {
   const [activeSlide, setActiveSlide] = useState(0);
+  const [hydrated, setHydrated] = useState(false);
+  const [behaviorTick, setBehaviorTick] = useState(0);
   const copyRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    setHydrated(true);
+    const handler = () => setBehaviorTick((t) => t + 1);
+    window.addEventListener("consultedge:behavior-updated", handler);
+    return () => window.removeEventListener("consultedge:behavior-updated", handler);
+  }, []);
+
+  const slides = useMemo<BannerSlide[]>(() => {
+    if (!hydrated || !hasPersonalSignal()) return carouselSlides;
+    const behavior = getBehavior();
+    const lastSearch = behavior.recentSearches[0]?.trim();
+    const personalized: BannerSlide = {
+      image: carouselSlides[0].image,
+      eyebrow: "Welcome back",
+      title: lastSearch
+        ? `Pick up where you left off with ${lastSearch}.`
+        : "Top experts curated from your recent activity.",
+      description:
+        "We've reshuffled the homepage to surface the experts and insights closest to what you've been exploring.",
+      personalized: true,
+    };
+    return [personalized, ...carouselSlides.slice(1)];
+    // behaviorTick triggers re-evaluation after mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated, behaviorTick]);
+
+  useEffect(() => {
     const intervalId = window.setInterval(() => {
-      setActiveSlide((current) => (current + 1) % carouselSlides.length);
+      setActiveSlide((current) => (current + 1) % slides.length);
     }, AUTO_PLAY_DELAY);
     return () => window.clearInterval(intervalId);
-  }, []);
+  }, [slides.length]);
 
   // GSAP intro/transition animation on slide change
   useEffect(() => {
@@ -71,14 +108,14 @@ export default function Banner() {
     const ctx = gsap.context(() => {
       gsap.fromTo(
         targets,
-        { y: 28, opacity: 0, filter: "blur(8px)" },
+        { y: 14, opacity: 0 },
         {
           y: 0,
           opacity: 1,
-          filter: "blur(0px)",
-          duration: 0.9,
-          ease: "power3.out",
-          stagger: 0.08,
+          duration: 0.55,
+          ease: "power2.out",
+          stagger: 0.06,
+          clearProps: "transform,opacity",
         },
       );
     }, node);
@@ -86,16 +123,16 @@ export default function Banner() {
     return () => ctx.revert();
   }, [activeSlide]);
 
-  const currentSlide = carouselSlides[activeSlide];
+  const currentSlide = slides[activeSlide] ?? slides[0];
 
   const goToPrevious = () =>
-    setActiveSlide((c) => (c === 0 ? carouselSlides.length - 1 : c - 1));
-  const goToNext = () => setActiveSlide((c) => (c + 1) % carouselSlides.length);
+    setActiveSlide((c) => (c === 0 ? slides.length - 1 : c - 1));
+  const goToNext = () => setActiveSlide((c) => (c + 1) % slides.length);
 
   return (
     <section className="relative -mx-4 -mt-6 overflow-hidden rounded-b-[2rem] border-b border-slate-800/80 bg-slate-950 shadow-[0_30px_80px_-30px_rgba(34,211,238,0.35)] md:-mx-6 lg:-mt-8 lg:rounded-b-[2.5rem]">
-      <div className="relative h-120 overflow-hidden md:h-130 lg:h-140">
-        {carouselSlides.map((slide, index) => (
+      <div className="relative h-[clamp(460px,62vh,640px)] overflow-hidden md:h-[clamp(480px,66vh,680px)] lg:h-[clamp(520px,70vh,720px)]">
+        {slides.map((slide, index) => (
           <div
             key={slide.title}
             className={`absolute inset-0 transition-opacity duration-1000 ${
@@ -210,9 +247,9 @@ export default function Banner() {
           {/* Carousel controls */}
           <div className="flex items-center justify-between gap-3 pt-3">
             <div className="flex items-center gap-1.5">
-              {carouselSlides.map((slide, index) => (
+              {slides.map((slide, index) => (
                 <button
-                  key={slide.image}
+                  key={slide.image + index}
                   type="button"
                   aria-label={`Go to slide ${index + 1}`}
                   onClick={() => setActiveSlide(index)}

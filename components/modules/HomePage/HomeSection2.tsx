@@ -60,6 +60,20 @@ const audiences = [
     accent: "from-amber-500 to-rose-500",
     glow: "shadow-rose-500/20",
   },
+  {
+    title: "Investors & Advisors",
+    description: "Validate decisions with sector specialists before committing capital or making strategic moves.",
+    icon: ShieldCheck,
+    accent: "from-violet-500 to-fuchsia-500",
+    glow: "shadow-violet-500/20",
+  },
+  {
+    title: "Teams & Agencies",
+    description: "Plug in expert reviewers and on-demand mentors to ship faster and raise the bar on every deliverable.",
+    icon: Users,
+    accent: "from-emerald-500 to-cyan-500",
+    glow: "shadow-emerald-500/20",
+  },
 ];
 
 const trustSignals = [
@@ -91,7 +105,7 @@ export default function HomeSection2({ testimonials }: HomeSection2Props) {
         </div>
 
         {/* Audience cards */}
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {audiences.map((item, index) => {
             const Icon = item.icon;
             return (

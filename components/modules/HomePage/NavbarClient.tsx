@@ -33,6 +33,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import LogoutButton from "@/components/modules/auth/LogoutButton";
+import AISearchBar from "@/components/AI/AISearchBar";
 
 interface NavItem {
   label: string;
@@ -148,6 +149,9 @@ const NavbarClient = ({
           </nav>
 
           <div className="hidden items-center gap-2.5 lg:flex">
+            <div className="hidden w-64 xl:block">
+              <AISearchBar />
+            </div>
             <TooltipProvider delayDuration={300}>
               {/* Theme toggle */}
               <Tooltip>
@@ -157,7 +161,7 @@ const NavbarClient = ({
                     variant="ghost"
                     size="icon"
                     onClick={handleThemeToggle}
-                    className="relative size-9 overflow-hidden rounded-full border border-slate-200/80 bg-white/80 text-slate-600 backdrop-blur transition-transform duration-300 hover:scale-110 hover:bg-blue-50 hover:text-blue-700 dark:border-white/10 dark:bg-slate-900/70 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-blue-300"
+                    className="relative size-9 rounded-full border border-slate-200/80 bg-white/80 text-slate-600 backdrop-blur transition-transform duration-300 hover:scale-110 hover:bg-blue-50 hover:text-blue-700 dark:border-white/10 dark:bg-slate-900/70 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-blue-300"
                   >
                     {isDarkMode ? <Sun className="size-4" /> : <Moon className="size-4" />}
                   </Button>
@@ -281,6 +285,10 @@ const NavbarClient = ({
                   </div>
                 </SheetHeader>
 
+                <div className="px-4 pb-3">
+                  <AISearchBar variant="mobile" />
+                </div>
+
                 <div className="flex flex-1 flex-col gap-2 px-4 pb-4">
                   {navItems.map((item) => {
                     const isActive = isActiveRoute(item.href);
@@ -307,7 +315,7 @@ const NavbarClient = ({
                     type="button"
                     variant="outline"
                     onClick={handleThemeToggle}
-                    className="relative w-full justify-center overflow-hidden rounded-full dark:border-white/10 dark:bg-slate-950/70 dark:text-slate-100"
+                    className="relative w-full justify-center rounded-full dark:border-white/10 dark:bg-slate-950/70 dark:text-slate-100"
                   >
                     {isDarkMode ? <Sun className="mr-2 size-4" /> : <Moon className="mr-2 size-4" />}
                     {themeLabel}
