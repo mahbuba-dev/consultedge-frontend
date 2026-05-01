@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { loginAction } from "@/src/app/(commonLayout)/(authRouteGroup)/login/_action";
+import { demoLoginAction } from "@/src/app/(commonLayout)/(authRouteGroup)/login/_action";
 import AppField from "@/components/form/AppField";
 import AppSubmitButton from "@/components/form/AppSubmitButton";
 
@@ -28,11 +29,6 @@ interface LoginFormProps {
   redirectPath?: string;
   passwordReset?: boolean;
 }
-
-const DEMO_CLIENT_EMAIL =
-  process.env.NEXT_PUBLIC_DEMO_CLIENT_EMAIL || "client@consultedge.demo";
-const DEMO_CLIENT_PASSWORD =
-  process.env.NEXT_PUBLIC_DEMO_CLIENT_PASSWORD || "Demo@1234";
 
 const LoginForm = ({ redirectPath, passwordReset = false }: LoginFormProps) => {
   // Track server-side error messages
@@ -73,6 +69,10 @@ const LoginForm = ({ redirectPath, passwordReset = false }: LoginFormProps) => {
   const { mutateAsync, isPending } = useMutation({
     mutationFn: (payload: ILoginPayload) =>
       loginAction(payload, redirectPath),
+  });
+
+  const { mutateAsync: mutateDemoLogin, isPending: isDemoPending } = useMutation({
+    mutationFn: () => demoLoginAction(redirectPath),
   });
 
   /**
@@ -215,18 +215,39 @@ const LoginForm = ({ redirectPath, passwordReset = false }: LoginFormProps) => {
             </Alert>
           )}
 
-          {/* Demo client account auto-fill */}
+          {/* Demo login endpoint */}
           <Button
             type="button"
             variant="outline"
-            onClick={() => {
-              form.setFieldValue("email", DEMO_CLIENT_EMAIL);
-              form.setFieldValue("password", DEMO_CLIENT_PASSWORD);
+            onClick={async () => {
+              setServerError(null);
+
+              try {
+                const result = (await mutateDemoLogin()) as any;
+
+                if (!result?.success) {
+                  setServerError(
+                    result?.message ||
+                      "We couldn't sign you in with demo mode right now. Please try again.",
+                  );
+                }
+              } catch (error: any) {
+                if (
+                  (typeof error?.digest === "string" &&
+                    error.digest.startsWith("NEXT_REDIRECT")) ||
+                  String(error?.message || "").includes("NEXT_REDIRECT")
+                ) {
+                  return;
+                }
+
+                setServerError(getFriendlyAuthErrorMessage(error, "login"));
+              }
             }}
+            disabled={isPending || isDemoPending}
             className="w-full justify-center gap-2 rounded-full border-blue-200 bg-blue-50/70 text-blue-700 hover:bg-blue-100 hover:text-blue-800 dark:border-cyan-400/30 dark:bg-cyan-500/10 dark:text-cyan-200 dark:hover:bg-cyan-500/15"
           >
             <Sparkles className="size-4" aria-hidden="true" />
-            Use demo client account
+            {isDemoPending ? "Starting demo session..." : "Continue with demo account"}
           </Button>
 
           {/* Submit Button */}

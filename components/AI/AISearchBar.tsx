@@ -1,39 +1,23 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import {
-  ArrowUpRight,
-  BadgeCheck,
-  Clock,
-  Flame,
-  History,
-  Loader2,
-  Search,
-  Sparkles,
-  X,
-} from "lucide-react";
+import { Search, Sparkles, X } from "lucide-react";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import SearchDropdown from "@/components/AI/local-search/SearchDropdown";
 import { cn } from "@/src/lib/utils";
-import { getExperts } from "@/src/services/expert.services";
-import { getAllIndustries } from "@/src/services/industry.services";
-import { aiSearch } from "@/src/services/ai.service";
 import {
+  addPreferredIndustry,
+  addRecentSearch,
+  addRecentlyViewedExpert,
+  buildDropdownSections,
   clearRecentSearches,
-  fuzzyMatch,
-  getBehavior,
-  getTrendingExperts,
-  recommendExperts,
-  trackExpertView,
-  trackSearch,
-} from "@/src/lib/aiPersonalization";
-import type { IExpert } from "@/src/types/expert.types";
-import type { IIndustry } from "@/src/types/industry.types";
+  readLocalSearchProfile,
+  type DropdownItem,
+} from "@/src/lib/localSearchPersonalization";
+import {
+  generateAISuggestions,
+} from "@/src/lib/localAISuggestionGenerator";
 
 interface AISearchBarProps {
   /** Visual variant — "navbar" sits inside the navbar, "mobile" inside the sheet. */
@@ -42,13 +26,64 @@ interface AISearchBarProps {
   onNavigate?: () => void;
 }
 
-const getInitials = (name: string) =>
-  name
-    .split(" ")
-    .map((part) => part[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
+const RECENT_FALLBACK_ITEMS: DropdownItem[] = [
+  {
+    id: "recent-fallback-1",
+    label: "Try: marketing strategy for B2B launch",
+    subLabel: "No recent searches yet",
+    type: "query",
+  },
+  {
+    id: "recent-fallback-2",
+    label: "Try: startup financial planning template",
+    subLabel: "No recent searches yet",
+    type: "query",
+  },
+  {
+    id: "recent-fallback-3",
+    label: "Try: legal checklist before fundraising",
+    subLabel: "No recent searches yet",
+    type: "query",
+  },
+];
+
+const TRENDING_FALLBACK_ITEMS: DropdownItem[] = [
+  {
+    id: "trending-fallback-1",
+    label: "GTM roadmap for a niche SaaS product",
+    subLabel: "Trending business query",
+    type: "query",
+  },
+  {
+    id: "trending-fallback-2",
+    label: "Finance KPIs founders should track weekly",
+    subLabel: "Trending business query",
+    type: "query",
+  },
+  {
+    id: "trending-fallback-3",
+    label: "Scaling engineering without delivery slowdown",
+    subLabel: "Trending business query",
+    type: "query",
+  },
+];
+
+function ensureMinItems(
+  items: DropdownItem[],
+  fallbacks: DropdownItem[],
+  min = 3,
+  max = 5,
+): DropdownItem[] {
+  const combined = [...items];
+  if (combined.length < min) {
+    for (const fallback of fallbacks) {
+      if (combined.some((item) => item.label === fallback.label)) continue;
+      combined.push(fallback);
+      if (combined.length >= min) break;
+    }
+  }
+  return combined.slice(0, max);
+}
 
 export default function AISearchBar({
   variant = "navbar",
@@ -60,64 +95,15 @@ export default function AISearchBar({
   const containerRef = useRef<HTMLDivElement>(null);
 
   const [query, setQuery] = useState("");
-  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [behaviorTick, setBehaviorTick] = useState(0);
+  const [profileTick, setProfileTick] = useState(0);
 
-  // Debounce the query so we don't hammer the AI endpoint on every keystroke.
   useEffect(() => {
-    const t = window.setTimeout(() => setDebouncedQuery(query.trim()), 220);
-    return () => window.clearTimeout(t);
-  }, [query]);
-
-  const { data: experts = [] } = useQuery({
-    queryKey: ["ai-search-experts"],
-    queryFn: async () => {
-      try {
-        const res = await getExperts();
-        return Array.isArray(res?.data) ? res.data : [];
-      } catch {
-        return [] as IExpert[];
-      }
-    },
-    staleTime: 1000 * 60 * 5,
-    gcTime: 1000 * 60 * 10,
-  });
-
-  const { data: industries = [] } = useQuery({
-    queryKey: ["ai-search-industries"],
-    queryFn: async () => {
-      try {
-        const res = await getAllIndustries();
-        return Array.isArray(res?.data) ? res.data : [];
-      } catch {
-        return [] as IIndustry[];
-      }
-    },
-    staleTime: 1000 * 60 * 10,
-    gcTime: 1000 * 60 * 30,
-  });
-
-  // Backend AI search — only fires when there's something meaningful to search.
-  const { data: aiSearchResult, isFetching: aiSearching } = useQuery({
-    queryKey: ["ai-search", debouncedQuery],
-    queryFn: () =>
-      aiSearch({
-        query: debouncedQuery,
-        limit: 5,
-        source: "navbar",
-      }),
-    enabled: debouncedQuery.length >= 2,
-    staleTime: 1000 * 60 * 2, // 2 minutes
-    gcTime: 1000 * 60 * 5,
-  });
-
-  // listen for behavior updates so recents refresh after a click
-  useEffect(() => {
-    const handler = () => setBehaviorTick((t) => t + 1);
-    window.addEventListener("consultedge:behavior-updated", handler);
-    return () => window.removeEventListener("consultedge:behavior-updated", handler);
+    const handler = () => setProfileTick((t) => t + 1);
+    window.addEventListener("consultedge:local-ai-search-updated", handler);
+    return () =>
+      window.removeEventListener("consultedge:local-ai-search-updated", handler);
   }, []);
 
   // close on outside click
@@ -145,187 +131,120 @@ export default function AISearchBar({
     return () => document.removeEventListener("keydown", handler);
   }, [variant]);
 
-  const behavior = useMemo(() => getBehavior(), [behaviorTick, open]);
+  const profile = useMemo(() => readLocalSearchProfile(), [profileTick, open]);
 
-  const trending = useMemo(() => getTrendingExperts(experts, 4), [experts]);
-  const personalized = useMemo(
-    () => recommendExperts(experts, 4).map((s) => s.expert),
-    [experts, behaviorTick],
+  const sections = useMemo(() => buildDropdownSections(query), [query, profileTick]);
+
+  const aiSuggestions = useMemo(() => generateAISuggestions(query), [query, profileTick]);
+
+  const recentItems = useMemo(() => {
+    if (sections.recentSearches.length >= 3) {
+      return sections.recentSearches.slice(0, 5);
+    }
+
+    const fallback = profile.recentlyViewedExperts.map((expert) => ({
+      id: `recent-expert-${expert.id}`,
+      label: `Similar to ${expert.name}`,
+      subLabel: `Recently viewed in ${expert.industry}`,
+      type: "expert" as const,
+    }));
+
+    return [...sections.recentSearches, ...fallback].slice(0, 5);
+  }, [sections.recentSearches, profile.recentlyViewedExperts]);
+
+  const trendingItems = useMemo(() => {
+    return ensureMinItems(sections.trendingNow, TRENDING_FALLBACK_ITEMS);
+  }, [sections.trendingNow]);
+
+  const aiItems = useMemo(() => {
+    const base = aiSuggestions;
+
+    if (base.length >= 3) return base.slice(0, 5);
+
+    const extraFromIndustry = profile.preferredIndustries.map((industry) => ({
+      id: `ai-industry-${industry.toLowerCase().replace(/\s+/g, "-")}`,
+      label: `Experts in ${industry} you may like`,
+      subLabel: "AI thinks: local personalization detected this preference",
+      type: "industry" as const,
+    }));
+
+    return ensureMinItems(
+      [...base, ...extraFromIndustry],
+      generateAISuggestions(),
+    );
+  }, [aiSuggestions, profile.preferredIndustries]);
+
+  const safeRecentItems = useMemo(() => {
+    return ensureMinItems(recentItems, RECENT_FALLBACK_ITEMS);
+  }, [recentItems]);
+
+  const allItems = useMemo(
+    () => [...recentItems, ...trendingItems, ...aiItems],
+    [recentItems, trendingItems, aiItems],
   );
-
-  const expertMatches = useMemo<IExpert[]>(() => {
-    const q = query.trim();
-    if (!q) return [];
-    // Prefer backend results when available, else heuristic fuzzy match.
-    const backend = aiSearchResult?.data?.experts ?? [];
-    if (backend.length > 0) return backend.slice(0, 5);
-    return experts
-      .filter((e) =>
-        fuzzyMatch(
-          `${e.fullName} ${e.title ?? ""} ${e.industry?.name ?? ""} ${e.bio ?? ""}`,
-          q,
-        ),
-      )
-      .slice(0, 5);
-  }, [experts, query, aiSearchResult]);
-
-  const industryMatches = useMemo<IIndustry[]>(() => {
-    const q = query.trim();
-    if (!q) return [];
-    return industries
-      .filter((ind) => fuzzyMatch(`${ind.name} ${ind.description ?? ""}`, q))
-      .slice(0, 3);
-  }, [industries, query]);
-
-  const semanticSuggestions = useMemo<string[]>(() => {
-    const q = query.trim().toLowerCase();
-    if (q.length < 2) return [];
-    // Backend topic suggestions take priority.
-    const backend =
-      aiSearchResult?.data?.suggestions
-        ?.filter((s) => s.type === "topic")
-        .map((s) => s.label) ?? [];
-    if (backend.length > 0) {
-      return Array.from(new Set(backend))
-        .filter((s) => s.toLowerCase() !== q)
-        .slice(0, 3);
-    }
-    const seeds: string[] = [];
-    industries.forEach((ind) => {
-      if (fuzzyMatch(ind.name, q)) {
-        seeds.push(`${ind.name} experts`);
-        seeds.push(`Top-rated ${ind.name.toLowerCase()} consultants`);
-      }
-    });
-    if (seeds.length === 0) {
-      seeds.push(`${query} expert`, `${query} consultant`, `${query} advisor`);
-    }
-    return Array.from(new Set(seeds))
-      .filter((s) => s.toLowerCase() !== q)
-      .slice(0, 3);
-  }, [industries, query, aiSearchResult]);
-
-  // flatten everything into a navigable list of items for arrow-keys
-  type Row =
-    | { kind: "suggestion"; label: string }
-    | { kind: "expert"; expert: IExpert }
-    | { kind: "industry"; industry: IIndustry }
-    | { kind: "recent"; label: string };
-
-  const rows: Row[] = useMemo(() => {
-    if (query.trim()) {
-      return [
-        ...semanticSuggestions.map<Row>((label) => ({ kind: "suggestion", label })),
-        ...expertMatches.map<Row>((expert) => ({ kind: "expert", expert })),
-        ...industryMatches.map<Row>((industry) => ({ kind: "industry", industry })),
-      ];
-    }
-    return [
-      ...behavior.recentSearches.map<Row>((label) => ({ kind: "recent", label })),
-      ...(personalized.length ? personalized : trending).map<Row>((expert) => ({
-        kind: "expert",
-        expert,
-      })),
-    ];
-  }, [
-    query,
-    semanticSuggestions,
-    expertMatches,
-    industryMatches,
-    behavior.recentSearches,
-    personalized,
-    trending,
-  ]);
 
   useEffect(() => {
     setActiveIndex(0);
   }, [query, open]);
 
-  const goTo = (path: string, opts?: { search?: string; expert?: IExpert }) => {
-    if (opts?.search) trackSearch(opts.search);
-    if (opts?.expert) trackExpertView(opts.expert);
+  const goTo = (path: string) => {
     setOpen(false);
     setQuery("");
     onNavigate?.();
     router.push(path);
   };
 
-  const submitFreeText = (raw: string) => {
+  const submitQuery = (raw: string) => {
     const q = raw.trim();
     if (!q) return;
-    trackSearch(q);
+    addRecentSearch(q);
     setOpen(false);
     setQuery("");
     onNavigate?.();
     router.push(`/experts?q=${encodeURIComponent(q)}`);
   };
 
-  const handleRowActivate = (row: Row) => {
-    switch (row.kind) {
-      case "expert":
-        return goTo(`/experts/${row.expert.id}`, { expert: row.expert });
-      case "industry":
-        return goTo(`/industries`, { search: row.industry.name });
-      case "suggestion":
-      case "recent":
-        return submitFreeText(row.label);
+  const handleItemActivate = (item: DropdownItem) => {
+    if (item.type === "industry") {
+      const industry = item.label.replace(/^Experts in\s+/i, "").replace(/\s+you may like$/i, "");
+      addPreferredIndustry(industry || item.label);
+      return goTo(`/experts?industry=${encodeURIComponent(industry || item.label)}`);
     }
+
+    if (item.type === "expert") {
+      const expertName = item.label.replace(/^Similar to\s+/i, "").trim();
+      if (expertName) {
+        const known = profile.recentlyViewedExperts.find(
+          (expert) => expert.name.toLowerCase() === expertName.toLowerCase(),
+        );
+        if (known) {
+          addRecentlyViewedExpert(known);
+        }
+      }
+      return submitQuery(expertName || item.label);
+    }
+
+    return submitQuery(item.label);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "ArrowDown") {
       e.preventDefault();
       setOpen(true);
-      setActiveIndex((i) => Math.min(rows.length - 1, i + 1));
+      setActiveIndex((i) => Math.min(allItems.length - 1, i + 1));
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       setActiveIndex((i) => Math.max(0, i - 1));
     } else if (e.key === "Enter") {
       e.preventDefault();
-      const row = rows[activeIndex];
-      if (row) handleRowActivate(row);
-      else submitFreeText(query);
+      const item = allItems[activeIndex];
+      if (item) handleItemActivate(item);
+      else submitQuery(query);
     } else if (e.key === "Escape") {
       setOpen(false);
       inputRef.current?.blur();
     }
   };
-
-  const sectionLabel = (icon: React.ReactNode, label: string, action?: React.ReactNode) => (
-    <div className="flex items-center justify-between px-3 pb-1.5 pt-3 first:pt-2">
-      <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-        {icon}
-        {label}
-      </div>
-      {action}
-    </div>
-  );
-
-  // --- track which absolute row index each rendered item maps to ---
-  let rowCursor = 0;
-  const nextIdx = () => rowCursor++;
-
-  const renderRow = (
-    idx: number,
-    children: React.ReactNode,
-    onClick: () => void,
-    key: string,
-  ) => (
-    <button
-      key={key}
-      type="button"
-      onMouseEnter={() => setActiveIndex(idx)}
-      onClick={onClick}
-      className={cn(
-        "flex w-full items-center gap-3 px-3 py-2 text-left text-sm transition-colors",
-        idx === activeIndex
-          ? "bg-cyan-50 text-foreground dark:bg-cyan-500/10"
-          : "hover:bg-slate-50 dark:hover:bg-white/5",
-      )}
-    >
-      {children}
-    </button>
-  );
 
   const isMobile = variant === "mobile";
 
@@ -366,11 +285,7 @@ export default function AISearchBar({
             className="rounded-full p-0.5 text-muted-foreground hover:bg-slate-100 hover:text-foreground dark:hover:bg-white/10"
             aria-label="Clear"
           >
-            {aiSearching ? (
-              <Loader2 className="size-3.5 animate-spin" />
-            ) : (
-              <X className="size-3.5" />
-            )}
+            <X className="size-3.5" />
           </button>
         ) : !isMobile ? (
           <kbd className="hidden rounded border border-slate-200/70 bg-slate-50 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground dark:border-white/10 dark:bg-slate-800 md:inline-block">
@@ -379,194 +294,35 @@ export default function AISearchBar({
         ) : null}
       </div>
 
+      <SearchDropdown
+        open={open}
+        recentItems={safeRecentItems}
+        trendingItems={trendingItems}
+        aiItems={ensureMinItems(aiItems, generateAISuggestions(), 3, 5)}
+        activeIndex={activeIndex}
+        onHover={setActiveIndex}
+        onSelect={handleItemActivate}
+        onClearRecents={() => {
+          clearRecentSearches();
+          setProfileTick((t) => t + 1);
+        }}
+      />
+
       {open ? (
-        <div
-          id="ai-search-listbox"
-          role="listbox"
-          className={cn(
-            "absolute z-60 mt-2 w-full overflow-hidden rounded-2xl border border-slate-200/80 bg-white/95 shadow-[0_24px_60px_-24px_rgba(15,23,42,0.45)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/95",
-            isMobile ? "max-h-[60vh]" : "max-h-[70vh] min-w-88 md:w-104",
-          )}
-        >
-          <div className="max-h-[inherit] overflow-y-auto">
-            {/* Empty-state ribbon */}
-            <div className="flex items-center gap-2 border-b border-slate-100 bg-linear-to-r from-cyan-50 via-white to-blue-50 px-3 py-2 text-[11px] font-medium text-cyan-800 dark:border-white/10 dark:from-cyan-500/10 dark:via-slate-950 dark:to-blue-500/10 dark:text-cyan-200">
-              <Sparkles className="size-3" />
-              {query
-                ? "AI suggestions tailored to your query"
-                : behavior.recentSearches.length || personalized.length
-                ? "Picks based on your activity"
-                : "Trending on ConsultEdge"}
-            </div>
-
-            {!query && behavior.recentSearches.length > 0 ? (
-              <>
-                {sectionLabel(
-                  <History className="size-3" />,
-                  "Recent searches",
-                  <button
-                    type="button"
-                    onClick={() => {
-                      clearRecentSearches();
-                      setBehaviorTick((t) => t + 1);
-                    }}
-                    className="text-[10px] font-medium text-muted-foreground hover:text-foreground"
-                  >
-                    Clear
-                  </button>,
-                )}
-                {behavior.recentSearches.map((label) => {
-                  const idx = nextIdx();
-                  return renderRow(
-                    idx,
-                    <>
-                      <Clock className="size-3.5 text-muted-foreground" />
-                      <span className="flex-1 truncate">{label}</span>
-                      <ArrowUpRight className="size-3.5 text-muted-foreground" />
-                    </>,
-                    () => submitFreeText(label),
-                    `recent-${label}`,
-                  );
-                })}
-              </>
-            ) : null}
-
-            {query && semanticSuggestions.length > 0 ? (
-              <>
-                {sectionLabel(<Sparkles className="size-3" />, "Suggested searches")}
-                {semanticSuggestions.map((label) => {
-                  const idx = nextIdx();
-                  return renderRow(
-                    idx,
-                    <>
-                      <Search className="size-3.5 text-cyan-600 dark:text-cyan-300" />
-                      <span className="flex-1 truncate">{label}</span>
-                      <ArrowUpRight className="size-3.5 text-muted-foreground" />
-                    </>,
-                    () => submitFreeText(label),
-                    `sug-${label}`,
-                  );
-                })}
-              </>
-            ) : null}
-
-            {(query ? expertMatches : personalized.length ? personalized : trending).length > 0 ? (
-              <>
-                {sectionLabel(
-                  query ? (
-                    <Search className="size-3" />
-                  ) : personalized.length ? (
-                    <Sparkles className="size-3" />
-                  ) : (
-                    <Flame className="size-3" />
-                  ),
-                  query
-                    ? "Experts"
-                    : personalized.length
-                    ? "Recommended for you"
-                    : "Trending experts",
-                )}
-                {(query ? expertMatches : personalized.length ? personalized : trending).map(
-                  (expert) => {
-                    const idx = nextIdx();
-                    return renderRow(
-                      idx,
-                      <>
-                        <Avatar size="default" className="size-8 border border-slate-200 dark:border-white/10">
-                          {expert.profilePhoto ? (
-                            <AvatarImage src={expert.profilePhoto} alt={expert.fullName} />
-                          ) : null}
-                          <AvatarFallback className="text-[10px]">
-                            {getInitials(expert.fullName)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-1.5">
-                            <p className="truncate text-sm font-medium text-foreground">
-                              {expert.fullName}
-                            </p>
-                            {expert.isVerified ? (
-                              <BadgeCheck className="size-3 shrink-0 text-cyan-600 dark:text-cyan-300" />
-                            ) : null}
-                          </div>
-                          <p className="truncate text-[11px] text-muted-foreground">
-                            {expert.title}
-                            {expert.industry?.name ? ` · ${expert.industry.name}` : ""}
-                          </p>
-                        </div>
-                      </>,
-                      () => goTo(`/experts/${expert.id}`, { expert }),
-                      `exp-${expert.id}`,
-                    );
-                  },
-                )}
-              </>
-            ) : null}
-
-            {query && industryMatches.length > 0 ? (
-              <>
-                {sectionLabel(<Badge className="h-3 rounded-sm px-1 text-[8px]">i</Badge>, "Industries")}
-                {industryMatches.map((industry) => {
-                  const idx = nextIdx();
-                  return renderRow(
-                    idx,
-                    <>
-                      <span className="flex size-7 items-center justify-center rounded-full bg-linear-to-br from-blue-500 to-cyan-400 text-[10px] font-semibold text-white">
-                        {industry.name.slice(0, 2).toUpperCase()}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-foreground">{industry.name}</p>
-                        {industry.description ? (
-                          <p className="truncate text-[11px] text-muted-foreground">
-                            {industry.description}
-                          </p>
-                        ) : null}
-                      </div>
-                    </>,
-                    () => goTo(`/industries`, { search: industry.name }),
-                    `ind-${industry.id}`,
-                  );
-                })}
-              </>
-            ) : null}
-
-            {query && rows.length === 0 ? (
-              <div className="flex flex-col items-center gap-2 px-4 py-6 text-center">
-                <Search className="size-5 text-muted-foreground" />
-                <p className="text-sm text-foreground">No matches yet</p>
-                <p className="text-xs text-muted-foreground">
-                  Try “marketing strategy”, “fintech”, or browse all experts.
-                </p>
-                <Button asChild size="sm" variant="outline" className="mt-1 rounded-full text-xs">
-                  <Link href="/experts" onClick={() => setOpen(false)}>
-                    Browse experts
-                  </Link>
-                </Button>
-              </div>
-            ) : null}
-
-            <div className="flex items-center justify-between border-t border-slate-100 px-3 py-2 text-[10px] text-muted-foreground dark:border-white/10">
-              <span className="flex items-center gap-1">
-                <kbd className="rounded border border-slate-200/70 bg-slate-50 px-1 dark:border-white/10 dark:bg-slate-800">
-                  ↑
-                </kbd>
-                <kbd className="rounded border border-slate-200/70 bg-slate-50 px-1 dark:border-white/10 dark:bg-slate-800">
-                  ↓
-                </kbd>
-                navigate
-              </span>
-              <span className="flex items-center gap-1">
-                <kbd className="rounded border border-slate-200/70 bg-slate-50 px-1 dark:border-white/10 dark:bg-slate-800">
-                  Enter
-                </kbd>
-                open
-              </span>
-              <span className="flex items-center gap-1">
-                <Sparkles className="size-3 text-cyan-500" />
-                AI ranking
-              </span>
-            </div>
-          </div>
+        <div className="mt-1.5 flex items-center justify-between px-1 text-[10px] text-slate-500 dark:text-slate-400">
+          <span className="inline-flex items-center gap-1">
+            <kbd className="rounded border border-slate-200/70 bg-slate-50 px-1 dark:border-white/10 dark:bg-slate-800">
+              ↑
+            </kbd>
+            <kbd className="rounded border border-slate-200/70 bg-slate-50 px-1 dark:border-white/10 dark:bg-slate-800">
+              ↓
+            </kbd>
+            navigate
+          </span>
+          <span className="inline-flex items-center gap-1 text-blue-700 dark:text-blue-300">
+            <Sparkles className="size-3" />
+            100% local AI suggestions
+          </span>
         </div>
       ) : null}
     </div>

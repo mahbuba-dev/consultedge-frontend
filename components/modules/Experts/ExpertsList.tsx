@@ -64,11 +64,13 @@ import { IExpert } from "@/src/types/expert.types";
 import { IIndustry, IIndustryListResponse } from "@/src/types/industry.types";
 import { cn } from "@/src/lib/utils";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowUpDown, ShieldCheck, Sparkles, TrendingUp, Users } from "lucide-react";
+import { ArrowUpDown, Users } from "lucide-react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ExpertCard from "./ExpertCard";
-import DataTableSearch from "../shared/Table/DataTableSearch";
+import DataTableSearch, {
+  type SearchSuggestion,
+} from "../shared/Table/DataTableSearch";
 
 type RangeField = "experience" | "price";
 type RangePreset = {
@@ -126,6 +128,60 @@ const getQuickFilterButtonClass = (isActive: boolean) =>
       : "border-blue-200 bg-white/80 text-blue-700 hover:border-blue-300 hover:bg-blue-50 dark:border-white/15 dark:bg-slate-900/85 dark:text-blue-200 dark:hover:border-blue-400/50 dark:hover:bg-slate-800/90",
   );
 
+const buildAISuggestions = (
+  value: string,
+  experts: IExpert[],
+  industries: IIndustry[],
+): SearchSuggestion[] => {
+  const trimmed = value.trim().toLowerCase();
+
+  const byName = experts
+    .filter((expert) => {
+      if (!expert.fullName) return false;
+      return trimmed ? expert.fullName.toLowerCase().includes(trimmed) : true;
+    })
+    .slice(0, 3)
+    .map((expert) => ({
+      id: `ai-name-${expert.id}`,
+      label: expert.fullName,
+      value: expert.fullName,
+      kind: "name" as const,
+      helperText: `AI found this expert · ${expert.title || "Consultant"}${expert.industry?.name ? ` · ${expert.industry.name}` : ""}`,
+    }));
+
+  const byTitle = Array.from(
+    new Set(
+      experts
+        .map((expert) => expert.title?.trim())
+        .filter((title): title is string => Boolean(title)),
+    ),
+  )
+    .filter((title) => (trimmed ? title.toLowerCase().includes(trimmed) : true))
+    .slice(0, 2)
+    .map((title) => ({
+      id: `ai-title-${title.toLowerCase().replace(/\s+/g, "-")}`,
+      label: title,
+      value: title,
+      kind: "title" as const,
+      helperText: "AI suggestion based on recurring expert titles",
+    }));
+
+  const byIndustry = industries
+    .filter((industry) =>
+      trimmed ? industry.name.toLowerCase().includes(trimmed) : true,
+    )
+    .slice(0, 2)
+    .map((industry) => ({
+      id: `ai-industry-${industry.id}`,
+      label: industry.name,
+      value: industry.name,
+      kind: "industry" as const,
+      helperText: "AI suggestion to explore this industry cluster",
+    }));
+
+  return [...byName, ...byTitle, ...byIndustry].slice(0, 6);
+};
+
 export default function ExpertsPageClient() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -154,6 +210,9 @@ export default function ExpertsPageClient() {
   }, []);
 
   const searchTerm = currentSearchParams.get("searchTerm") ?? "";
+  const [liveSearchValue, setLiveSearchValue] = useState(searchTerm);
+  const [visibleCount, setVisibleCount] = useState(8);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const activeSortValue = `${currentSearchParams.get("sortBy") ?? "createdAt"}:${currentSearchParams.get("sortOrder") ?? "desc"}`;
   const hasExperienceRange = Boolean(
     currentSearchParams.get("experience[gte]") ||
@@ -185,6 +244,10 @@ export default function ExpertsPageClient() {
   const meta = data?.meta;
   const selectedIndustryId = currentSearchParams.get("industryId") ?? "all";
   const selectedVerification = currentSearchParams.get("isVerified") ?? "all";
+
+  useEffect(() => {
+    setLiveSearchValue(searchTerm);
+  }, [searchTerm]);
 
   const displayedExperts = useMemo(() => {
     const minExperience = parseOptionalNumber(
@@ -408,23 +471,6 @@ export default function ExpertsPageClient() {
     [updateUrlParams],
   );
 
-  const handlePageChange = useCallback(
-    (page: number) => {
-      updateUrlParams(
-        (params) => {
-          if (page <= 1) {
-            params.delete("page");
-            return;
-          }
-
-          params.set("page", String(page));
-        },
-        { resetPage: false },
-      );
-    },
-    [updateUrlParams],
-  );
-
   const clearAllFilters = useCallback(() => {
     if (!queryString) {
       return;
@@ -450,6 +496,44 @@ export default function ExpertsPageClient() {
     );
   };
 
+  const aiSuggestions = useMemo(
+    () => buildAISuggestions(liveSearchValue, experts, industries),
+    [liveSearchValue, experts, industries],
+  );
+
+  useEffect(() => {
+    setVisibleCount(8);
+  }, [displayedExperts.length, queryString]);
+
+  const visibleExperts = useMemo(
+    () => displayedExperts.slice(0, visibleCount),
+    [displayedExperts, visibleCount],
+  );
+
+  const hasMoreVisibleExperts = visibleCount < displayedExperts.length;
+
+  useEffect(() => {
+    if (!hasMoreVisibleExperts || !loadMoreRef.current) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (!entry?.isIntersecting) {
+          return;
+        }
+
+        setVisibleCount((current) => Math.min(current + 8, displayedExperts.length));
+      },
+      { rootMargin: "220px 0px" },
+    );
+
+    observer.observe(loadMoreRef.current);
+
+    return () => observer.disconnect();
+  }, [displayedExperts.length, hasMoreVisibleExperts]);
+
   return (
     <div className="mx-auto max-w-6xl space-y-6 py-6">
       <div className="animate-in slide-in-from-top-2 fade-in-0 rounded-3xl border border-blue-200/70 bg-linear-to-br from-blue-500/10 via-background to-cyan-500/10 p-5 shadow-lg shadow-blue-500/5 duration-500 dark:border-white/10 dark:from-slate-950 dark:via-[#071326] dark:to-slate-950 dark:shadow-[0_20px_60px_-28px_rgba(34,211,238,0.28)] md:p-6">
@@ -458,7 +542,7 @@ export default function ExpertsPageClient() {
               variant="secondary"
               className="w-fit gap-1 bg-blue-100 text-blue-700 dark:border-white/10 dark:bg-blue-500/15 dark:text-blue-200"
             >
-              <Sparkles className="h-3.5 w-3.5" />
+              <Users className="h-3.5 w-3.5" />
               Expert network
             </Badge>
 
@@ -477,6 +561,12 @@ export default function ExpertsPageClient() {
             <DataTableSearch
               initialValue={searchTerm}
               placeholder="Search by name, title, or industry"
+              suggestionTitle="AI-powered suggestions"
+              suggestions={aiSuggestions}
+              onValueChange={setLiveSearchValue}
+              onSuggestionSelect={(suggestion) => {
+                handleSearch(suggestion.value);
+              }}
               onDebouncedChange={handleSearch}
               isLoading={isLoading}
             />
@@ -656,16 +746,25 @@ export default function ExpertsPageClient() {
 
             {meta ? (
               <p className="text-sm text-muted-foreground">
-                Page {meta.page} of {meta.totalPages}
+                Showing {visibleExperts.length} of {displayedExperts.length}
               </p>
             ) : null}
           </div>
 
           <div className="animate-in fade-in-0 slide-in-from-bottom-2 grid grid-cols-1 gap-4 duration-500 md:grid-cols-2 xl:grid-cols-4">
-            {displayedExperts.map((expert) => (
+            {visibleExperts.map((expert) => (
               <ExpertCard key={expert.id} expert={expert} />
             ))}
           </div>
+
+          {hasMoreVisibleExperts ? (
+            <div className="pt-2">
+              <div ref={loadMoreRef} className="h-8" aria-hidden="true" />
+              <p className="text-center text-xs text-muted-foreground">
+                Loading more experts as you scroll...
+              </p>
+            </div>
+          ) : null}
         </>
       ) : (
         <Card className="border-dashed">
@@ -682,27 +781,9 @@ export default function ExpertsPageClient() {
         </Card>
       )}
 
-      {meta && meta.totalPages > 1 ? (
-        <div className="flex items-center justify-between rounded-2xl border px-4 py-3">
-          <Button
-            variant="outline"
-            disabled={meta.page <= 1}
-            onClick={() => handlePageChange(meta.page - 1)}
-          >
-            Previous
-          </Button>
-
-          <p className="text-sm text-muted-foreground">
-            Page <span className="font-medium text-foreground">{meta.page}</span> of {meta.totalPages}
-          </p>
-
-          <Button
-            variant="outline"
-            disabled={meta.page >= meta.totalPages}
-            onClick={() => handlePageChange(meta.page + 1)}
-          >
-            Next
-          </Button>
+      {meta && meta.totalPages > 1 && !hasMoreVisibleExperts ? (
+        <div className="rounded-2xl border px-4 py-3 text-center text-sm text-muted-foreground">
+          You reached the end of the current result set.
         </div>
       ) : null}
     </div>

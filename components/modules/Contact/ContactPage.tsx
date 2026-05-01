@@ -7,12 +7,13 @@ import {
   MapPin,
   Clock,
   Send,
-  Sparkles,
+  MessageSquareText,
   ArrowRight,
   CheckCircle2,
   MessageCircle,
   ShieldCheck,
   Zap,
+  Search,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -131,7 +132,7 @@ export default function ContactPage() {
 
         <div className="relative mx-auto max-w-2xl space-y-5">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3.5 py-1.5 text-xs font-semibold tracking-wide text-cyan-200 backdrop-blur">
-            <Sparkles className="size-3" />
+            <MessageSquareText className="size-3" />
             We&apos;d love to hear from you
           </span>
 
@@ -224,7 +225,7 @@ export default function ContactPage() {
             />
             <div className="relative">
               <div className="flex items-center gap-2 text-blue-700 dark:text-cyan-300">
-                <Sparkles className="size-4" />
+                <Search className="size-4" />
                 <span className="text-sm font-semibold">Looking for an expert?</span>
               </div>
               <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">

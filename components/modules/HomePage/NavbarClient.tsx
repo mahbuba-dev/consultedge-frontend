@@ -101,7 +101,7 @@ const NavbarClient = ({
       className="sticky top-0 z-50 border-b border-slate-200/70 bg-white/45 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/35"
     >
       <div className="mx-auto w-full max-w-360 px-4 py-3 md:px-6">
-        <div className="relative flex items-center justify-between gap-3 rounded-[1.35rem] border border-white/60 bg-white/80 px-3 py-2.5 shadow-[0_20px_45px_-28px_rgba(15,23,42,0.45)] backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/70 overflow-hidden">
+        <div className="relative flex items-center justify-between gap-3 rounded-[1.35rem] border border-white/60 bg-white/80 px-3 py-2.5 shadow-[0_20px_45px_-28px_rgba(15,23,42,0.45)] backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/70 overflow-visible">
           <div className="navbar-gradient-motion" aria-hidden="true" />
           <Link href="/" className="group flex min-w-0 items-center gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br from-blue-600 via-cyan-600 to-sky-500 text-white shadow-lg shadow-blue-500/25 transition-transform duration-200 ease-out group-hover:scale-102 group-hover:drop-shadow-[0_2px_12px_rgba(59,130,246,0.25)]">

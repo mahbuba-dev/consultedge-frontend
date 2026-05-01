@@ -11,6 +11,33 @@ import { ILoginPayload, loginZodSchema } from "@/src/zod/auth.validation";
 import { redirect } from "next/navigation";
 import { httpClient } from "@/src/lib/axious/httpClient";
 
+const finalizeLogin = async (
+    response: { data: ILOginResponse },
+    redirectPath?: string,
+) => {
+    const { accessToken, refreshToken, token, user } = response.data;
+    const { role, emailVerified, needPasswordChange, email } = user;
+
+    await setTokenInCookies("accessToken", accessToken, 7 * 24 * 60 * 60); // 7 days
+    await setTokenInCookies("refreshToken", refreshToken, 30 * 24 * 60 * 60); // 30 days
+    await setTokenInCookies("better-auth.session_token", token, 24 * 60 * 60); // 1 day in seconds
+
+    if (!emailVerified) {
+        redirect("/verify-email");
+    }
+
+    if (needPasswordChange) {
+        redirect(`/change-password?email=${email}`);
+    }
+
+    const targetPath =
+        redirectPath && isValidRedirectForRole(redirectPath, role as UserRole)
+            ? redirectPath
+            : getDefaultDashboardRoute(role as UserRole);
+
+    redirect(targetPath);
+};
+
 export const loginAction = async (payload : ILoginPayload, redirectPath ?: string ) : Promise<ILOginResponse | ApiErrorResponse> =>{
     const parsedPayload = loginZodSchema.safeParse(payload);
 
@@ -29,26 +56,7 @@ export const loginAction = async (payload : ILoginPayload, redirectPath ?: strin
             { expectedStatuses: [400, 401, 403, 429] },
         );
 
-        const { accessToken, refreshToken, token, user} = response.data;
-        const {role, emailVerified, needPasswordChange, email} = user;
-        await setTokenInCookies("accessToken", accessToken, 7 * 24 * 60 * 60); // 7 days
-        await setTokenInCookies("refreshToken", refreshToken, 30 * 24 * 60 * 60); // 30 days
-        await setTokenInCookies("better-auth.session_token", token, 24 * 60 * 60); // 1 day in seconds
-
-        if(!emailVerified){
-            redirect("/verify-email");
-        }else // in the catch block
-            
-        if(needPasswordChange){
-            //TODO : refactoring
-            redirect(`/change-password?email=${email}`);
-        }else{
-            // redirect(redirectPath || "/dashboard");
-            const targetPath = redirectPath && isValidRedirectForRole(redirectPath, role as UserRole) ? redirectPath : getDefaultDashboardRoute(role as UserRole);
-
-            
-            redirect(targetPath);
-        }
+        await finalizeLogin(response, redirectPath);
         
     } catch (error : any) {
         if(error && typeof error === "object" && "digest" in error && typeof error.digest === "string" && error.digest.startsWith("NEXT_REDIRECT")){
@@ -64,3 +72,32 @@ export const loginAction = async (payload : ILoginPayload, redirectPath ?: strin
         }
     }
 }
+
+export const demoLoginAction = async (
+    redirectPath?: string,
+): Promise<ILOginResponse | ApiErrorResponse> => {
+    try {
+        const response = await httpClient.post<ILOginResponse>(
+            "/auth/demo-login",
+            {},
+            { expectedStatuses: [400, 401, 403, 429] },
+        );
+
+        await finalizeLogin(response, redirectPath);
+    } catch (error: any) {
+        if (
+            error &&
+            typeof error === "object" &&
+            "digest" in error &&
+            typeof error.digest === "string" &&
+            error.digest.startsWith("NEXT_REDIRECT")
+        ) {
+            throw error;
+        }
+
+        return {
+            success: false,
+            message: getFriendlyAuthErrorMessage(error, "login"),
+        };
+    }
+};
