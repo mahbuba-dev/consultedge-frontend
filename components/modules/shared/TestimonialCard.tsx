@@ -11,7 +11,10 @@ interface TestimonialCardProps {
 }
 
 const getReviewerName = (testimonial: ITestimonial) =>
-  testimonial.client?.fullName || testimonial.client?.user?.name || "Verified Client";
+  testimonial.reviewerName ||
+  testimonial.client?.fullName ||
+  testimonial.client?.user?.name ||
+  "Verified Client";
 
 const getFormattedDate = (value?: string) => {
   if (!value) {

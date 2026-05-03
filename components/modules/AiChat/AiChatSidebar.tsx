@@ -4,7 +4,6 @@ import { Bot, MessageSquarePlus, Loader2 } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 import type { AIConversationSummary } from "@/src/types/ai.types";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface AiChatSidebarProps {
   conversations: AIConversationSummary[];
@@ -72,7 +71,7 @@ export default function AiChatSidebar({
       </div>
 
       {/* Recent messages (conversation history) */}
-      <ScrollArea className="consultedge-ai-scrollbar flex-1">
+      <div className="consultedge-ai-scrollbar-native min-h-0 flex-1 overflow-y-auto">
         <div className="p-2 pt-3">
           <p className="mb-1.5 px-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
             Recent messages
@@ -87,23 +86,24 @@ export default function AiChatSidebar({
               No messages yet. Start chatting!
             </p>
           ) : (
-            <ul className="space-y-0.5">
+            <ul className="space-y-1.5 pb-2">
               {conversations.map((conv) => (
                 <li key={conv.id}>
                   <button
                     type="button"
                     onClick={() => onSelect(conv.id)}
+                    title={conv.title}
                     className={cn(
-                      "w-full rounded-xl px-3 py-2.5 text-left transition-all hover:bg-muted",
+                      "w-full overflow-hidden rounded-xl px-3 py-2.5 text-left transition-all hover:bg-muted",
                       conv.id === activeConversationId
                         ? "bg-cyan-50/80 ring-1 ring-cyan-200/60 dark:bg-cyan-500/10 dark:ring-cyan-400/20"
                         : "hover:bg-muted",
                     )}
                   >
-                    <p className="truncate text-sm font-medium leading-tight">
+                    <p className="line-clamp-1 wrap-break-word text-sm font-medium leading-5">
                       {conv.title}
                     </p>
-                    <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                    <p className="mt-1 line-clamp-2 wrap-break-word text-xs leading-4 text-muted-foreground">
                       {conv.preview || "No messages yet"}
                     </p>
                   </button>
@@ -112,7 +112,7 @@ export default function AiChatSidebar({
             </ul>
           )}
         </div>
-      </ScrollArea>
+      </div>
     </aside>
   );
 }

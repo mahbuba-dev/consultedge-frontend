@@ -296,6 +296,7 @@ export default function ClientManageTable() {
           <Table
             data={filteredClients}
             columns={columns}
+            meta={data?.meta}
             isLoading={isLoading || isFetching}
             emptyMessage="No clients match the current search or filters."
             pagination={{

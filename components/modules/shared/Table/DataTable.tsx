@@ -155,6 +155,11 @@ const DataTable = <TData,>({
         }
     ] : columns;
 
+    const hasServerPagination =
+      Boolean(pagination) &&
+      typeof meta?.totalPages === "number" &&
+      meta.totalPages > 0;
+
     // eslint-disable-next-line react-hooks/incompatible-library -- TanStack Table is intentionally used here and React Compiler already skips memoization for this hook.
     const table = useReactTable({
       data,
@@ -169,8 +174,8 @@ const DataTable = <TData,>({
       getSortedRowModel:getSortedRowModel(),
       getPaginationRowModel: getPaginationRowModel(),
       manualSorting: !!sorting,
-      manualPagination: !!pagination,
-      pageCount: pagination ? Math.max(meta?.totalPages ?? 0, 0) : undefined,
+      manualPagination: hasServerPagination,
+      pageCount: hasServerPagination ? Math.max(meta?.totalPages ?? 0, 0) : undefined,
       state : {
         ...(sorting ? { sorting : sorting.state } : {}),
         ...(pagination ? { pagination: pagination.state } : {}),
@@ -211,7 +216,6 @@ const DataTable = <TData,>({
           <div className="mb-4 flex flex-wrap items-start gap-3">
             {search && (
               <DataTableSearch
-                key={search.initialValue ?? ""}
                 initialValue={search.initialValue}
                 placeholder={search.placeholder}
                 debounceMs={search.debounceMs}

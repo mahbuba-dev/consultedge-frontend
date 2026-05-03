@@ -300,7 +300,9 @@ export default function MyScheduleList() {
 
           <div className="rounded-xl border border-slate-200/70 bg-white/50 p-3 text-sm dark:border-white/10 dark:bg-white/5">
             <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              <CalendarDays className="size-3.5" />
+              <span className="inline-flex size-6 items-center justify-center rounded-full border border-slate-200/80 bg-white/85 text-emerald-600 shadow-sm dark:border-white/15 dark:bg-slate-900/80 dark:text-emerald-300">
+                <CalendarDays className="size-3.5" />
+              </span>
               Slot ID
             </div>
             <p className="mt-1 break-all font-mono text-xs text-foreground/80">

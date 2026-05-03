@@ -42,6 +42,7 @@ const DataTableSearch = ({
   const [value, setValue] = useState(initialValue);
   const [isFocused, setIsFocused] = useState(false);
   const skipNextDebounceRef = useRef(false);
+  const previousInitialValueRef = useRef(initialValue);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -56,11 +57,15 @@ const DataTableSearch = ({
   }, []);
 
   useEffect(() => {
-    if (value === initialValue) return;
+    if (previousInitialValueRef.current === initialValue) {
+      return;
+    }
+
+    previousInitialValueRef.current = initialValue;
     skipNextDebounceRef.current = true;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setValue(initialValue);
-  }, [initialValue, value]);
+  }, [initialValue]);
 
   useEffect(() => {
     if (skipNextDebounceRef.current) {
@@ -103,7 +108,6 @@ const DataTableSearch = ({
         onFocus={() => setIsFocused(true)}
         placeholder={placeholder}
         className="h-9 pr-9 pl-9"
-        disabled={isLoading}
       />
 
       {value.length > 0 && (

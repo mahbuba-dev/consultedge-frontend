@@ -20,7 +20,8 @@ import { Button } from "@/components/ui/button";
 const quickLinks = [
   { label: "Home", href: "/" },
   { label: "Experts", href: "/experts" },
-  { label: "How it works", href: "/industries" },
+  { label: "Insights", href: "/insights" },
+  { label: "About", href: "/about" },
   { label: "Contact", href: "/contact" },
 ];
 
@@ -29,6 +30,12 @@ const platformLinks = [
   { label: "Register", href: "/register" },
   { label: "Login", href: "/login" },
   { label: "Dashboard", href: "/dashboard" },
+];
+
+const legalLinks = [
+  { label: "Privacy Policy", href: "/privacy" },
+  { label: "Terms of Service", href: "/terms" },
+  { label: "Help & Support", href: "/help" },
 ];
 
 const socialLinks = [
@@ -158,10 +165,10 @@ export default function Footer() {
       </div>
 
       {/* MAIN FOOTER */}
-      <div className="mx-auto mt-2 grid w-full max-w-360 items-start gap-10 px-4 py-12 md:grid-cols-[1.1fr_0.75fr_0.75fr_1fr] md:px-6">
+      <div className="mx-auto px-4 mt-2 grid w-full max-w-360 items-start gap-10  py-12 md:grid-cols-[1.1fr_0.65fr_0.65fr_0.65fr_1fr] md:px-6">
 
         {/* BRAND */}
-        <div className="space-y-5">
+        <div className="space-y-5 pl-10">
           <Link href="/" className="inline-flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-linear-to-br from-blue-600 via-cyan-600 to-sky-500 text-white">
               <Gem className="size-5" />
@@ -172,7 +179,7 @@ export default function Footer() {
             </div>
           </Link>
 
-          <p className="text-sm text-slate-300">
+          <p className="text-sm text-slate-300 px-2">
             A modern platform connecting clients with verified experts for smarter decisions.
           </p>
 
@@ -233,6 +240,25 @@ export default function Footer() {
           </div>
         </div>
 
+        {/* LEGAL */}
+        <div>
+          <h3 className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
+            Legal
+          </h3>
+
+          <div className="flex flex-col gap-3 text-sm">
+            {legalLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="footer-ink-link text-slate-300 hover:text-white"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </div>
+        </div>
+
         {/* CONTACT */}
         <div>
           <h3 className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
@@ -260,7 +286,10 @@ export default function Footer() {
         <div className="mx-auto flex max-w-360 flex-col items-center justify-between gap-2 px-4 py-4 text-sm text-slate-400 md:flex-row md:px-6">
           <p>© {new Date().getFullYear()} ConsultEdge</p>
           <div className="flex gap-4">
-            <Link href="/experts" className="hover:text-white">Browse experts</Link>
+            <Link href="/about" className="hover:text-white">About</Link>
+            <Link href="/privacy" className="hover:text-white">Privacy</Link>
+            <Link href="/terms" className="hover:text-white">Terms</Link>
+            <Link href="/help" className="hover:text-white">Help</Link>
             <Link href="/contact" className="hover:text-white">Contact</Link>
           </div>
         </div>

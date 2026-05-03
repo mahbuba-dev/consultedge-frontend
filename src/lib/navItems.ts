@@ -88,6 +88,11 @@ export const adminNavItems: NavSection[] = [
         icon: "UserCog",
       },
       {
+        title: "New Applicants",
+        href: "/admin/dashboard/new-applicants",
+        icon: "UserPlus",
+      },
+      {
         title: "Clients",
         href: "/admin/dashboard/client-management",
         icon: "Users",

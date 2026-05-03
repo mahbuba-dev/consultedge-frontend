@@ -16,7 +16,16 @@ export default function SupportChatWidget() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [showGreeting, setShowGreeting] = useState(false);
-  const hideOnRoute = pathname === "/apply-expert" || pathname === "/experts/apply-expert";
+  const hideOnRoute =
+    pathname === "/apply-expert" ||
+    pathname === "/experts/apply-expert" ||
+    pathname.startsWith("/admin/dashboard") ||
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/register") ||
+    pathname.startsWith("/forgot-password") ||
+    pathname.startsWith("/reset-password") ||
+    pathname.startsWith("/verify-email") ||
+    pathname.startsWith("/forgetPassword");
 
   useEffect(() => {
     if (hideOnRoute) {
@@ -49,49 +58,44 @@ export default function SupportChatWidget() {
     // Get started, Contact us, footer links, Book now, etc.). Each
     // interactive child re-enables pointer events on itself below.
     <div className="pointer-events-none fixed bottom-4 right-4 z-70 flex max-w-[calc(100vw-1rem)] flex-col items-end gap-3 sm:bottom-5 sm:right-5">
-      <div
-        className={cn(
-          "origin-bottom-right transition-all duration-300 ease-out",
-          isOpen
-            ? "pointer-events-auto translate-y-0 scale-100 opacity-100"
-            : "pointer-events-none translate-y-3 scale-95 opacity-0",
-        )}
-      >
-        <div className="relative h-[min(84vh,760px)] w-[min(96vw,1080px)] overflow-hidden rounded-[28px] border border-cyan-200/70 bg-white/75 shadow-[0_30px_90px_-28px_rgba(14,116,144,0.55)] backdrop-blur-2xl dark:border-cyan-300/20 dark:bg-slate-950/75">
-          <div className="pointer-events-none absolute inset-0">
-            <div className="absolute -left-16 top-8 h-56 w-56 rounded-full bg-cyan-400/20 blur-3xl" />
-            <div className="absolute -right-10 bottom-12 h-52 w-52 rounded-full bg-blue-500/20 blur-3xl" />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(255,255,255,0.35)_0%,transparent_45%),radial-gradient(circle_at_85%_80%,rgba(56,189,248,0.20)_0%,transparent_40%)]" />
-          </div>
-          <div className="border-b border-blue-100 bg-linear-to-r from-blue-600 via-cyan-500 to-sky-500 p-4 text-white">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h3 className="text-lg font-semibold">Ask AI</h3>
-                <p className="mt-1 text-xs text-white/80">
-                  OpenAI-powered assistant with chat history, suggested prompts, and feedback actions.
-                </p>
-              </div>
+      {isOpen ? (
+        <div className={cn("pointer-events-auto origin-bottom-right transition-all duration-300 ease-out translate-y-0 scale-100 opacity-100")}>
+          <div className="relative h-[min(84vh,760px)] w-[min(96vw,1080px)] overflow-hidden rounded-[28px] border border-cyan-200/70 bg-white/75 shadow-[0_30px_90px_-28px_rgba(14,116,144,0.55)] backdrop-blur-2xl dark:border-cyan-300/20 dark:bg-slate-950/75">
+            <div className="pointer-events-none absolute inset-0">
+              <div className="absolute -left-16 top-8 h-56 w-56 rounded-full bg-cyan-400/20 blur-3xl" />
+              <div className="absolute -right-10 bottom-12 h-52 w-52 rounded-full bg-blue-500/20 blur-3xl" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(255,255,255,0.35)_0%,transparent_45%),radial-gradient(circle_at_85%_80%,rgba(56,189,248,0.20)_0%,transparent_40%)]" />
+            </div>
+            <div className="border-b border-blue-100 bg-linear-to-r from-blue-600 via-cyan-500 to-sky-500 p-4 text-white">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-lg font-semibold">Ask AI</h3>
+                  <p className="mt-1 text-xs text-white/80">
+                    OpenAI-powered assistant with chat history, suggested prompts, and feedback actions.
+                  </p>
+                </div>
 
-              <div className="flex items-center gap-1">
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="ghost"
-                  className="size-8 rounded-full text-white hover:bg-white/15 hover:text-white"
-                  onClick={() => setIsOpen(false)}
-                  aria-label="Close support chat"
-                >
-                  <X className="size-4" />
-                </Button>
+                <div className="flex items-center gap-1">
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    className="size-8 rounded-full text-white hover:bg-white/15 hover:text-white"
+                    onClick={() => setIsOpen(false)}
+                    aria-label="Close support chat"
+                  >
+                    <X className="size-4" />
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="relative h-[calc(100%-84px)] min-h-0 bg-linear-to-b from-blue-50/50 via-background to-sky-50/40 dark:from-slate-950 dark:via-slate-950 dark:to-slate-950">
-            <AiChatWorkspace mode="widget" />
+            <div className="relative h-[calc(100%-84px)] min-h-0 bg-linear-to-b from-blue-50/50 via-background to-sky-50/40 dark:from-slate-950 dark:via-slate-950 dark:to-slate-950">
+              <AiChatWorkspace mode="widget" />
+            </div>
           </div>
         </div>
-      </div>
+      ) : null}
 
       {showGreeting && !isOpen && (
         <button

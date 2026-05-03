@@ -32,13 +32,33 @@ const formatCurrency = (value?: number) =>
 const fallbackBio =
   "Focused 1:1 guidance for strategy, growth, operations, and decision-making support.";
 
+const buildProfessionalHeadshot = (expert: IExpert) => {
+  const currentPhoto = (expert.profilePhoto ?? "").trim();
+  const isCartoonSeed = /api\.dicebear\.com\/9\.x\/adventurer/i.test(currentPhoto);
+
+  if (currentPhoto && !isCartoonSeed) {
+    return currentPhoto;
+  }
+
+  const identitySeed = `${expert.id}-${expert.fullName}`;
+  let hash = 0;
+  for (let i = 0; i < identitySeed.length; i += 1) {
+    hash = (hash * 31 + identitySeed.charCodeAt(i)) % 1_000_000;
+  }
+
+  const collection = hash % 2 === 0 ? "men" : "women";
+  const photoId = hash % 90;
+  return `https://randomuser.me/api/portraits/${collection}/${photoId}.jpg`;
+};
+
 export default function ExpertCard({ expert }: { expert: IExpert }) {
   const expertPrice = expert.price ?? expert.consultationFee;
   const bio = expert.bio?.trim() || fallbackBio;
+  const profilePhoto = buildProfessionalHeadshot(expert);
 
   return (
-    <Card className="consultedge-card-glow group relative h-full overflow-hidden border border-slate-200 bg-white shadow-[0_20px_50px_-30px_rgba(15,23,42,0.25)] transition duration-300 hover:-translate-y-1 hover:border-cyan-400 hover:shadow-[0_28px_70px_-26px_rgba(34,211,238,0.45)] dark:border-white/10 dark:bg-slate-900/80 dark:shadow-black/20 dark:hover:border-cyan-400/40">
-      <CardContent className="flex h-full flex-col gap-3 p-4">
+    <Card className="consultedge-card-glow group relative h-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_20px_50px_-30px_rgba(15,23,42,0.25)] transition duration-300 hover:-translate-y-1 hover:border-cyan-400 hover:shadow-[0_28px_70px_-26px_rgba(34,211,238,0.45)] dark:border-white/10 dark:bg-slate-900/80 dark:shadow-black/20 dark:hover:border-cyan-400/40">
+      <CardContent className="flex h-full flex-col gap-4 p-5">
         <div
           className="-mx-4 -mt-4 mb-1 h-1.5 bg-linear-to-r from-blue-500 via-cyan-400 to-teal-400"
           aria-hidden="true"
@@ -50,8 +70,8 @@ export default function ExpertCard({ expert }: { expert: IExpert }) {
               size="default"
               className="size-12 border-2 border-cyan-100 ring-2 ring-cyan-50 dark:border-white/15 dark:ring-white/10"
             >
-              {expert.profilePhoto ? (
-                <AvatarImage src={expert.profilePhoto} alt={expert.fullName} />
+              {profilePhoto ? (
+                <AvatarImage src={profilePhoto} alt={expert.fullName} />
               ) : null}
               <AvatarFallback className="text-slate-900">
                 {getInitials(expert.fullName)}
@@ -66,24 +86,24 @@ export default function ExpertCard({ expert }: { expert: IExpert }) {
           </div>
 
           <div className="min-w-0 flex-1 space-y-0.5">
-            <h3 className="line-clamp-1 flex items-center gap-1.5 text-sm font-semibold text-foreground">
+            <h3 className="line-clamp-1 flex items-center gap-1.5 text-base font-semibold tracking-tight text-foreground">
               {expert.fullName}
               {expert.isVerified ? (
                 <BadgeCheck className="size-3.5 shrink-0 text-cyan-600 dark:text-cyan-300" />
               ) : null}
             </h3>
-            <p className="line-clamp-1 text-xs text-muted-foreground">{expert.title}</p>
+            <p className="line-clamp-1 text-sm text-muted-foreground">{expert.title}</p>
             {expert.industry?.name ? (
-              <p className="line-clamp-1 text-[11px] font-medium text-cyan-700 dark:text-cyan-300">
+              <p className="line-clamp-1 text-xs font-medium text-cyan-700 dark:text-cyan-300">
                 {expert.industry.name}
               </p>
             ) : null}
           </div>
         </div>
 
-        <p className="line-clamp-2 text-sm text-gray-600 dark:text-gray-300">{bio}</p>
+        <p className="line-clamp-3 min-h-[4.5rem] text-sm leading-6 text-slate-600 dark:text-slate-300">{bio}</p>
 
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2.5">
           <div className="rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-white/10 dark:bg-white/5">
             <div className="mb-0.5 flex items-center gap-1 text-cyan-700 dark:text-cyan-300">
               <BriefcaseBusiness className="size-3" />
@@ -105,7 +125,7 @@ export default function ExpertCard({ expert }: { expert: IExpert }) {
           </div>
         </div>
 
-        <div className="mt-auto grid gap-2 sm:grid-cols-2">
+        <div className="mt-auto grid gap-2.5 sm:grid-cols-2">
           <Button
             asChild
             size="sm"

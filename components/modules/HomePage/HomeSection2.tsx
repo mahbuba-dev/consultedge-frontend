@@ -91,11 +91,14 @@ export default function HomeSection2({ testimonials }: HomeSection2Props) {
   const scrollingTestimonials = homeTestimonials.length > 0 ? [...homeTestimonials, ...homeTestimonials] : [];
 
   const getReviewerName = (testimonial: ITestimonial) => {
-    const namedReviewer = testimonial.client?.fullName || testimonial.client?.user?.name;
+    const namedReviewer =
+      testimonial.reviewerName ||
+      testimonial.client?.fullName ||
+      testimonial.client?.user?.name;
     if (namedReviewer) return namedReviewer;
 
     // Keep reviewer identity readable even if profile details are partially missing.
-    return `Reviewer ${testimonial.clientId.slice(-4).toUpperCase()}`;
+    return "Verified Client";
   };
 
   return (

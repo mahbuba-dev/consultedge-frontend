@@ -8,7 +8,6 @@ import AiChatSidebar from "./AiChatSidebar";
 import AiMessageBubble from "./AiMessageBubble";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Dialog,
   DialogContent,
@@ -53,14 +52,15 @@ export default function AiChatWorkspace({ mode = "page" }: AiChatWorkspaceProps)
   const [improveReason, setImproveReason] = useState("");
   const [expectedResponse, setExpectedResponse] = useState("");
   const [isSubmittingDislike, setIsSubmittingDislike] = useState(false);
-  const endRef = useRef<HTMLDivElement | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const attachmentInputRef = useRef<HTMLInputElement | null>(null);
 
   const loadingLabels = ["Thinking", "Analyzing", "Crafting reply"];
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    const el = scrollContainerRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
   }, [messages, isLoading]);
 
   useEffect(() => {
@@ -275,7 +275,10 @@ export default function AiChatWorkspace({ mode = "page" }: AiChatWorkspaceProps)
         </div>
 
         {/* Messages */}
-        <ScrollArea className="consultedge-ai-scrollbar h-0 flex-1 px-4 py-4 md:px-6">
+        <div
+          ref={scrollContainerRef}
+          className="consultedge-ai-scrollbar-native min-h-0 flex-1 overflow-y-auto px-4 py-4 md:px-6"
+        >
           {isFetchingMessages ? (
             <div className="flex items-center justify-center py-20">
               <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
@@ -296,6 +299,10 @@ export default function AiChatWorkspace({ mode = "page" }: AiChatWorkspaceProps)
                   message={msg}
                   mode={mode}
                   onFeedback={handleFeedback}
+                  onSuggestionClick={(prompt) => {
+                    setInput(prompt);
+                    if (isMobileViewport()) setSidebarOpen(false);
+                  }}
                 />
               ))}
 
@@ -318,10 +325,9 @@ export default function AiChatWorkspace({ mode = "page" }: AiChatWorkspaceProps)
                 </div>
               )}
 
-              <div ref={endRef} />
             </div>
           )}
-        </ScrollArea>
+          </div>
 
         {/* Input bar */}
         <div className="border-t border-border px-4 py-3">

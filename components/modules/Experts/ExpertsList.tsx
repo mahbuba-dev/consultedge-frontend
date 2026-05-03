@@ -125,6 +125,16 @@ const getSortableTimestamp = (expert: IExpert) => {
   return Number.isFinite(updatedAt) ? updatedAt : 0;
 };
 
+const isSeededExpert = (expert: IExpert) => {
+  if (typeof expert.isSeeded === "boolean") {
+    return expert.isSeeded;
+  }
+
+  // Backward-compatible fallback for old payloads before seeded flag rollout.
+  const email = (expert.email ?? expert.user?.email ?? "").toLowerCase();
+  return email.endsWith("@consultedge.test");
+};
+
 const getQuickFilterButtonClass = (isActive: boolean) =>
   cn(
     "h-auto min-h-9 rounded-full border px-3 py-2 text-xs font-medium whitespace-nowrap transition-all duration-300 hover:-translate-y-0.5 sm:px-4 sm:text-sm",
@@ -205,7 +215,17 @@ export default function ExpertsPageClient() {
   const [aiSearchSuggestions, setAiSearchSuggestions] = useState<SearchSuggestion[]>([]);
   const aiSearchAbortRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
   const PAGE_SIZE = 12;
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 767px)");
+    const updateViewportMode = () => setIsMobileViewport(mediaQuery.matches);
+    updateViewportMode();
+    mediaQuery.addEventListener("change", updateViewportMode);
+
+    return () => mediaQuery.removeEventListener("change", updateViewportMode);
+  }, []);
 
   useEffect(() => {
     const nextQueryString = searchParams.toString();
@@ -389,6 +409,13 @@ export default function ExpertsPageClient() {
         return true;
       })
       .sort((leftExpert, rightExpert) => {
+        if (sortBy === "createdAt") {
+          const seededDelta = Number(isSeededExpert(leftExpert)) - Number(isSeededExpert(rightExpert));
+          if (seededDelta !== 0) {
+            return seededDelta;
+          }
+        }
+
         let comparison = 0;
 
         switch (sortBy) {
@@ -587,6 +614,30 @@ export default function ExpertsPageClient() {
     () => displayedExperts.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
     [displayedExperts, currentPage, PAGE_SIZE],
   );
+
+  const mobileVisibleExperts = useMemo(
+    () => displayedExperts.slice(0, currentPage * PAGE_SIZE),
+    [displayedExperts, currentPage, PAGE_SIZE],
+  );
+
+  const renderedExperts = isMobileViewport ? mobileVisibleExperts : visibleExperts;
+  const canLoadMoreOnMobile = mobileVisibleExperts.length < displayedExperts.length;
+
+  useEffect(() => {
+    // Prefetch next page card images so transitions feel instant.
+    const nextPageExperts = displayedExperts.slice(
+      currentPage * PAGE_SIZE,
+      (currentPage + 1) * PAGE_SIZE,
+    );
+
+    nextPageExperts.forEach((expert) => {
+      const imageSrc = (expert.profilePhoto ?? "").trim();
+      if (!imageSrc) return;
+
+      const img = new Image();
+      img.src = imageSrc;
+    });
+  }, [displayedExperts, currentPage, PAGE_SIZE]);
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 py-6">
@@ -802,18 +853,23 @@ export default function ExpertsPageClient() {
             </p>
 
             <p className="text-sm text-muted-foreground">
-              Showing {Math.min((currentPage - 1) * PAGE_SIZE + 1, totalExperts)}–{Math.min(currentPage * PAGE_SIZE, totalExperts)} of {totalExperts}
+              {isMobileViewport
+                ? `Showing ${mobileVisibleExperts.length} of ${totalExperts}`
+                : `Showing ${Math.min((currentPage - 1) * PAGE_SIZE + 1, totalExperts)}–${Math.min(
+                    currentPage * PAGE_SIZE,
+                    totalExperts,
+                  )} of ${totalExperts}`}
             </p>
           </div>
 
           <div className="animate-in fade-in-0 slide-in-from-bottom-2 grid grid-cols-1 gap-4 duration-500 md:grid-cols-2 xl:grid-cols-4">
-            {visibleExperts.map((expert) => (
+            {renderedExperts.map((expert) => (
               <ExpertCard key={expert.id} expert={expert} />
             ))}
           </div>
 
-          {totalPages > 1 ? (
-            <div className="flex flex-wrap items-center justify-center gap-1 pt-2">
+          {!isMobileViewport && totalPages > 1 ? (
+            <div className="hidden flex-wrap items-center justify-center gap-1 pt-2 md:flex">
               <Button
                 variant="outline"
                 size="sm"
@@ -853,6 +909,18 @@ export default function ExpertsPageClient() {
                 onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               >
                 Next
+              </Button>
+            </div>
+          ) : null}
+
+          {isMobileViewport && canLoadMoreOnMobile ? (
+            <div className="pt-2 md:hidden">
+              <Button
+                variant="outline"
+                className="w-full rounded-xl"
+                onClick={() => setCurrentPage((page) => Math.min(page + 1, totalPages))}
+              >
+                Load more experts
               </Button>
             </div>
           ) : null}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -31,6 +31,10 @@ import {
 import type { IExpert, IExpertAvailability } from "@/src/types/expert.types";
 import type { ITestimonial } from "@/src/types/testimonial.types";
 import { trackExpertView } from "@/src/lib/aiPersonalization";
+import {
+  buildSeededAvailability,
+  buildSeededTestimonials,
+} from "@/src/lib/seededExpertContent";
 
 type ExpertDetailsProps = {
   expert: IExpert;
@@ -65,8 +69,18 @@ export default function ExpertDetails({
   userRole,
 }: ExpertDetailsProps) {
   const [openBookingSignal, setOpenBookingSignal] = useState(0);
-  const availableSlots = availability.filter((slot) => !slot.isBooked && !slot.isDeleted).length;
-  const reviewCount = testimonials.length;
+  const effectiveAvailability = useMemo<IExpertAvailability[]>(
+    () => (availability.length > 0 ? availability : buildSeededAvailability(expert)),
+    [availability, expert],
+  );
+  const effectiveTestimonials = useMemo<ITestimonial[]>(
+    () => (testimonials.length > 0 ? testimonials : buildSeededTestimonials(expert)),
+    [testimonials, expert],
+  );
+  const availableSlots = effectiveAvailability.filter(
+    (slot) => !slot.isBooked && !slot.isDeleted,
+  ).length;
+  const reviewCount = effectiveTestimonials.length;
   const consultationFee = formatCurrency(expert.consultationFee ?? expert.price);
 
   useEffect(() => {
@@ -378,6 +392,11 @@ export default function ExpertDetails({
           <p className="text-muted-foreground">
             Choose an open slot, review the session summary, and continue with a secure consultation flow.
           </p>
+          {availability.length === 0 ? (
+            <p className="mt-2 text-xs font-medium text-amber-700 dark:text-amber-300">
+              Showing sample availability — real slots will appear once {expert.fullName.split(" ")[0]} publishes their schedule.
+            </p>
+          ) : null}
         </div>
 
         <BookSessionPanel
@@ -386,7 +405,7 @@ export default function ExpertDetails({
           expertTitle={expert.title}
           consultationFee={expert.consultationFee ?? expert.price}
           industryName={expert.industry?.name ?? null}
-          availability={availability}
+          availability={effectiveAvailability}
           isLoggedIn={isLoggedIn}
           userRole={userRole}
           openSignal={openBookingSignal}
@@ -402,9 +421,14 @@ export default function ExpertDetails({
           <p className="text-muted-foreground">
             Reviews shared by clients who have worked with this expert.
           </p>
+          {testimonials.length === 0 ? (
+            <p className="mt-2 text-xs font-medium text-amber-700 dark:text-amber-300">
+              Showing sample testimonials — real reviews will appear after the first verified consultation.
+            </p>
+          ) : null}
         </div>
 
-        <ExpertTestimonialsSection testimonials={testimonials} />
+        <ExpertTestimonialsSection testimonials={effectiveTestimonials} />
       </section>
     </div>
   );

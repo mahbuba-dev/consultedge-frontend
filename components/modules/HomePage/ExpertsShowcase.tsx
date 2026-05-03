@@ -23,6 +23,7 @@ import {
 } from "@/src/lib/aiPersonalization";
 import { useUserActivity } from "@/src/hooks/useUserActivity";
 import { getAIRecommendations } from "@/src/services/ai.service";
+import { getExperts } from "@/src/services/expert.services";
 import type { IExpert } from "@/src/types/expert.types";
 
 interface ExpertsShowcaseProps {
@@ -67,6 +68,15 @@ const fallbackBio =
 
 const normalizeName = (value: string) => value.trim().toLowerCase();
 
+const isSeededExpert = (expert: IExpert) => {
+  if (typeof expert.isSeeded === "boolean") {
+    return expert.isSeeded;
+  }
+
+  const email = (expert.email ?? expert.user?.email ?? "").toLowerCase();
+  return email.endsWith("@consultedge.test");
+};
+
 const emptyBehaviorState: BehaviorState = {
   industryWeights: {},
   recentSearches: [],
@@ -80,6 +90,21 @@ const formatWhyReason = (value: string) =>
     .replace(/^(?:\s*why\s*:\s*)+/i, "")
     .replace(/^\s*because\s+you\s+/i, "Based on your ")
     .trim();
+
+const dedupeDisplayCards = (cards: DisplayExpertCard[], cap: number) => {
+  const used = new Set<string>();
+  const unique: DisplayExpertCard[] = [];
+
+  for (const card of cards) {
+    const key = normalizeName(card.name);
+    if (used.has(key)) continue;
+    used.add(key);
+    unique.push(card);
+    if (unique.length >= cap) break;
+  }
+
+  return unique;
+};
 
 export default function ExpertsShowcase({ experts, limit = 4 }: ExpertsShowcaseProps) {
   const cap = Math.max(4, Math.min(limit, 6));
@@ -96,7 +121,7 @@ export default function ExpertsShowcase({ experts, limit = 4 }: ExpertsShowcaseP
     [signals],
   );
 
-  const { data: aiResult, isPending: aiLoading } = useQuery({
+  const { data: aiResult } = useQuery({
     queryKey: ["ai-recommendations", cap, recommendationPayload],
     queryFn: () => getAIRecommendations(recommendationPayload),
     enabled: hydrated,
@@ -104,17 +129,46 @@ export default function ExpertsShowcase({ experts, limit = 4 }: ExpertsShowcaseP
     gcTime: 1000 * 60 * 30,
   });
 
+  const { data: fallbackExpertsResult } = useQuery({
+    queryKey: ["homepage-fallback-experts", cap],
+    queryFn: () =>
+      getExperts({
+        page: 1,
+        limit: Math.max(cap * 5, 24),
+        sortBy: "createdAt",
+        sortOrder: "desc",
+      }),
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 20,
+  });
+
+  const candidateExperts = useMemo(() => {
+    const pool = [
+      ...experts,
+      ...(Array.isArray(fallbackExpertsResult?.data) ? fallbackExpertsResult.data : []),
+    ];
+    const unique = new Map<string, IExpert>();
+
+    for (const expert of pool) {
+      if (!expert?.id || unique.has(expert.id)) continue;
+      if (isSeededExpert(expert)) continue;
+      unique.set(expert.id, expert);
+    }
+
+    return Array.from(unique.values());
+  }, [experts, fallbackExpertsResult]);
+
   const expertsByName = useMemo(() => {
     const map = new Map<string, IExpert>();
-    for (const expert of experts) {
+    for (const expert of candidateExperts) {
       map.set(normalizeName(expert.fullName), expert);
     }
     return map;
-  }, [experts]);
+  }, [candidateExperts]);
 
   const localRanked = useMemo(
-    () => recommendExperts(experts, cap, hydrated ? getBehavior() : emptyBehaviorState),
-    [experts, cap, hydrated, signals],
+    () => recommendExperts(candidateExperts, cap, hydrated ? getBehavior() : emptyBehaviorState),
+    [candidateExperts, cap, hydrated],
   );
 
   const localReasonByName = useMemo(() => {
@@ -129,11 +183,14 @@ export default function ExpertsShowcase({ experts, limit = 4 }: ExpertsShowcaseP
     const backendExperts = aiResult?.data?.experts ?? [];
 
     if (backendExperts.length > 0) {
-      return backendExperts.slice(0, cap).map((expert, index) => {
+      return backendExperts
+        .map((expert, index) => {
         const matched = expertsByName.get(normalizeName(expert.name));
+        if (!matched) return null;
+
         return {
           key: `ai-${index}-${expert.name}`,
-          href: matched ? `/experts/${matched.id}` : "/experts",
+          href: `/experts/${matched.id}`,
           name: expert.name,
           title: expert.title || "Consultant",
           specialization: expert.specialization || "General Consulting",
@@ -142,10 +199,12 @@ export default function ExpertsShowcase({ experts, limit = 4 }: ExpertsShowcaseP
           fee: Number(expert.fee ?? 0),
           whyReason:
             expert.whyReason || localReasonByName.get(normalizeName(expert.name)) || "",
-          profilePhoto: matched?.profilePhoto,
-          isVerified: matched?.isVerified,
+          profilePhoto: matched.profilePhoto || null,
+          isVerified: matched.isVerified,
         };
-      });
+      })
+        .filter((card): card is DisplayExpertCard => Boolean(card))
+        .slice(0, cap);
     }
 
     return localRanked.map((item) => ({
@@ -158,14 +217,16 @@ export default function ExpertsShowcase({ experts, limit = 4 }: ExpertsShowcaseP
       experienceYears: Number(item.expert.experience ?? 0),
       fee: Number(item.expert.consultationFee ?? item.expert.price ?? 0),
       whyReason: item.reason,
-      profilePhoto: item.expert.profilePhoto,
+      profilePhoto: item.expert.profilePhoto || null,
       isVerified: item.expert.isVerified,
     }));
   }, [aiResult, cap, expertsByName, localReasonByName, localRanked]);
 
-  const showSkeleton = hydrated && aiLoading && items.length === 0;
-
-  if (!showSkeleton && !items.length) return null;
+  const displayItems = dedupeDisplayCards(items, cap);
+  const isDevFallbackActive =
+    process.env.NODE_ENV !== "production" &&
+    hydrated &&
+    (aiResult?.data?.experts?.length ?? 0) === 0;
 
   return (
     <section id="experts-showcase" className="relative scroll-mt-28 overflow-hidden rounded-(--ce-shell-radius) border border-cyan-100/70 bg-white/52 p-5 shadow-(--ce-shell-shadow-strong) backdrop-blur-2xl md:rounded-(--ce-shell-radius-md) md:p-7 lg:p-8 dark:rounded-(--ce-shell-radius-dark) dark:border-white/10 dark:bg-slate-950/42">
@@ -201,6 +262,11 @@ export default function ExpertsShowcase({ experts, limit = 4 }: ExpertsShowcaseP
               ? "Our AI ranks specialists that match your recent activity."
               : "Selected from verified specialists, weekly momentum, and quality signals so you can book with confidence."}
           </p>
+          {isDevFallbackActive ? (
+            <span className="inline-flex w-fit items-center gap-1 rounded-full border border-amber-300/70 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:border-amber-400/30 dark:bg-amber-500/10 dark:text-amber-200">
+              Fallback mode active
+            </span>
+          ) : null}
           <RecDebugPanel mode={mode} activityCount={activityCount} />
         </div>
 
@@ -226,126 +292,106 @@ export default function ExpertsShowcase({ experts, limit = 4 }: ExpertsShowcaseP
         </div>
       </div>
 
-      <div className="relative grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {showSkeleton
-          ? Array.from({ length: cap }).map((_, i) => <ExpertCardSkeleton key={i} />)
-          : items.map((item, index) => {
-              return (
-                <Link
-                  key={item.key}
-                  href={item.href}
-                  className="group block h-full"
-                  style={{ animationDelay: `${110 + index * 70}ms` }}
-                >
-                  <Card className="consultedge-reveal--visible consultedge-card-glow relative h-full overflow-hidden border border-slate-200 bg-white shadow-[0_20px_50px_-30px_rgba(15,23,42,0.25)] transition duration-300 hover:-translate-y-1 hover:border-cyan-400 hover:shadow-[0_28px_70px_-26px_rgba(34,211,238,0.45)] dark:border-white/10 dark:bg-slate-900/80 dark:shadow-black/20 dark:hover:border-cyan-400/40">
-                    <CardContent className="flex h-full flex-col gap-3 p-4">
-                      <div
-                        className="-mx-4 -mt-4 mb-1 h-1.5 bg-linear-to-r from-blue-500 via-cyan-400 to-teal-400"
-                        aria-hidden="true"
-                      />
-
-                      <div className="flex items-center gap-3">
-                        <div className="relative flex items-center justify-center">
-                          <Avatar
-                            size="default"
-                            className="size-12 border-2 border-cyan-100 ring-2 ring-cyan-50 dark:border-white/15 dark:ring-white/10"
-                          >
-                            {item.profilePhoto ? (
-                              <AvatarImage src={item.profilePhoto} alt={item.name} />
-                            ) : null}
-                            <AvatarFallback className="text-slate-900">
-                              {getInitials(item.name)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="absolute -bottom-0.5 -right-0.5 z-20 flex">
-                            <span className="relative flex h-2.5 w-2.5">
-                              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
-                              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900" />
-                            </span>
-                          </span>
-                        </div>
-
-                        <div className="min-w-0 flex-1 space-y-0.5">
-                          <h3 className="line-clamp-1 flex items-center gap-1.5 text-sm font-semibold text-foreground">
-                            {item.name}
-                            {item.isVerified ? (
-                              <BadgeCheck className="size-3.5 shrink-0 text-cyan-600 dark:text-cyan-300" />
-                            ) : null}
-                          </h3>
-                          <p className="line-clamp-1 text-xs text-muted-foreground">{item.title}</p>
-                          <p className="line-clamp-1 text-[11px] font-medium text-cyan-700 dark:text-cyan-300">
-                            {item.specialization}
-                          </p>
-                        </div>
-                      </div>
-
-                      <p className="line-clamp-2 text-sm text-gray-600 dark:text-gray-300">
-                        {item.description || fallbackBio}
-                      </p>
-
-                      {item.whyReason ? (
-                        <div className="rounded-lg border border-cyan-100 bg-cyan-50/60 px-2 py-1.5 text-[11px] text-cyan-800 dark:border-cyan-500/20 dark:bg-cyan-500/5 dark:text-cyan-200">
-                          <span className="font-medium">Why this pick:</span>{" "}
-                          <span className="opacity-90">{formatWhyReason(item.whyReason)}</span>
-                        </div>
-                      ) : null}
-
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-white/10 dark:bg-white/5">
-                          <div className="mb-0.5 flex items-center gap-1 text-cyan-700 dark:text-cyan-300">
-                            <BriefcaseBusiness className="size-3" />
-                            <span className="text-[9px] font-medium uppercase tracking-wide">Exp</span>
-                          </div>
-                          <p className="text-xs font-semibold text-foreground">
-                            {item.experienceYears} {item.experienceYears === 1 ? "yr" : "yrs"}
-                          </p>
-                        </div>
-
-                        <div className="rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-white/10 dark:bg-white/5">
-                          <div className="mb-0.5 flex items-center gap-1 text-cyan-700 dark:text-cyan-300">
-                            <Wallet className="size-3" />
-                            <span className="text-[9px] font-medium uppercase tracking-wide">Fee</span>
-                          </div>
-                          <p className="text-xs font-semibold text-foreground">
-                            {formatFee(item.fee)}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="mt-auto flex items-center justify-between text-xs font-medium text-cyan-700 transition-colors group-hover:text-cyan-600 dark:text-cyan-300">
-                        <span>View profile</span>
-                        <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              );
-            })}
-      </div>
-    </section>
-  );
-}
-
-function ExpertCardSkeleton() {
-  return (
-    <div className="relative h-full overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-slate-900/80">
-      <div className="-mx-4 -mt-4 mb-3 h-1.5 bg-linear-to-r from-blue-500/30 via-cyan-400/30 to-teal-400/30" />
-      <div className="flex items-center gap-3">
-        <div className="size-12 animate-pulse rounded-full bg-slate-200 dark:bg-white/10" />
-        <div className="min-w-0 flex-1 space-y-1.5">
-          <div className="h-3 w-3/4 animate-pulse rounded bg-slate-200 dark:bg-white/10" />
-          <div className="h-2.5 w-1/2 animate-pulse rounded bg-slate-200 dark:bg-white/10" />
-          <div className="h-2.5 w-1/3 animate-pulse rounded bg-slate-200 dark:bg-white/10" />
+      {displayItems.length === 0 ? (
+        <div className="relative rounded-xl border border-cyan-100 bg-cyan-50/40 p-5 text-sm text-cyan-900 dark:border-cyan-500/20 dark:bg-cyan-500/5 dark:text-cyan-100">
+          No approved expert profiles are available yet.
         </div>
+      ) : (
+      <div className="relative grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {displayItems.map((item, index) => {
+          return (
+            <Link
+              key={item.key}
+              href={item.href}
+              className="group block h-full"
+              style={{ animationDelay: `${110 + index * 70}ms` }}
+            >
+              <Card className="consultedge-reveal--visible consultedge-card-glow relative h-full overflow-hidden border border-slate-200 bg-white shadow-[0_20px_50px_-30px_rgba(15,23,42,0.25)] transition duration-300 hover:-translate-y-1 hover:border-cyan-400 hover:shadow-[0_28px_70px_-26px_rgba(34,211,238,0.45)] dark:border-white/10 dark:bg-slate-900/80 dark:shadow-black/20 dark:hover:border-cyan-400/40">
+                <CardContent className="flex h-full flex-col gap-3 p-4">
+                  <div
+                    className="-mx-4 -mt-4 mb-1 h-1.5 bg-linear-to-r from-blue-500 via-cyan-400 to-teal-400"
+                    aria-hidden="true"
+                  />
+
+                  <div className="flex items-center gap-3">
+                    <div className="relative flex items-center justify-center">
+                      <Avatar
+                        size="default"
+                        className="size-12 border-2 border-cyan-100 ring-2 ring-cyan-50 dark:border-white/15 dark:ring-white/10"
+                      >
+                        {item.profilePhoto ? (
+                          <AvatarImage src={item.profilePhoto} alt={item.name} />
+                        ) : null}
+                        <AvatarFallback className="text-slate-900">
+                          {getInitials(item.name)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="absolute -bottom-0.5 -right-0.5 z-20 flex">
+                        <span className="relative flex h-2.5 w-2.5">
+                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+                          <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900" />
+                        </span>
+                      </span>
+                    </div>
+
+                    <div className="min-w-0 flex-1 space-y-0.5">
+                      <h3 className="line-clamp-1 flex items-center gap-1.5 text-sm font-semibold text-foreground">
+                        {item.name}
+                        {item.isVerified ? (
+                          <BadgeCheck className="size-3.5 shrink-0 text-cyan-600 dark:text-cyan-300" />
+                        ) : null}
+                      </h3>
+                      <p className="line-clamp-1 text-xs text-muted-foreground">{item.title}</p>
+                      <p className="line-clamp-1 text-[11px] font-medium text-cyan-700 dark:text-cyan-300">
+                        {item.specialization}
+                      </p>
+                    </div>
+                  </div>
+
+                  <p className="line-clamp-2 text-sm text-gray-600 dark:text-gray-300">
+                    {item.description || fallbackBio}
+                  </p>
+
+                  {item.whyReason ? (
+                    <div className="rounded-lg border border-cyan-100 bg-cyan-50/60 px-2 py-1.5 text-[11px] text-cyan-800 dark:border-cyan-500/20 dark:bg-cyan-500/5 dark:text-cyan-200">
+                      <span className="font-medium">Why this pick:</span>{" "}
+                      <span className="opacity-90">{formatWhyReason(item.whyReason)}</span>
+                    </div>
+                  ) : null}
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-white/10 dark:bg-white/5">
+                      <div className="mb-0.5 flex items-center gap-1 text-cyan-700 dark:text-cyan-300">
+                        <BriefcaseBusiness className="size-3" />
+                        <span className="text-[9px] font-medium uppercase tracking-wide">Exp</span>
+                      </div>
+                      <p className="text-xs font-semibold text-foreground">
+                        {item.experienceYears} {item.experienceYears === 1 ? "yr" : "yrs"}
+                      </p>
+                    </div>
+
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-white/10 dark:bg-white/5">
+                      <div className="mb-0.5 flex items-center gap-1 text-cyan-700 dark:text-cyan-300">
+                        <Wallet className="size-3" />
+                        <span className="text-[9px] font-medium uppercase tracking-wide">Fee</span>
+                      </div>
+                      <p className="text-xs font-semibold text-foreground">
+                        {formatFee(item.fee)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-auto flex items-center justify-between text-xs font-medium text-cyan-700 transition-colors group-hover:text-cyan-600 dark:text-cyan-300">
+                    <span>View profile</span>
+                    <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          );
+        })}
       </div>
-      <div className="mt-3 space-y-1.5">
-        <div className="h-2.5 w-full animate-pulse rounded bg-slate-200 dark:bg-white/10" />
-        <div className="h-2.5 w-4/5 animate-pulse rounded bg-slate-200 dark:bg-white/10" />
-      </div>
-      <div className="mt-3 grid grid-cols-2 gap-2">
-        <div className="h-12 animate-pulse rounded-lg bg-slate-100 dark:bg-white/5" />
-        <div className="h-12 animate-pulse rounded-lg bg-slate-100 dark:bg-white/5" />
-      </div>
-    </div>
+      )}
+    </section>
   );
 }

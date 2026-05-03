@@ -43,7 +43,7 @@ function pickCoupon(opts: { industryName?: string | null }): CouponOffer | null 
     return {
       code: "EDGE10",
       percent: 10,
-      reason: "We noticed you've been comparing experts — here's 10% off your first booking.",
+        reason: "Your first booking, made easy. Save 10% when you book today.",
       tone: "loyal",
     };
   }
@@ -53,7 +53,7 @@ function pickCoupon(opts: { industryName?: string | null }): CouponOffer | null 
     return {
       code: `${opts.industryName.replace(/\s+/g, "").toUpperCase().slice(0, 6)}8`,
       percent: 8,
-      reason: `8% off because you're exploring ${opts.industryName}.`,
+        reason: `Exclusive offer for ${opts.industryName} expertise — save 8% on your session.`,
       tone: "industry",
     };
   }
@@ -63,7 +63,7 @@ function pickCoupon(opts: { industryName?: string | null }): CouponOffer | null 
     return {
       code: "BOOK5",
       percent: 5,
-      reason: "Almost there — 5% off when you confirm in this session.",
+        reason: "Ready to move forward? Use this code for 5% off your next booking.",
       tone: "abandoned",
     };
   }
@@ -72,7 +72,7 @@ function pickCoupon(opts: { industryName?: string | null }): CouponOffer | null 
   return {
     code: "WELCOME5",
     percent: 5,
-    reason: "Welcome to ConsultEdge. Enjoy 5% off your first session.",
+      reason: "Welcome to ConsultEdge — here's 5% off your first expert session.",
     tone: "first-visit",
   };
 }

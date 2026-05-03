@@ -10,15 +10,33 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { getTrendingExperts } from "@/src/lib/aiPersonalization";
 import { getAIRecommendations } from "@/src/services/ai.service";
+import { getExperts } from "@/src/services/expert.services";
 import type { IExpert } from "@/src/types/expert.types";
 
 interface TrendingExpertsProps {
   experts: IExpert[];
 }
 
+type TrendingCard = {
+  key: string;
+  href: string;
+  name: string;
+  title: string;
+  industry?: string;
+  bio: string;
+  profilePhoto?: string | null;
+};
+
 const MAX = 4;
 const fallbackBio =
   "Trusted operator helping teams move faster with focused 1:1 sessions.";
+
+const variedFallbackBios = [
+  "Builds practical operating systems for teams that need cleaner execution under growth pressure.",
+  "Advises leaders on prioritization, stakeholder alignment, and measurable quarterly outcomes.",
+  "Designs repeatable client-delivery playbooks that improve quality without slowing momentum.",
+  "Supports founders with offer strategy, positioning, and retention-focused customer journeys.",
+] as const;
 
 const getInitials = (name: string) =>
   name
@@ -28,14 +46,54 @@ const getInitials = (name: string) =>
     .slice(0, 2)
     .toUpperCase();
 
+  const normalizeName = (value: string) => value.trim().toLowerCase();
+
+const isSeededExpert = (expert: IExpert) => {
+  if (typeof expert.isSeeded === "boolean") {
+    return expert.isSeeded;
+  }
+
+  const email = (expert.email ?? expert.user?.email ?? "").toLowerCase();
+  return email.endsWith("@consultedge.test");
+};
+
 export default function TrendingExperts({ experts }: TrendingExpertsProps) {
+  const { data: fallbackExpertsResult } = useQuery({
+    queryKey: ["homepage-trending-fallback-experts", MAX],
+    queryFn: () =>
+      getExperts({
+        page: 1,
+        limit: 24,
+        sortBy: "createdAt",
+        sortOrder: "desc",
+      }),
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 20,
+  });
+
+  const candidateExperts = useMemo(() => {
+    const pool = [
+      ...experts,
+      ...(Array.isArray(fallbackExpertsResult?.data) ? fallbackExpertsResult.data : []),
+    ];
+    const unique = new Map<string, IExpert>();
+
+    for (const expert of pool) {
+      if (!expert?.id || unique.has(expert.id)) continue;
+      if (isSeededExpert(expert)) continue;
+      unique.set(expert.id, expert);
+    }
+
+    return Array.from(unique.values());
+  }, [experts, fallbackExpertsResult]);
+
   const expertsById = useMemo(() => {
     const m = new Map<string, IExpert>();
-    for (const e of experts) m.set(e.id, e);
+    for (const e of candidateExperts) m.set(e.id, e);
     return m;
-  }, [experts]);
+  }, [candidateExperts]);
 
-  const { data: aiResult, isPending: aiLoading } = useQuery({
+  const { data: aiResult } = useQuery({
     queryKey: ["ai-trending", MAX],
     queryFn: () =>
       getAIRecommendations({
@@ -46,23 +104,54 @@ export default function TrendingExperts({ experts }: TrendingExpertsProps) {
     gcTime: 1000 * 60 * 30,
   });
 
-  const heuristicTrending = useMemo(() => getTrendingExperts(experts, MAX), [experts]);
+  const heuristicTrending = useMemo(
+    () => getTrendingExperts(candidateExperts, MAX),
+    [candidateExperts],
+  );
 
   const trending: IExpert[] = useMemo(() => {
     const backendItems = aiResult?.data?.items ?? [];
     if (backendItems.length > 0) {
       const resolved = backendItems
         .map((it) => it.expert ?? expertsById.get(it.expertId))
-        .filter((e): e is IExpert => Boolean(e))
+        .filter((e): e is IExpert => Boolean(e) && !isSeededExpert(e))
         .slice(0, MAX);
       if (resolved.length > 0) return resolved;
     }
-    return heuristicTrending;
+    return heuristicTrending.filter((expert) => !isSeededExpert(expert));
   }, [aiResult, expertsById, heuristicTrending]);
 
-  const showSkeleton = aiLoading && trending.length === 0;
+  const cards: TrendingCard[] = useMemo(() => {
+    if (trending.length > 0) {
+      const used = new Set<string>();
+      const unique = trending
+        .filter((expert) => {
+          const key = normalizeName(expert.fullName);
+          if (used.has(key)) return false;
+          used.add(key);
+          return true;
+        })
+        .slice(0, MAX)
+        .map((expert, index) => ({
+          key: expert.id,
+          href: `/experts/${expert.id}`,
+          name: expert.fullName,
+          title: expert.title || "Consultant",
+          industry: expert.industry?.name,
+          bio:
+            expert.bio?.trim() ||
+            variedFallbackBios[index % variedFallbackBios.length] ||
+            fallbackBio,
+          profilePhoto: expert.profilePhoto || null,
+        }));
 
-  if (!showSkeleton && trending.length === 0) return null;
+      return unique;
+    }
+
+    return [];
+  }, [trending]);
+  const isDevFallbackActive =
+    process.env.NODE_ENV !== "production" && (aiResult?.data?.items?.length ?? 0) === 0;
 
   return (
     <section
@@ -85,6 +174,11 @@ export default function TrendingExperts({ experts }: TrendingExpertsProps) {
           <p className="text-sm text-muted-foreground md:text-base">
             Powered by our AI ranking with heuristic fallback for resilience.
           </p>
+          {isDevFallbackActive ? (
+            <span className="inline-flex items-center gap-1 rounded-full border border-amber-300/70 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:border-amber-400/30 dark:bg-amber-500/10 dark:text-amber-200">
+              Fallback mode active
+            </span>
+          ) : null}
         </div>
         <div className="hidden items-center gap-2 rounded-full border border-orange-200/70 bg-white/80 px-3 py-1.5 text-xs font-medium text-orange-700 dark:border-white/10 dark:bg-slate-900/70 dark:text-orange-200 md:inline-flex">
           <TrendingUp className="size-3.5" />
@@ -92,80 +186,59 @@ export default function TrendingExperts({ experts }: TrendingExpertsProps) {
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {showSkeleton
-          ? Array.from({ length: MAX }).map((_, i) => <TrendingSkeleton key={i} />)
-          : trending.map((expert, idx) => {
-              const bio = expert.bio?.trim() || fallbackBio;
-              return (
-                <Link
-                  key={expert.id}
-                  href={`/experts/${expert.id}`}
-                  className="group block h-full"
-                >
-                  <Card className="relative h-full overflow-hidden border border-slate-200 bg-white transition duration-300 hover:-translate-y-1 hover:border-orange-400 hover:shadow-[0_28px_70px_-26px_rgba(251,146,60,0.4)] dark:border-white/10 dark:bg-slate-900/80 dark:hover:border-orange-400/40">
-                    <CardContent className="flex h-full flex-col gap-3 p-4">
-                      <div className="flex items-center justify-between">
-                        <Badge className="gap-1 rounded-full bg-orange-500/10 text-[10px] font-bold text-orange-700 hover:bg-orange-500/20 dark:bg-orange-500/15 dark:text-orange-200">
-                          <Flame className="size-3" />#{idx + 1}
-                        </Badge>
-                        <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-                          Trending
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-3">
-                        <Avatar size="default" className="size-12 border-2 border-orange-100 ring-2 ring-orange-50 dark:border-white/15 dark:ring-white/10">
-                          {expert.profilePhoto ? (
-                            <AvatarImage src={expert.profilePhoto} alt={expert.fullName} />
-                          ) : null}
-                          <AvatarFallback>{getInitials(expert.fullName)}</AvatarFallback>
-                        </Avatar>
-                        <div className="min-w-0 flex-1">
-                          <h3 className="line-clamp-1 text-sm font-semibold">{expert.fullName}</h3>
-                          <p className="line-clamp-1 text-xs text-muted-foreground">{expert.title}</p>
-                          {expert.industry?.name ? (
-                            <p className="line-clamp-1 text-[11px] font-medium text-orange-700 dark:text-orange-300">
-                              {expert.industry.name}
-                            </p>
-                          ) : null}
-                        </div>
-                      </div>
-
-                      <p className="line-clamp-2 text-sm text-gray-600 dark:text-gray-300">{bio}</p>
-
-                      <div className="mt-auto flex items-center justify-between text-xs font-medium text-orange-700 transition-colors group-hover:text-orange-600 dark:text-orange-300">
-                        <span>View profile</span>
-                        <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              );
-            })}
-      </div>
-    </section>
-  );
-}
-
-function TrendingSkeleton() {
-  return (
-    <div className="relative h-full overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-slate-900/80">
-      <div className="flex items-center justify-between">
-        <div className="h-5 w-12 animate-pulse rounded-full bg-orange-200/50" />
-        <div className="h-3 w-14 animate-pulse rounded bg-slate-200 dark:bg-white/10" />
-      </div>
-      <div className="mt-3 flex items-center gap-3">
-        <div className="size-12 animate-pulse rounded-full bg-slate-200 dark:bg-white/10" />
-        <div className="min-w-0 flex-1 space-y-1.5">
-          <div className="h-3 w-3/4 animate-pulse rounded bg-slate-200 dark:bg-white/10" />
-          <div className="h-2.5 w-1/2 animate-pulse rounded bg-slate-200 dark:bg-white/10" />
+      {cards.length === 0 ? (
+        <div className="rounded-xl border border-orange-100 bg-orange-50/40 p-5 text-sm text-orange-900 dark:border-orange-500/20 dark:bg-orange-500/5 dark:text-orange-100">
+          No trending experts available yet.
         </div>
+      ) : (
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {cards.map((card, idx) => (
+          <Link
+            key={card.key}
+            href={card.href}
+            className="group block h-full"
+          >
+            <Card className="relative h-full overflow-hidden border border-slate-200 bg-white transition duration-300 hover:-translate-y-1 hover:border-orange-400 hover:shadow-[0_28px_70px_-26px_rgba(251,146,60,0.4)] dark:border-white/10 dark:bg-slate-900/80 dark:hover:border-orange-400/40">
+              <CardContent className="flex h-full flex-col gap-3 p-4">
+                <div className="flex items-center justify-between">
+                  <Badge className="gap-1 rounded-full bg-orange-500/10 text-[10px] font-bold text-orange-700 hover:bg-orange-500/20 dark:bg-orange-500/15 dark:text-orange-200">
+                    <Flame className="size-3" />#{idx + 1}
+                  </Badge>
+                  <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                    Trending
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <Avatar size="default" className="size-12 border-2 border-orange-100 ring-2 ring-orange-50 dark:border-white/15 dark:ring-white/10">
+                    {card.profilePhoto ? (
+                      <AvatarImage src={card.profilePhoto} alt={card.name} />
+                    ) : null}
+                    <AvatarFallback>{getInitials(card.name)}</AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="line-clamp-1 text-sm font-semibold">{card.name}</h3>
+                    <p className="line-clamp-1 text-xs text-muted-foreground">{card.title}</p>
+                    {card.industry ? (
+                      <p className="line-clamp-1 text-[11px] font-medium text-orange-700 dark:text-orange-300">
+                        {card.industry}
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
+
+                <p className="line-clamp-2 text-sm text-gray-600 dark:text-gray-300">{card.bio}</p>
+
+                <div className="mt-auto flex items-center justify-between text-xs font-medium text-orange-700 transition-colors group-hover:text-orange-600 dark:text-orange-300">
+                  <span>View profile</span>
+                  <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
       </div>
-      <div className="mt-3 space-y-1.5">
-        <div className="h-2.5 w-full animate-pulse rounded bg-slate-200 dark:bg-white/10" />
-        <div className="h-2.5 w-4/5 animate-pulse rounded bg-slate-200 dark:bg-white/10" />
-      </div>
-    </div>
+      )}
+    </section>
   );
 }

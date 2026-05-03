@@ -409,6 +409,31 @@
   background: linear-gradient(180deg, rgba(14, 165, 233, 1), rgba(79, 70, 229, 0.98));
 }
 
+  /* Native-scroll variant for the messages pane — reliable auto-scroll via scrollTop */
+  .consultedge-ai-scrollbar-native {
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(34, 211, 238, 0.7) transparent;
+  }
+  .consultedge-ai-scrollbar-native::-webkit-scrollbar {
+    width: 10px;
+  }
+  .consultedge-ai-scrollbar-native::-webkit-scrollbar-track {
+    background: linear-gradient(180deg, rgba(6, 182, 212, 0.12), rgba(59, 130, 246, 0.16));
+    border-left: 1px solid rgba(56, 189, 248, 0.22);
+    border-radius: 999px;
+  }
+  .consultedge-ai-scrollbar-native::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(34, 211, 238, 0.8), rgba(59, 130, 246, 0.8));
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    box-shadow: 0 0 8px rgba(14, 165, 233, 0.35);
+  }
+  .consultedge-ai-scrollbar-native::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, rgba(14, 165, 233, 1), rgba(79, 70, 229, 0.95));
+  }
+
 @media (prefers-reduced-motion: reduce) {
   .consultedge-reveal,
   .consultedge-reveal--visible {

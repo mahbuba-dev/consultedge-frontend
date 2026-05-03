@@ -9,6 +9,7 @@ export interface IExpert {
   price?: number;
   consultationFee?: number;
   isVerified?: boolean;
+  isSeeded?: boolean;
   profilePhoto: string | null;
   resumeUrl?: string | null;
   industryId: string;
@@ -45,6 +46,51 @@ export interface IApplyExpertPayload {
 }
 
 export type ExpertVerificationStatus = "APPROVED" | "REJECTED" | "PENDING";
+
+export type ExpertApplicationStatus = "PENDING" | "APPROVED" | "REJECTED";
+
+export interface IExpertApplication {
+  id: string;
+  userId: string;
+  industryId: string;
+  fullName: string;
+  email: string;
+  phone?: string | null;
+  bio?: string | null;
+  title?: string | null;
+  experience: number;
+  consultationFee: number;
+  profilePhoto?: string | null;
+  resumeUrl?: string | null;
+  resumeFileName?: string | null;
+  resumeFileType?: string | null;
+  resumeFileSize?: number | null;
+  status: ExpertApplicationStatus;
+  reviewNotes?: string | null;
+  reviewedBy?: string | null;
+  reviewedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  user?: {
+    id: string;
+    name?: string;
+    email?: string;
+    role?: string;
+    status?: string;
+    image?: string | null;
+  } | null;
+  industry?: {
+    id: string;
+    name: string;
+    description?: string;
+    icon?: string | null;
+  } | null;
+}
+
+export interface IReviewExpertApplicationPayload {
+  status: "APPROVED" | "REJECTED";
+  notes?: string;
+}
 
 export interface IVerifyExpertPayload {
   status: ExpertVerificationStatus;

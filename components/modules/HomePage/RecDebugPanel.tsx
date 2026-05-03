@@ -8,13 +8,17 @@ interface RecDebugPanelProps {
 export default function RecDebugPanel({ mode, activityCount }: RecDebugPanelProps) {
   if (process.env.NODE_ENV === "production") return null;
 
-  const modeLabel = mode === "personalized" ? "Personalized journey" : "New visitor journey";
+  const isPersonalized = mode === "personalized";
 
   return (
-    <span className="inline-flex items-center gap-2 rounded-full border border-fuchsia-300/60 bg-fuchsia-50 px-2.5 py-1 text-[10px] font-semibold text-fuchsia-700 dark:border-fuchsia-400/30 dark:bg-fuchsia-500/10 dark:text-fuchsia-200">
-      debug view
-      <span className="font-bold">{modeLabel}</span>
-      <span className="font-bold">signals captured: {activityCount}</span>
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200/70 bg-emerald-50/80 px-3 py-1.5 text-[11px] font-medium text-emerald-700 dark:border-emerald-400/25 dark:bg-emerald-500/10 dark:text-emerald-300">
+      <span
+        className={`size-1.5 rounded-full ${isPersonalized ? "bg-emerald-500" : "bg-slate-400"}`}
+        aria-hidden="true"
+      />
+      {isPersonalized
+        ? `Tailored to your interests · ${activityCount} signal${activityCount !== 1 ? "s" : ""} captured`
+        : "Discovering your preferences"}
     </span>
   );
 }

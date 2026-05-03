@@ -11,11 +11,21 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { applyExpertAction } from "@/src/services/expert.services";
 import { getAllIndustries } from "@/src/services/industry.services";
 import { aiChatOpenAIFallback } from "@/src/services/ai.service";
 import { getMe } from "@/src/services/auth.services";
+import { createNotification } from "@/src/services/notification.service";
+import { getUsers } from "@/src/services/user.services";
 import type { IIndustry, IIndustryListResponse } from "@/src/types/industry.types";
 
 // ─── fee ranges used for AI price suggestion (fallback heuristics) ───────────
@@ -46,6 +56,7 @@ export default function ApplyExpertForm() {
   const [isAnalyzingResume, setIsAnalyzingResume] = useState(false);
   const [resuggestFeedback, setResuggestFeedback] = useState("");
   const [showResuggest, setShowResuggest] = useState(false);
+  const [submitSuccessOpen, setSubmitSuccessOpen] = useState(false);
   // tracks which fields were set by AI so we can show badges
   const [aiFilledFields, setAiFilledFields] = useState<Set<string>>(new Set());
   // whether the industry-triggered AI suggestion has run for the current choice
@@ -55,14 +66,35 @@ export default function ApplyExpertForm() {
   // ── submit mutation ──────────────────────────────────────────────────────
   const mutation = useMutation({
     mutationFn: applyExpertAction,
-    onSuccess: (response: any) => {
-      toast.success("Application submitted successfully");
+    onSuccess: async (response: any) => {
+      toast.success("Application submitted successfully.");
+
+      try {
+        const admins = await getUsers({ role: "ADMIN", limit: 100 });
+        await Promise.all(
+          admins
+            .map((admin) => admin.userId || admin.id)
+            .filter(Boolean)
+            .map((adminUserId) =>
+              createNotification({
+                type: "EXPERT_APPLICATION",
+                userId: adminUserId,
+                message: `New expert application submitted by ${form.state.values.fullName || "a candidate"}.`,
+              }),
+            ),
+        );
+      } catch {
+        // Submission should remain successful even if notifications fail.
+      }
+
       if (response?.__debugApplyEndpoint) {
         toast.message(`Debug: submitted via ${response.__debugApplyEndpoint}`);
       }
+
+      setSubmitSuccessOpen(true);
       window.setTimeout(() => {
-        window.location.href = "/expert/dashboard";
-      }, 900);
+        window.location.href = "/";
+      }, 2600);
     },
     onError: (err: any) => {
       const backendMessage = err?.response?.data?.message;
@@ -355,6 +387,7 @@ export default function ApplyExpertForm() {
   };
 
   return (
+    <>
     <Card className="max-w-2xl mx-auto shadow-sm border">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
@@ -739,5 +772,39 @@ export default function ApplyExpertForm() {
         </form>
       </CardContent>
     </Card>
+    <Dialog
+      open={submitSuccessOpen}
+      onOpenChange={(open) => {
+        setSubmitSuccessOpen(open);
+        if (!open) {
+          window.location.href = "/";
+        }
+      }}
+    >
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-emerald-700 dark:text-emerald-300">
+            <CheckCircle2 className="size-5" />
+            Expert application submitted
+          </DialogTitle>
+          <DialogDescription className="pt-1 text-sm leading-relaxed">
+            You have successfully submitted your application as an expert. Our admin team will review your
+            form shortly. Once approved, you will join our expert team and we will notify you right away.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button
+            type="button"
+            onClick={() => {
+              setSubmitSuccessOpen(false);
+              window.location.href = "/";
+            }}
+          >
+            Go to homepage
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }

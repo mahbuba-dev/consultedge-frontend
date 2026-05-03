@@ -292,11 +292,8 @@ export default function ReviewsManagementTable() {
       placeholderData: (prev) => prev,
     });
 
-  // The service returns ITestimonial[] directly — we store the flat array.
-  // If/when the backend starts returning paginated { data, meta } shape,
-  // replace the two lines below with proper extraction + pass meta to Table.
   const reviews = useMemo(
-    () => (Array.isArray(reviewsResponse) ? reviewsResponse : []),
+    () => (Array.isArray(reviewsResponse?.data) ? reviewsResponse.data : []),
     [reviewsResponse],
   );
 
@@ -430,6 +427,7 @@ export default function ReviewsManagementTable() {
             <Table
               data={filteredReviews}
               columns={columns}
+              meta={reviewsResponse?.meta}
               tableClassName="w-full min-w-[900px]"
               headCellClassName="whitespace-nowrap align-middle"
               bodyCellClassName="whitespace-normal wrap-break-word align-top"

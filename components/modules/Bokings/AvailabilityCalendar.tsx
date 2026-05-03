@@ -20,6 +20,7 @@ import {
 // import { bookConsultation, bookConsultationWithPayLater } from "@/src/services/bookings";
 import type { IExpertAvailability } from "@/src/types/expert.types";
 import { bookConsultation, bookConsultationWithPayLater } from "@/src/services/bookings.service";
+import { isPlaceholderSlotId } from "@/src/lib/seededExpertContent";
 
 type AvailabilityCalendarProps = {
   expertId: string;
@@ -164,6 +165,14 @@ export default function AvailabilityCalendar({
 
   const handleBookAction = async (mode: "pay-now" | "pay-later") => {
     if (!ensureBookingAccess() || !selectedSlot) {
+      return;
+    }
+
+    if (isPlaceholderSlotId(selectedSlot.id)) {
+      toast.info("This is a sample preview slot.", {
+        description:
+          "Real booking will open once this expert publishes their availability schedule.",
+      });
       return;
     }
 

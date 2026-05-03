@@ -40,6 +40,7 @@ import {
   getExperts,
   verifyExpertAction,
 } from "@/src/services/expert.services";
+import { createNotification } from "@/src/services/notification.service";
 import type { IExpert, IVerifyExpertPayload } from "@/src/types/expert.types";
 import { useServerDataTable } from "@/src/hooks/useServerDataTable";
 
@@ -126,7 +127,9 @@ const columns: ColumnDef<IExpert>[] = [
 export default function ExpertManageTable() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterValues, setFilterValues] = useState<DataTableFilterValues>({});
+  const [filterValues, setFilterValues] = useState<DataTableFilterValues>({
+    verification: "verified",
+  });
   const [verificationTarget, setVerificationTarget] = useState<{
     expert: IExpert;
     status: IVerifyExpertPayload["status"];
@@ -164,17 +167,38 @@ export default function ExpertManageTable() {
     mutationFn: ({
       expertId,
       payload,
+      expert,
     }: {
       expertId: string;
       payload: IVerifyExpertPayload;
+      expert: IExpert;
     }) => verifyExpertAction(expertId, payload),
-    onSuccess: (_, variables) => {
+    onSuccess: async (_, variables) => {
       toast.success(
         variables.payload.status === "APPROVED"
           ? "Expert approved successfully."
           : "Expert rejected successfully.",
       );
-      void refetch();
+
+      if (variables.expert.userId) {
+        try {
+          await createNotification({
+            type:
+              variables.payload.status === "APPROVED"
+                ? "EXPERT_APPROVED"
+                : "EXPERT_REJECTED",
+            userId: variables.expert.userId,
+            message:
+              variables.payload.status === "APPROVED"
+                ? "Your expert application has been approved. You are now part of the ConsultEdge expert team."
+                : "Your expert application has been reviewed and is currently not approved. Please check your dashboard for details.",
+          });
+        } catch {
+          // Notification failure should not block moderation flow.
+        }
+      }
+
+      await refetch();
     },
     onError: (mutationError) => {
       toast.error(getErrorMessage(mutationError, "Failed to update expert verification."));
@@ -293,6 +317,7 @@ export default function ExpertManageTable() {
 
     await verifyMutation.mutateAsync({
       expertId: verificationTarget.expert.id,
+      expert: verificationTarget.expert,
       payload: {
         status: verificationTarget.status,
         ...(verificationNotes.trim() ? { notes: verificationNotes.trim() } : {}),
@@ -339,6 +364,7 @@ export default function ExpertManageTable() {
           <Table
             data={filteredExperts}
             columns={columns}
+            meta={data?.meta}
             isLoading={isLoading || isFetching}
             emptyMessage="No experts match the current search or filters."
             pagination={{

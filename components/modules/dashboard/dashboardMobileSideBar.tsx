@@ -7,6 +7,7 @@ import { getIconComponent } from "@/src/lib/iconMapper";
 import { cn } from "@/src/lib/utils";
 import { NavSection } from "@/src/types/dashboard.types";
 import { UserInfo } from "@/src/types/user.types";
+import { usePendingApplicantsCount } from "@/src/hooks/usePendingApplicantsCount";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -21,6 +22,7 @@ interface DashboardMobileSidebarProps{
 const DashboardMobileSidebar = ({dashboardHome, navItems, userInfo} : DashboardMobileSidebarProps ) => {
     const pathname = usePathname()
     const [openDropdown, setOpenDropdown] = useState<string | null>(null)
+  const { pendingCount } = usePendingApplicantsCount(userInfo.role === "ADMIN")
   return (
     <div className="flex h-full flex-col overflow-y-auto">
       {/* Logo / Brand */}
@@ -111,6 +113,11 @@ const DashboardMobileSidebar = ({dashboardHome, navItems, userInfo} : DashboardM
                     >
                       <Icon className="h-4 w-4" />
                       <span className="flex-1">{item.title}</span>
+                      {item.href === "/admin/dashboard/new-applicants" && pendingCount > 0 ? (
+                        <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-red-600 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white">
+                          {pendingCount > 99 ? "99+" : pendingCount}
+                        </span>
+                      ) : null}
                     </Link>
                   );
                 })}

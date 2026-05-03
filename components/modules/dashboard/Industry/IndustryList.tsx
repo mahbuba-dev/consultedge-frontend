@@ -171,6 +171,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { deleteIndustry, getAllIndustries } from "@/src/services/industry.services";
 import Link from "next/link";
 import { toast } from "sonner";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -181,7 +182,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 import DateCell from "../../shared/Cell/DataCell";
+import { useServerDataTable } from "@/src/hooks/useServerDataTable";
 
 export default function IndustryList() {
   const queryClient = useQueryClient();
@@ -190,10 +193,23 @@ export default function IndustryList() {
     name?: string;
   } | null>(null);
 
+  const {
+    paginationState,
+    onPaginationChange,
+    queryParams,
+  } = useServerDataTable({ defaultPageSize: 10 });
+
   const { data: industriesResponse } = useQuery({
-    queryKey: ["industries"],
-    queryFn: getAllIndustries,
+    queryKey: ["industries-management-table", queryParams],
+    queryFn: () =>
+      getAllIndustries({
+        page: queryParams.page,
+        limit: queryParams.limit,
+        sortBy: queryParams.sortBy,
+        sortOrder: queryParams.sortOrder,
+      }),
     refetchOnWindowFocus: "always",
+    placeholderData: (prev) => prev,
   });
 
   const deleteMutation = useMutation({
@@ -201,6 +217,10 @@ export default function IndustryList() {
   });
 
   const industries = industriesResponse?.data || [];
+  const meta = industriesResponse?.meta;
+  const currentPage = paginationState.pageIndex + 1;
+  const totalPages = Math.max(meta?.totalPages ?? 1, 1);
+  const totalRows = meta?.total ?? industries.length;
 
   const handleDelete = () => {
     if (!selectedIndustry?.id) return;
@@ -208,7 +228,7 @@ export default function IndustryList() {
     deleteMutation.mutate(selectedIndustry.id, {
       onSuccess: async () => {
         toast.success("Industry deleted successfully");
-        await queryClient.invalidateQueries({ queryKey: ["industries"] });
+        await queryClient.invalidateQueries({ queryKey: ["industries-management-table"] });
         setSelectedIndustry(null);
       },
       onError: (error: unknown) => {
@@ -382,6 +402,62 @@ export default function IndustryList() {
             No industries found.
           </div>
         )}
+      </div>
+
+      <div className="relative flex flex-wrap items-center justify-between gap-3 border-t border-slate-200/70 bg-white/60 px-4 py-3 text-sm dark:border-white/10 dark:bg-slate-900/50">
+        <p className="text-muted-foreground">
+          Page {currentPage} of {totalPages} • {totalRows} industries
+        </p>
+
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={currentPage <= 1}
+            onClick={() =>
+              onPaginationChange({
+                ...paginationState,
+                pageIndex: Math.max(0, paginationState.pageIndex - 1),
+              })
+            }
+          >
+            <ChevronLeft className="mr-1 size-4" /> Prev
+          </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={currentPage >= totalPages}
+            onClick={() =>
+              onPaginationChange({
+                ...paginationState,
+                pageIndex: Math.min(totalPages - 1, paginationState.pageIndex + 1),
+              })
+            }
+          >
+            Next <ChevronRight className="ml-1 size-4" />
+          </Button>
+
+          <select
+            value={paginationState.pageSize}
+            onChange={(event) =>
+              onPaginationChange({
+                pageIndex: 0,
+                pageSize: Number(event.target.value),
+              })
+            }
+            className="h-9 rounded-md border border-slate-200 bg-white px-2 text-xs dark:border-white/15 dark:bg-slate-900"
+            aria-label="Industries per page"
+          >
+            {[10, 20, 30, 50].map((size) => (
+              <option key={size} value={size}>
+                {size} / page
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* ================= ALERT DIALOG ================= */}

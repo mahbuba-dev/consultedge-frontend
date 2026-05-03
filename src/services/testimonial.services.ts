@@ -15,6 +15,11 @@ type TestimonialCollectionShape = {
   rows?: unknown;
 };
 
+type TestimonialPagedResult = {
+  data: ITestimonial[];
+  meta?: ApiResponse<ITestimonial[]>["meta"];
+};
+
 // ------------------------------
 // ADMIN UPDATE REVIEW STATUS
 // ------------------------------
@@ -248,7 +253,7 @@ export interface ITestimonialAdminQueryParams {
 
 export const getAllTestimonialsForAdmin = async (
   params: ITestimonialAdminQueryParams = {},
-): Promise<ITestimonial[]> => {
+): Promise<TestimonialPagedResult> => {
   const includeRelations = ["client", "client.user", "expert", "consultation"];
 
   const requestParams = {
@@ -262,8 +267,21 @@ export const getAllTestimonialsForAdmin = async (
     expand: includeRelations.join(","),
   };
 
-  const testimonials = await requestTestimonials("/testimonials/admin", requestParams);
-  return enrichTestimonialsWithClientDirectory(testimonials);
+  const response = await httpClient.get<ITestimonial[]>("/testimonials/admin", {
+    params: requestParams as Record<string, unknown>,
+    silent: true,
+  });
+
+  const extracted = normalizeTestimonials(
+    extractTestimonialCollection(extractData<unknown>(response) ?? response),
+  );
+
+  const enriched = await enrichTestimonialsWithClientDirectory(extracted);
+
+  return {
+    data: enriched,
+    meta: response.meta,
+  };
 };
 
 export const getTestimonialsByExpert = async (

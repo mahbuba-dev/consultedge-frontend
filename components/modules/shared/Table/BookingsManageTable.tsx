@@ -331,6 +331,7 @@ export default function BookingsManageTable() {
           <Table
             data={filteredBookings}
             columns={columns}
+            meta={data?.meta}
             isLoading={isLoading || isFetching}
             emptyMessage="No bookings match the current search or filters."
             pagination={{

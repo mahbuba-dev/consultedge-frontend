@@ -4,6 +4,8 @@ export interface ITestimonial {
   comment?: string | null;
   clientId: string;
   expertId: string;
+  reviewerName?: string | null;
+  reviewerImage?: string | null;
   consultationId: string;
   createdAt: string;
   updatedAt?: string;

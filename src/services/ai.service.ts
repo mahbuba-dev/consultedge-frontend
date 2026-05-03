@@ -45,9 +45,34 @@ const ENDPOINTS = {
   search: "/ai/search",
   summary: "/ai/summary",
   chat: "/ai/chat",
+  ragQuery: "/ai/rag/query",
   document: "/ai/document-analysis",
   support: "/ai/support",
 } as const;
+
+export interface AIRagContextItem {
+  source_id: string;
+  content: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface AIRagQueryRequest {
+  query: string;
+  topK?: number;
+  context: AIRagContextItem[];
+}
+
+export interface AIRagSource {
+  source_id: string;
+  evidence: string;
+}
+
+export interface AIRagQueryResponse {
+  answer: string;
+  reasoning: string;
+  sources: AIRagSource[];
+  suggestions: string[];
+}
 
 const MAX_TOPIC_LENGTH = 200;
 const MAX_QUERY_LENGTH = 120;
@@ -494,6 +519,48 @@ export async function aiSupport(
   payload: AIChatRequest,
 ): Promise<AIResult<AIChatResponse>> {
   return postOrFallback(ENDPOINTS.support, payload, chatFallback);
+}
+
+export async function aiRagQuery(
+  payload: AIRagQueryRequest,
+): Promise<AIResult<AIRagQueryResponse>> {
+  const safeContext = Array.isArray(payload.context)
+    ? payload.context
+        .filter((item) => item?.source_id?.trim() && item?.content?.trim())
+        .slice(0, 100)
+    : [];
+
+  const safePayload: AIRagQueryRequest = {
+    query: normalizeText(payload.query ?? "", 1000),
+    topK:
+      typeof payload.topK === "number" && Number.isFinite(payload.topK)
+        ? Math.min(20, Math.max(1, Math.trunc(payload.topK)))
+        : 6,
+    context: safeContext,
+  };
+
+  if (!safePayload.query || safePayload.context.length === 0) {
+    return {
+      data: {
+        answer: "No matching data found in the system.",
+        reasoning: "Insufficient context provided from frontend.",
+        sources: [],
+        suggestions: [],
+      },
+      error: null,
+    };
+  }
+
+  return postOrFallback(
+    ENDPOINTS.ragQuery,
+    safePayload,
+    () => ({
+      answer: "No matching data found in the system.",
+      reasoning: "RAG service unavailable.",
+      sources: [],
+      suggestions: [],
+    }),
+  );
 }
 
 // ---------------------------------------------

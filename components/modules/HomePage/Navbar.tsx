@@ -9,7 +9,10 @@ const baseNavItems = [
   { label: "Industries", href: "/industries" },
   { label: "Insights", href: "/insights" },
   { label: "Process", href: "/process" },
+  { label: "About", href: "/about" },
   { label: "Contact", href: "/contact" },
+  { label: "Help", href: "/help" },
+  { label: "Legal", href: "/terms" },
   { label: "Apply Expert", href: "/apply-expert" },
 ];
 

@@ -94,7 +94,7 @@ const NavbarClient = ({
     (item) => item.label === "Home" || item.label === "Experts",
   );
   const discoverItems = navItems.filter((item) =>
-    ["Industries", "Insights", "Testimonials", "Process", "FAQ"].includes(item.label),
+    ["Industries", "Insights", "Testimonials", "Process", "About", "FAQ"].includes(item.label),
   );
   const moreItems = navItems.filter(
     (item) =>
@@ -136,25 +136,17 @@ const NavbarClient = ({
       <div className="mx-auto w-full max-w-360 px-4 py-3 md:px-6">
         <div className="relative flex items-center justify-between gap-3 rounded-[1.35rem] border border-white/60 bg-white/80 px-3 py-2.5 shadow-[0_20px_45px_-28px_rgba(15,23,42,0.45)] backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/70 overflow-visible">
           <div className="navbar-gradient-motion" aria-hidden="true" />
-          <Link href="/" className="group flex min-w-0 items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl shadow-lg shadow-blue-500/25 transition-transform duration-200 ease-out group-hover:scale-102 group-hover:drop-shadow-[0_2px_12px_rgba(59,130,246,0.25)]">
-              <Image src="/logo-consultedge.png" alt="ConsultEdge" width={40} height={40} className="h-full w-full object-contain" />
-            </div>
-
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <p className="truncate text-base font-semibold tracking-tight text-foreground md:text-lg">
-                  ConsultEdge
-                </p>
-                <Badge className="hidden border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-50 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-200 md:inline-flex">
-                  Premium
-                </Badge>
-              </div>
-              <p className="truncate text-xs text-muted-foreground">
-                Trusted expert consultation network
-              </p>
-            </div>
-          </Link>
+          <Link href="/" className="group flex items-center gap-3">
+  
+    <Image
+      src="/logo-consultedge - Copy.png"
+      alt="ConsultEdge"
+      width={80}
+      height={80}
+      className="h-full w-full object-contain rounded-full"
+    />
+  
+</Link>
 
           <nav className="hidden items-center gap-1 rounded-full border border-slate-200/70 bg-white/75 px-2 py-1 shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-950/60 lg:flex">
             {visiblePrimary.map((item) => {
@@ -345,19 +337,19 @@ const NavbarClient = ({
               <SheetContent side="right" className="flex w-[88vw] flex-col border-slate-200/70 bg-background/95 sm:max-w-sm dark:border-white/10 dark:bg-slate-950/95">
                 <SheetHeader className="px-4 pb-2">
                   <div className="rounded-2xl border border-slate-200/70 bg-linear-to-br from-blue-50 via-white to-cyan-50 p-4 text-left dark:border-white/10 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900">
-                    <div className="mb-3 flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-2xl shadow-lg shadow-blue-500/20">
+                    <div className="mb-3 flex items-center gap-3.5">
+                      <div className="flex h-[3.25rem] w-[3.25rem] items-center justify-center overflow-hidden rounded-2xl border border-blue-200/60 bg-linear-to-br from-white via-blue-50 to-cyan-50 p-1 shadow-[0_14px_34px_-20px_rgba(59,130,246,0.65)] ring-1 ring-white/80 dark:border-cyan-400/30 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 dark:ring-white/10">
                         <Image
                           src="/logo-consultedge.png"
                           alt="ConsultEdge"
-                          width={40}
-                          height={40}
+                          width={48}
+                          height={48}
                           className="h-full w-full object-contain"
                         />
                       </div>
                       <div>
-                        <SheetTitle>ConsultEdge</SheetTitle>
-                        <SheetDescription>
+                        <SheetTitle className="text-lg font-semibold tracking-tight">ConsultEdge</SheetTitle>
+                        <SheetDescription className="text-xs md:text-sm">
                           Premium expert consultation network.
                         </SheetDescription>
                       </div>
