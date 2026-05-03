@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import ConsultationsList from "./ConsultationsList";
@@ -107,15 +107,10 @@ export default function ConsultationsMain({ consultations }: ConsultationsMainPr
       isMissedConsultation(c)
   );
 
-  useEffect(() => {
-    if (activeTab !== "missed") {
-      return;
-    }
-
-    if (missed.length === 0 && upcoming.length > 0) {
-      setActiveTab("upcoming");
-    }
-  }, [activeTab, missed.length, upcoming.length]);
+  const resolvedActiveTab =
+    activeTab === "missed" && missed.length === 0 && upcoming.length > 0
+      ? "upcoming"
+      : activeTab;
 
   return (
     <div className="space-y-6">
@@ -129,7 +124,7 @@ export default function ConsultationsMain({ consultations }: ConsultationsMainPr
 
       {/* Tabs */}
       <ConsultationTabs
-        activeTab={activeTab}
+        activeTab={resolvedActiveTab}
         setActiveTab={setActiveTab}
         upcomingCount={upcoming.length}
         completedCount={completed.length}
@@ -137,7 +132,7 @@ export default function ConsultationsMain({ consultations }: ConsultationsMainPr
       />
 
       {/* Filtered lists */}
-      {activeTab === "upcoming" && (
+      {resolvedActiveTab === "upcoming" && (
         <ConsultationsList
           consultations={upcoming}
           highlightedConsultationId={consultationId}
@@ -149,14 +144,14 @@ export default function ConsultationsMain({ consultations }: ConsultationsMainPr
         />
       )}
 
-      {activeTab === "completed" && (
+      {resolvedActiveTab === "completed" && (
         <ConsultationsList
           consultations={completed}
           onReviewSubmitted={() => setActiveTab("completed")}
         />
       )}
 
-      {activeTab === "missed" && (
+      {resolvedActiveTab === "missed" && (
         <ConsultationsList
           consultations={missed}
           onReviewSubmitted={() => setActiveTab("completed")}

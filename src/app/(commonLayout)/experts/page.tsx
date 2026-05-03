@@ -19,6 +19,10 @@ const buildQueryString = async (searchParams?: SearchParams) => {
     }
   }
 
+  if (!params.get("limit")) {
+    params.set("limit", "500");
+  }
+
   return params.toString();
 };
 

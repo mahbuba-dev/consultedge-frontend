@@ -81,10 +81,9 @@ export function clearAutofill() {
 
 /** React hook for components that want a reactive view of the profile. */
 export function useAutofillProfile(): AutofillProfile {
-  const [profile, setProfile] = useState<AutofillProfile>({});
+  const [profile, setProfile] = useState<AutofillProfile>(() => read());
 
   useEffect(() => {
-    setProfile(read());
     const handler = () => setProfile(read());
     window.addEventListener("consultedge:autofill-updated", handler);
     return () => window.removeEventListener("consultedge:autofill-updated", handler);

@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { RefreshCw } from "lucide-react";
+import { Download, ExternalLink, FileText, RefreshCw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -41,6 +41,7 @@ import {
   verifyExpertAction,
 } from "@/src/services/expert.services";
 import type { IExpert, IVerifyExpertPayload } from "@/src/types/expert.types";
+import { useServerDataTable } from "@/src/hooks/useServerDataTable";
 
 const getErrorMessage = (error: unknown, fallback: string) => {
   if (typeof error === "object" && error !== null) {
@@ -132,10 +133,31 @@ export default function ExpertManageTable() {
   } | null>(null);
   const [verificationNotes, setVerificationNotes] = useState("");
   const [expertToDelete, setExpertToDelete] = useState<IExpert | null>(null);
+  const [applicationTarget, setApplicationTarget] = useState<IExpert | null>(null);
+
+  // -------------------------------------------------------------------
+  // Server-side pagination with URL sync
+  // -------------------------------------------------------------------
+  const {
+    paginationState,
+    onPaginationChange,
+    sortingState,
+    onSortingChange,
+    queryParams,
+  } = useServerDataTable({ defaultPageSize: 10 });
 
   const { data, isLoading, isFetching, isError, error, refetch } = useQuery({
-    queryKey: ["expert-management-table"],
-    queryFn: () => getExperts(),
+    queryKey: ["expert-management-table", queryParams],
+    queryFn: () =>
+      getExperts({
+        page: queryParams.page,
+        limit: queryParams.limit,
+        sortBy: queryParams.sortBy,
+        sortOrder: queryParams.sortOrder,
+        searchTerm: searchTerm.trim() || undefined,
+      }),
+    staleTime: 60 * 1000,
+    placeholderData: (prev) => prev,
   });
 
   const verifyMutation = useMutation({
@@ -319,8 +341,20 @@ export default function ExpertManageTable() {
             columns={columns}
             isLoading={isLoading || isFetching}
             emptyMessage="No experts match the current search or filters."
+            pagination={{
+              state: paginationState,
+              onPaginationChange,
+            }}
+            sorting={{
+              state: sortingState,
+              onSortingChange,
+            }}
             actions={{
               items: (expert) => [
+                {
+                  label: "View application",
+                  onClick: () => setApplicationTarget(expert),
+                },
                 {
                   label: "Open profile",
                   onClick: () => router.push(`/experts/${expert.id}`),
@@ -374,6 +408,117 @@ export default function ExpertManageTable() {
           />
         </CardContent>
       </Card>
+
+      <Dialog
+        open={Boolean(applicationTarget)}
+        onOpenChange={(open) => {
+          if (!open) setApplicationTarget(null);
+        }}
+      >
+        <DialogContent className="max-h-[90vh] max-w-xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-primary" />
+              Application Overview
+            </DialogTitle>
+            <DialogDescription>
+              Submitted application details for {applicationTarget?.fullName}.
+            </DialogDescription>
+          </DialogHeader>
+
+          {applicationTarget && (
+            <div className="space-y-4 py-2">
+              <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Full Name</p>
+                  <p className="mt-0.5">{applicationTarget.fullName}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Email</p>
+                  <p className="mt-0.5 break-all">{applicationTarget.email}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Phone</p>
+                  <p className="mt-0.5">{applicationTarget.phone || "—"}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Industry</p>
+                  <p className="mt-0.5">{applicationTarget.industry?.name || "—"}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Title</p>
+                  <p className="mt-0.5">{applicationTarget.title || "—"}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Experience</p>
+                  <p className="mt-0.5">{applicationTarget.experience ?? 0} years</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Consultation Fee</p>
+                  <p className="mt-0.5">{formatCurrency(applicationTarget.consultationFee ?? applicationTarget.price)}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Applied On</p>
+                  <p className="mt-0.5">{formatDate(applicationTarget.createdAt)}</p>
+                </div>
+              </div>
+
+              {applicationTarget.bio && (
+                <div>
+                  <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Bio</p>
+                  <p className="rounded-lg border border-border bg-muted/40 px-3 py-2.5 text-sm leading-relaxed">
+                    {applicationTarget.bio}
+                  </p>
+                </div>
+              )}
+
+              <div className="border-t border-border pt-4">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Resume / CV</p>
+                {applicationTarget.resumeUrl ? (
+                  <div className="flex flex-wrap gap-2">
+                    <a
+                      href={applicationTarget.resumeUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 rounded-md border border-border bg-muted/50 px-3 py-1.5 text-sm transition hover:bg-muted"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      View Resume
+                    </a>
+                    <a
+                      href={applicationTarget.resumeUrl}
+                      download
+                      className="inline-flex items-center gap-1.5 rounded-md border border-primary/40 bg-primary/10 px-3 py-1.5 text-sm text-primary transition hover:bg-primary/20"
+                    >
+                      <Download className="h-3.5 w-3.5" />
+                      Download Resume
+                    </a>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No resume uploaded.</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setApplicationTarget(null)}>
+              Close
+            </Button>
+            {applicationTarget && !applicationTarget.isVerified && (
+              <Button
+                type="button"
+                onClick={() => {
+                  setApplicationTarget(null);
+                  openVerificationDialog(applicationTarget, "APPROVED");
+                }}
+              >
+                Approve expert
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog
         open={Boolean(verificationTarget)}

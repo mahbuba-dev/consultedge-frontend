@@ -286,7 +286,6 @@ import {
   CheckCircle2,
   Clock3,
   MessageCircleMore,
-  UserRound,
   AlertTriangle,
   Video,
 } from "lucide-react";
@@ -295,7 +294,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { cn } from "@/src/lib/utils";
 import type { IConsultation } from "@/src/types/booking.types";
 
 type Props = {
@@ -309,38 +307,21 @@ const formatDateTime = (value?: string) => {
 };
 
 export default function ConsultationCard({ consultation, onJoin }: Props) {
-  const now = new Date();
-
-  const startTime = consultation.date ? new Date(consultation.date) : null;
-
-  const leadTime = 15 * 60 * 1000; // 15 min before
-  const graceTime = 30 * 60 * 1000; // 30 min after
-
-  const joinStart = startTime ? new Date(startTime.getTime() - leadTime) : null;
-  const joinEnd = startTime ? new Date(startTime.getTime() + graceTime) : null;
-
-  // =========================
-  // SESSION STATE LOGIC
-  // =========================
   const state = useMemo(() => {
     if (consultation.status === "CANCELLED") return "CANCELLED";
     if (consultation.status === "COMPLETED") return "COMPLETED";
     if (consultation.status === "ONGOING") return "ONGOING";
-
     if (consultation.paymentStatus !== "PAID") return "UNPAID";
-
-    if (!joinStart || !joinEnd) return "PENDING";
-
+    const startTime = consultation.date ? new Date(consultation.date) : null;
+    if (!startTime) return "PENDING";
+    const now = new Date();
+    const joinStart = new Date(startTime.getTime() - 15 * 60 * 1000);
+    const joinEnd = new Date(startTime.getTime() + 30 * 60 * 1000);
     if (now < joinStart) return "UPCOMING";
-
     if (now >= joinStart && now <= joinEnd) return "JOINABLE";
-
     if (now > joinEnd) return "MISSED";
-
     return "PENDING";
-  }, [consultation.status, consultation.paymentStatus]);
-
-  const canJoin = state === "JOINABLE" || state === "ONGOING";
+  }, [consultation.status, consultation.paymentStatus, consultation.date]);
 
   const clientName = consultation.client?.fullName || "Client";
 

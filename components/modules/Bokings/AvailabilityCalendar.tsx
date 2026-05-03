@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { format, isBefore, isSameDay, parseISO, startOfDay } from "date-fns";
+import { format, isSameDay, parseISO } from "date-fns";
 import { CalendarDays, Clock3, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
@@ -209,8 +209,6 @@ export default function AvailabilityCalendar({
       setActionLoading(null);
     }
   };
-
-  const today = startOfDay(new Date());
 
   return (
     <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">

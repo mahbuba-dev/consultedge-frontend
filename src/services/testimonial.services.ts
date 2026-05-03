@@ -8,10 +8,10 @@ type ApiPayload<TData> = ApiResponse<TData> | { data?: TData } | TData;
 
 type TestimonialCollectionShape = {
   data?: unknown;
-  testimonials?: unknown;
+  testimonials?:unknown;
   items?: unknown;
   result?: unknown;
-  results?: unknown;
+  results?:unknown;
   rows?: unknown;
 };
 
@@ -237,22 +237,32 @@ export const getAllTestimonials = async (
   }
 };
 
+export interface ITestimonialAdminQueryParams {
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+  searchTerm?: string;
+  [key: string]: unknown;
+}
+
 export const getAllTestimonialsForAdmin = async (
-  limit = 100
+  params: ITestimonialAdminQueryParams = {},
 ): Promise<ITestimonial[]> => {
   const includeRelations = ["client", "client.user", "expert", "consultation"];
 
-  const params = {
-    limit,
+  const requestParams = {
+    limit: 100,
     sortBy: "createdAt",
     sortOrder: "desc",
+    ...params,
     include: includeRelations.join(","),
     includes: includeRelations.join(","),
     populate: includeRelations.join(","),
     expand: includeRelations.join(","),
   };
 
-  const testimonials = await requestTestimonials("/testimonials/admin", params);
+  const testimonials = await requestTestimonials("/testimonials/admin", requestParams);
   return enrichTestimonialsWithClientDirectory(testimonials);
 };
 

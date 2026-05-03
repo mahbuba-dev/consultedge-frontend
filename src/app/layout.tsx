@@ -34,7 +34,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} min-h-full flex flex-col antialiased`}
       >
-        <div className="mx-auto w-full max-w-360 flex min-h-screen flex-col">
+        <div className="mx-auto flex min-h-screen w-full max-w-360 flex-col">
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

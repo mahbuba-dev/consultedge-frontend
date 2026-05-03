@@ -8,11 +8,11 @@ import {
   Rocket,
   ShieldCheck,
   Star,
+  Quote,
   Users,
   Zap,
 } from "lucide-react";
 
-import TestimonialCard from "@/components/modules/shared/TestimonialCard";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import type { ITestimonial } from "@/src/types/testimonial.types";
@@ -87,13 +87,28 @@ type HomeSection2Props = {
 };
 
 export default function HomeSection2({ testimonials }: HomeSection2Props) {
+  const homeTestimonials = testimonials.slice(0, 4);
+  const scrollingTestimonials = homeTestimonials.length > 0 ? [...homeTestimonials, ...homeTestimonials] : [];
+
+  const getReviewerName = (testimonial: ITestimonial) => {
+    const namedReviewer = testimonial.client?.fullName || testimonial.client?.user?.name;
+    if (namedReviewer) return namedReviewer;
+
+    // Keep reviewer identity readable even if profile details are partially missing.
+    return `Reviewer ${testimonial.clientId.slice(-4).toUpperCase()}`;
+  };
+
   return (
     <>
-      <section className="rounded-[2.25rem] border border-border/60 bg-white/75 p-5 shadow-[0_28px_60px_-40px_rgba(15,23,42,0.28)] backdrop-blur md:p-7 dark:border-white/10 dark:bg-slate-950/55">
+      <section className="relative overflow-hidden rounded-(--ce-shell-radius) border border-border/60 bg-white/52 p-5 shadow-(--ce-shell-shadow-soft) backdrop-blur-2xl md:rounded-(--ce-shell-radius-md) md:p-7 dark:rounded-(--ce-shell-radius-dark) dark:border-white/10 dark:bg-slate-950/45">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-[linear-gradient(124deg,rgba(255,255,255,0.45),rgba(255,255,255,0.1)_45%,rgba(59,130,246,0.08)_100%)] dark:bg-[linear-gradient(124deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02)_45%,rgba(56,189,248,0.08)_100%)]"
+        />
         {/* Header */}
-        <div className="mx-auto max-w-2xl space-y-3 text-center">
+        <div className="relative mx-auto max-w-2xl space-y-3 text-center">
           <Badge variant="secondary" className="bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300">
-            Who it's built for
+            Who it&apos;s built for
           </Badge>
           <h2 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
             Expert guidance for every professional who moves fast
@@ -105,7 +120,7 @@ export default function HomeSection2({ testimonials }: HomeSection2Props) {
         </div>
 
         {/* Audience cards */}
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="relative mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {audiences.map((item, index) => {
             const Icon = item.icon;
             return (
@@ -137,7 +152,7 @@ export default function HomeSection2({ testimonials }: HomeSection2Props) {
         </div>
 
         {/* Trust signals + CTA */}
-        <div className="consultedge-reveal--visible mt-8 rounded-[1.8rem] border border-border/60 bg-linear-to-r from-slate-950 via-blue-950 to-cyan-950 text-white shadow-sm dark:border-white/10" style={{ animationDelay: "520ms" }}>
+        <div className="consultedge-reveal--visible relative mt-8 rounded-[1.8rem] border border-border/60 bg-linear-to-r from-slate-950 via-blue-950 to-cyan-950 text-white shadow-sm dark:border-white/10" style={{ animationDelay: "520ms" }}>
           <div className="grid gap-6 p-6 md:grid-cols-[1fr_auto] md:items-center md:p-8">
             <div className="grid gap-5 sm:grid-cols-3">
               {trustSignals.map((signal) => {
@@ -174,43 +189,92 @@ export default function HomeSection2({ testimonials }: HomeSection2Props) {
         </div>
       </section>
 
-      <section className=" mt-6 space-y-6 rounded-[2.25rem] border bg-linear-to-br from-emerald-50/75 via-white to-cyan-50/65 p-5 shadow-[0_26px_60px_-40px_rgba(5,150,105,0.28)] dark:border-white/10 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 md:p-7">
-        <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-          <div>
-            <Badge variant="secondary" className="mb-2 bg-emerald-100 text-emerald-700">
-              Testimonials
-            </Badge>
-            <h2 className="text-2xl font-bold tracking-tight md:text-3xl">
-              What clients are saying
-            </h2>
-            <p className="text-muted-foreground">
-              Real feedback from businesses and professionals using ConsultEdge.
-            </p>
+      <section id="home-testimonials" className="mt-6 scroll-mt-28 overflow-hidden rounded-(--ce-shell-radius) border border-blue-200/70 bg-linear-to-br from-slate-950 via-blue-950 to-cyan-950 p-5 text-white shadow-(--ce-shell-shadow-strong) md:rounded-(--ce-shell-radius-md) md:p-7 lg:p-9 dark:rounded-(--ce-shell-radius-dark) dark:border-white/10">
+        <div className="relative overflow-hidden rounded-[1.8rem] border border-white/15 bg-white/6 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.28)] backdrop-blur-xl md:p-7">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_8%_10%,rgba(147,197,253,0.35),transparent_32%),radial-gradient(circle_at_86%_80%,rgba(34,211,238,0.24),transparent_34%)]"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(rgba(191,219,254,0.34)_1px,transparent_1px)] bg-size-[18px_18px] opacity-30"
+          />
+
+          {["8% 12%", "21% 78%", "34% 28%", "48% 86%", "63% 18%", "76% 62%", "89% 32%"].map((position, index) => {
+            const [left, top] = position.split(" ");
+            return (
+              <span
+                key={position}
+                aria-hidden
+                style={{ left, top, animationDelay: `${index * 0.45}s` }}
+                className="pointer-events-none absolute h-1.5 w-1.5 rounded-full bg-cyan-100/65 shadow-[0_0_14px_rgba(165,243,252,0.85)] animate-pulse"
+              />
+            );
+          })}
+
+          <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-2xl space-y-2">
+              <Badge className="border-white/20 bg-white/10 text-white hover:bg-white/10">
+                Testimonials
+              </Badge>
+              <h2 className="text-2xl font-bold tracking-tight text-white md:text-3xl lg:text-4xl">
+                Stories from teams who moved faster with ConsultEdge
+              </h2>
+              <p className="text-sm text-slate-200/90 md:text-base">
+                Real client outcomes, shared by founders, operators, and professionals who booked expert sessions.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-between gap-3 sm:justify-end">
+              <p className="text-sm font-semibold text-slate-100">{homeTestimonials.length} client stories</p>
+              <span className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-semibold tracking-wide text-cyan-100">
+                Live client voices
+              </span>
+            </div>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-3">
-            <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-white/90 px-4 py-3 text-center shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-900/70">
-              <div className="absolute inset-x-0 top-0 h-0.5 bg-linear-to-r from-blue-500 to-cyan-500" />
-              <p className="bg-linear-to-r from-blue-600 to-cyan-500 bg-clip-text text-lg font-bold text-transparent">Real</p>
-              <p className="text-xs text-muted-foreground">Client feedback</p>
-            </div>
-            <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-white/90 px-4 py-3 text-center shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-900/70">
-              <div className="absolute inset-x-0 top-0 h-0.5 bg-linear-to-r from-cyan-500 to-teal-500" />
-              <p className="bg-linear-to-r from-cyan-500 to-teal-500 bg-clip-text text-lg font-bold text-transparent">Fast</p>
-              <p className="text-xs text-muted-foreground">Booking experience</p>
-            </div>
-            <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-white/90 px-4 py-3 text-center shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-900/70">
-              <div className="absolute inset-x-0 top-0 h-0.5 bg-linear-to-r from-teal-500 to-emerald-500" />
-              <p className="bg-linear-to-r from-teal-500 to-emerald-500 bg-clip-text text-lg font-bold text-transparent">Clear</p>
-              <p className="text-xs text-muted-foreground">Consultation flow</p>
+          <div className="relative mt-6 overflow-hidden rounded-[1.8rem] border border-white/15 bg-slate-950/30 px-2 py-3">
+            <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-linear-to-r from-slate-950 via-slate-950/70 to-transparent" />
+            <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-linear-to-l from-slate-950 via-slate-950/70 to-transparent" />
+
+            <div className="industry-marquee-track flex w-max items-stretch gap-4 py-1" style={{ animationDuration: `${Math.max(24, homeTestimonials.length * 8)}s` }}>
+              {scrollingTestimonials.map((testimonial, index) => (
+                <article
+                  key={`${testimonial.id}-${index}`}
+                  className="w-[84vw] shrink-0 rounded-3xl border border-white/25 bg-linear-to-b from-white/22 to-white/10 p-5 shadow-[0_24px_56px_-34px_rgba(15,23,42,0.85)] backdrop-blur-md sm:w-80 lg:w-64 xl:w-64"
+                >
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-base font-semibold text-white">
+                        {getReviewerName(testimonial)}
+                      </p>
+                      <p className="text-xs text-cyan-100/90">Verified client</p>
+                    </div>
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-white/10 text-cyan-100">
+                      <Quote className="size-4" />
+                    </div>
+                  </div>
+
+                  <div className="mb-3 flex items-center gap-1 text-amber-300">
+                    {Array.from({ length: 5 }).map((_, starIndex) => (
+                      <Star
+                        key={starIndex}
+                        className={`size-4 ${starIndex < Number(testimonial.rating || 0) ? "fill-current" : "text-white/30"}`}
+                      />
+                    ))}
+                  </div>
+
+                  <p className="line-clamp-4 text-sm leading-6 text-slate-100/95">
+                    {testimonial.comment || "A positive consultation experience shared by the client."}
+                  </p>
+
+                  {testimonial.expert?.fullName ? (
+                    <div className="mt-3 text-xs font-medium text-cyan-100/90">For {testimonial.expert.fullName}</div>
+                  ) : null}
+                </article>
+              ))}
             </div>
           </div>
-        </div>
-
-        <div className="grid gap-5 grid-cols-1 md:grid-cols-2 xl:grid-cols-4">
-          {testimonials.map((testimonial) => (
-            <TestimonialCard key={testimonial.id} testimonial={testimonial} />
-          ))}
         </div>
       </section>
     </>

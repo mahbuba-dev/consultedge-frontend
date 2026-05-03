@@ -6,10 +6,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
+  BrainCircuit,
   CalendarRange,
   ChevronDown,
   ShieldCheck,
-  Sparkles,
   Users,
 } from "lucide-react";
 import gsap from "gsap";
@@ -160,7 +160,7 @@ export default function Banner() {
                 data-anim
                 className="border-white/20 bg-white/10 text-white hover:bg-white/10"
               >
-                <Sparkles className="mr-1 size-3.5" />
+                <BrainCircuit className="mr-1 size-3.5" />
                 Premium consultation platform
               </Badge>
 
@@ -221,7 +221,7 @@ export default function Banner() {
                     </p>
                   </div>
                   <div className="rounded-xl border border-white/10 bg-white/10 p-2 text-cyan-200">
-                    <Sparkles className="size-4" />
+                    <ShieldCheck className="size-4" />
                   </div>
                 </div>
                 <div className="space-y-2">

@@ -6,6 +6,8 @@ import InViewReveal from "@/components/modules/HomePage/InViewReveal";
 import IndustryTicker from "@/components/modules/HomePage/IndustryTicker";
 import TrendingExperts from "@/components/modules/HomePage/TrendingExperts";
 import ContentSuggestions from "@/components/modules/HomePage/ContentSuggestions";
+import PremiumGlassBackground from "@/components/modules/HomePage/PremiumGlassBackground";
+import type { PremiumGlassIntensity } from "@/components/modules/HomePage/PremiumGlassBackground";
 import SmartNewsletter from "@/components/modules/HomePage/SmartNewsletter";
 
 import { getExperts } from "@/src/services/expert.services";
@@ -14,6 +16,41 @@ import { getAllTestimonials } from "@/src/services/testimonial.services";
 import type { IExpert } from "@/src/types/expert.types";
 import type { IIndustry } from "@/src/types/industry.types";
 import type { ITestimonial } from "@/src/types/testimonial.types";
+
+type HomeLayoutVariant = "compact" | "editorial" | "immersive";
+
+const HOME_LAYOUT_VARIANT: HomeLayoutVariant = "editorial";
+
+const HOME_LAYOUT_PRESETS: Record<
+  HomeLayoutVariant,
+  {
+    backgroundIntensity: PremiumGlassIntensity;
+    stackClass: string;
+    surfaceClass: string;
+  }
+> = {
+  compact: {
+    // Conversion-first: tighter rhythm, flatter surfaces, calm background.
+    backgroundIntensity: "calm",
+    stackClass: "mt-7 scroll-mt-24 space-y-5 md:mt-10 md:space-y-7 lg:mt-12 lg:space-y-8",
+    surfaceClass:
+      "[--ce-shell-radius:0rem] [--ce-shell-radius-md:0rem] [--ce-shell-radius-dark:0rem] [--ce-shell-shadow-soft:0_12px_28px_-24px_rgba(15,23,42,0.2)] [--ce-shell-shadow-strong:0_18px_40px_-30px_rgba(15,23,42,0.24)]",
+  },
+  editorial: {
+    // Reading-first: balanced spacing and gentle depth.
+    backgroundIntensity: "balanced",
+    stackClass: "mt-10 scroll-mt-24 space-y-8 md:mt-14 md:space-y-10 lg:mt-16 lg:space-y-12",
+    surfaceClass:
+      "[--ce-shell-radius:0rem] [--ce-shell-radius-md:0rem] [--ce-shell-radius-dark:0rem] [--ce-shell-shadow-soft:0_20px_44px_-32px_rgba(15,23,42,0.24)] [--ce-shell-shadow-strong:0_28px_62px_-38px_rgba(15,23,42,0.3)]",
+  },
+  immersive: {
+    // Brand-first: airier rhythm, richer depth, cinematic background.
+    backgroundIntensity: "rich",
+    stackClass: "mt-12 scroll-mt-24 space-y-10 md:mt-16 md:space-y-12 lg:mt-20 lg:space-y-15",
+    surfaceClass:
+      "[--ce-shell-radius:0rem] [--ce-shell-radius-md:0rem] [--ce-shell-radius-dark:0rem] [--ce-shell-shadow-soft:0_30px_68px_-38px_rgba(15,23,42,0.31)] [--ce-shell-shadow-strong:0_42px_96px_-48px_rgba(15,23,42,0.4)]",
+  },
+};
 
 const fallbackTestimonials: ITestimonial[] = [
   {
@@ -49,13 +86,26 @@ const fallbackTestimonials: ITestimonial[] = [
     expert: { fullName: "Operations Consultant" },
     client: { fullName: "Business Owner" },
   },
+  {
+    id: "fallback-4",
+    rating: 5,
+    comment: "The recommendations were practical and immediately useful for our next quarter plan.",
+    clientId: "client-4",
+    expertId: "expert-4",
+    consultationId: "consultation-4",
+    createdAt: new Date().toISOString(),
+    expert: { fullName: "Execution Advisor" },
+    client: { fullName: "Product Lead" },
+  },
 ];
 
 const HomePage = async () => {
+  const layoutPreset = HOME_LAYOUT_PRESETS[HOME_LAYOUT_VARIANT];
+
   const [expertsResult, industriesResult, testimonialsResult] = await Promise.allSettled([
     getExperts(),
     getAllIndustries(),
-    getAllTestimonials(3),
+    getAllTestimonials(4),
   ]);
 
   const allExperts: IExpert[] =
@@ -72,19 +122,15 @@ const HomePage = async () => {
 
   const featuredTestimonials: ITestimonial[] =
     testimonialsResult.status === "fulfilled" && testimonialsResult.value.length > 0
-      ? testimonialsResult.value.slice(0, 3)
+      ? testimonialsResult.value.slice(0, 4)
       : fallbackTestimonials;
 
   return (
-    <div className="relative overflow-x-hidden pb-20">
-      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[34rem] bg-[radial-gradient(circle_at_top_left,rgba(6,182,212,0.14),transparent_40%),radial-gradient(circle_at_top_right,rgba(37,99,235,0.12),transparent_36%)]" />
-      <div className="pointer-events-none absolute inset-x-0 top-[40rem] -z-10 h-[48rem] bg-[radial-gradient(circle_at_center,rgba(16,185,129,0.08),transparent_26%),radial-gradient(circle_at_80%_30%,rgba(56,189,248,0.08),transparent_24%)]" />
+    <div className={`relative overflow-x-hidden pb-20 ${layoutPreset.surfaceClass}`}>
+      <PremiumGlassBackground intensity={layoutPreset.backgroundIntensity} />
       <Banner />
 
-      <div
-        id="home-after-hero"
-        className="mt-10 scroll-mt-24 space-y-8 md:mt-14 md:space-y-10 lg:mt-16 lg:space-y-12"
-      >
+      <div id="home-after-hero" className={layoutPreset.stackClass}>
         <InViewReveal delay={40}>
           <IndustryTicker industries={featuredIndustries} />
         </InViewReveal>

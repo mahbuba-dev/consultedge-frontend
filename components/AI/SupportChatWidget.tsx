@@ -1,45 +1,30 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import {
   Bot,
-  Loader2,
   MessageCircleMore,
-  RotateCcw,
-  SendHorizontal,
-  ShieldAlert,
-  Sparkles,
   X,
 } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/src/lib/utils";
-import { useAiSupportChat } from "@/src/components/support-chat/useAiSupportChat";
+import AiChatWorkspace from "@/components/modules/AiChat/AiChatWorkspace";
 
 export default function SupportChatWidget() {
-  const {
-    messages,
-    isLoading,
-    error,
-    isOpen,
-    setIsOpen,
-    quickActions,
-    sendMessage,
-    sendQuickAction,
-    resetConversation,
-  } = useAiSupportChat("homepage");
-
-  const [input, setInput] = useState("");
+  const pathname = usePathname();
+  const [isOpen, setIsOpen] = useState(false);
   const [showGreeting, setShowGreeting] = useState(false);
-  const endRef = useRef<HTMLDivElement | null>(null);
+  const hideOnRoute = pathname === "/apply-expert" || pathname === "/experts/apply-expert";
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [messages, isLoading, isOpen]);
+    if (hideOnRoute) {
+      setShowGreeting(false);
+      setIsOpen(false);
+      return;
+    }
 
-  useEffect(() => {
     if (isOpen) {
       setShowGreeting(false);
       return;
@@ -50,25 +35,11 @@ export default function SupportChatWidget() {
       clearTimeout(showTimer);
       clearTimeout(hideTimer);
     };
-  }, [isOpen]);
+  }, [isOpen, hideOnRoute]);
 
-  const handleSend = async () => {
-    const trimmed = input.trim();
-
-    if (!trimmed || isLoading) {
-      return;
-    }
-
-    setInput("");
-    await sendMessage(trimmed, "homepage");
-  };
-
-  const handleKeyDown = async (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (event.key === "Enter" && !event.shiftKey) {
-      event.preventDefault();
-      await handleSend();
-    }
-  };
+  if (hideOnRoute) {
+    return null;
+  }
 
   return (
     // The outer container is sized by its tallest child (the always-rendered
@@ -86,28 +57,22 @@ export default function SupportChatWidget() {
             : "pointer-events-none translate-y-3 scale-95 opacity-0",
         )}
       >
-        <div className="h-[min(78vh,640px)] w-[min(92vw,420px)] overflow-hidden rounded-[28px] border border-blue-200/70 bg-white/90 shadow-[0_30px_80px_-28px_rgba(37,99,235,0.45)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/90">
+        <div className="relative h-[min(84vh,760px)] w-[min(96vw,1080px)] overflow-hidden rounded-[28px] border border-cyan-200/70 bg-white/75 shadow-[0_30px_90px_-28px_rgba(14,116,144,0.55)] backdrop-blur-2xl dark:border-cyan-300/20 dark:bg-slate-950/75">
+          <div className="pointer-events-none absolute inset-0">
+            <div className="absolute -left-16 top-8 h-56 w-56 rounded-full bg-cyan-400/20 blur-3xl" />
+            <div className="absolute -right-10 bottom-12 h-52 w-52 rounded-full bg-blue-500/20 blur-3xl" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(255,255,255,0.35)_0%,transparent_45%),radial-gradient(circle_at_85%_80%,rgba(56,189,248,0.20)_0%,transparent_40%)]" />
+          </div>
           <div className="border-b border-blue-100 bg-linear-to-r from-blue-600 via-cyan-500 to-sky-500 p-4 text-white">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <Badge className="border-white/20 bg-white/15 text-white hover:bg-white/15">
-                  <Sparkles className="mr-1 size-3.5" />
-                  AI
-                </Badge>
-                <h3 className="mt-2 text-lg font-semibold">Ask AI</h3>
+                <h3 className="text-lg font-semibold">Ask AI</h3>
+                <p className="mt-1 text-xs text-white/80">
+                  OpenAI-powered assistant with chat history, suggested prompts, and feedback actions.
+                </p>
               </div>
 
               <div className="flex items-center gap-1">
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="ghost"
-                  className="size-8 rounded-full text-white hover:bg-white/15 hover:text-white"
-                  onClick={resetConversation}
-                  aria-label="Reset conversation"
-                >
-                  <RotateCcw className="size-4" />
-                </Button>
                 <Button
                   type="button"
                   size="icon"
@@ -122,148 +87,8 @@ export default function SupportChatWidget() {
             </div>
           </div>
 
-          <div className="flex h-[calc(100%-96px)] flex-col bg-linear-to-b from-blue-50/50 via-background to-sky-50/40 dark:from-slate-950 dark:via-slate-950 dark:to-slate-950">
-            <div className="border-b px-3 py-3">
-              <div className="flex flex-wrap gap-2">
-                {quickActions.map((action) => (
-                  <button
-                    key={action.id}
-                    type="button"
-                    onClick={() => void sendQuickAction(action)}
-                    disabled={isLoading}
-                    className="rounded-full border border-blue-200 bg-white px-3 py-1.5 text-xs font-medium text-blue-700 transition hover:border-blue-300 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-70 dark:border-cyan-500/30 dark:bg-slate-900 dark:text-cyan-200 dark:hover:border-cyan-400/50 dark:hover:bg-slate-800"
-                  >
-                    {action.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex-1 overflow-y-auto px-3 py-3">
-              <div className="space-y-3">
-                {messages.map((message) => {
-                  const isUser = message.role === "user";
-
-                  return (
-                    <div
-                      key={message.id}
-                      className={cn("flex", isUser ? "justify-end" : "justify-start")}
-                    >
-                      <div
-                        className={cn(
-                          "max-w-[88%] rounded-2xl px-3.5 py-3 text-sm shadow-sm wrap-break-word",
-                          isUser
-                            ? "bg-blue-600 text-white"
-                            : "border border-blue-100 bg-white/90 text-foreground dark:border-white/10 dark:bg-slate-900/90 dark:text-slate-100",
-                          message.isError && !isUser
-                            ? "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100"
-                            : undefined,
-                        )}
-                      >
-                        <div className="mb-2 flex items-center gap-2 text-[11px] font-medium opacity-80">
-                          {isUser ? (
-                            <>
-                              <span>You</span>
-                              <MessageCircleMore className="size-3.5" />
-                            </>
-                          ) : (
-                            <>
-                              <Bot className="size-3.5" />
-                              <span>AI</span>
-                            </>
-                          )}
-                        </div>
-
-                        <p className="whitespace-pre-wrap leading-6">{message.content}</p>
-
-                        {message.suggestedActions?.length ? (
-                          <ul className="mt-2 list-disc space-y-1 pl-4 text-[12px] opacity-85">
-                            {message.suggestedActions.slice(0, 3).map((item) => (
-                              <li key={item}>{item}</li>
-                            ))}
-                          </ul>
-                        ) : null}
-
-                        {message.escalatedToHuman ? (
-                          <div className="mt-3 space-y-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] text-amber-800">
-                            <div className="flex items-center gap-2 font-medium">
-                              <ShieldAlert className="size-3.5" />
-                              Need human help?
-                            </div>
-
-                            <Button
-                              asChild
-                              size="sm"
-                              variant="outline"
-                              className="h-8 border-amber-300 bg-white text-amber-900 hover:bg-amber-100"
-                            >
-                              <a href="/contact">Contact</a>
-                            </Button>
-                          </div>
-                        ) : null}
-                      </div>
-                    </div>
-                  );
-                })}
-
-                {isLoading ? (
-                  <div className="flex justify-start">
-                    <div className="rounded-2xl border border-blue-100 bg-white/90 px-3.5 py-3 text-sm shadow-sm dark:border-white/10 dark:bg-slate-900/90">
-                      <div className="mb-2 flex items-center gap-2 text-[11px] font-medium text-muted-foreground">
-                        <Bot className="size-3.5" />
-                        Thinking
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="size-2 animate-bounce rounded-full bg-blue-500 [animation-delay:-0.2s]" />
-                        <span className="size-2 animate-bounce rounded-full bg-blue-500 [animation-delay:-0.1s]" />
-                        <span className="size-2 animate-bounce rounded-full bg-blue-500" />
-                      </div>
-                    </div>
-                  </div>
-                ) : null}
-
-                <div ref={endRef} />
-              </div>
-            </div>
-
-            <div className="border-t bg-background/85 p-3">
-              {error ? (
-                <div className="mb-2 flex items-center justify-between gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-                  <span>{error}</span>
-                  <Button asChild size="sm" variant="outline" className="h-7 border-amber-300 bg-white text-amber-900 hover:bg-amber-100">
-                    <a href="/contact">Contact</a>
-                  </Button>
-                </div>
-              ) : null}
-
-              <div className="rounded-2xl border bg-white p-2 shadow-sm dark:border-white/10 dark:bg-slate-900">
-                <Textarea
-                  value={input}
-                  onChange={(event) => setInput(event.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Type your question..."
-                  className="min-h-22 resize-none border-0 bg-transparent px-1 shadow-none focus-visible:ring-0"
-                />
-
-                <div className="mt-2 flex items-center justify-end gap-2">
-                  <Button
-                    type="button"
-                    className="bg-linear-to-r from-blue-600 via-cyan-500 to-sky-500 text-white shadow-sm hover:opacity-95"
-                    disabled={isLoading || !input.trim()}
-                    onClick={() => void handleSend()}
-                  >
-                    {isLoading ? (
-                      <Loader2 className="size-4 animate-spin" />
-                    ) : (
-                      <>
-                        <SendHorizontal className="mr-2 size-4" />
-                        Send
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </div>
+          <div className="relative h-[calc(100%-84px)] min-h-0 bg-linear-to-b from-blue-50/50 via-background to-sky-50/40 dark:from-slate-950 dark:via-slate-950 dark:to-slate-950">
+            <AiChatWorkspace mode="widget" />
           </div>
         </div>
       </div>
@@ -280,7 +105,9 @@ export default function SupportChatWidget() {
           <span>
             <span className="font-semibold text-blue-700 dark:text-blue-400">AI Assistant</span>
             <br />
-            <span>How can I help you? 👋</span>
+            <span>
+              How can I help you? <span className="consultedge-hand-wave">👋</span>
+            </span>
           </span>
           <span
             role="button"

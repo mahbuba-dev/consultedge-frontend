@@ -2,21 +2,22 @@
 
 import { ArrowUpRight, Clock, Flame, Sparkles } from "lucide-react";
 
+import type { SearchDropdownItem } from "@/components/AI/local-search/types";
 import { cn } from "@/src/lib/utils";
-import type { DropdownItem } from "@/src/lib/localSearchPersonalization";
 
 interface SuggestionListProps {
-  items: DropdownItem[];
+  items: SearchDropdownItem[];
   activeIndexOffset: number;
   activeIndex: number;
-  section: "recent" | "trending" | "ai";
+  section: "recent" | "trending" | "ai" | "matches";
   onHover: (absoluteIndex: number) => void;
-  onSelect: (item: DropdownItem) => void;
+  onSelect: (item: SearchDropdownItem) => void;
 }
 
 function getItemIcon(section: SuggestionListProps["section"]) {
   if (section === "recent") return <Clock className="size-3.5 text-slate-500" />;
   if (section === "trending") return <Flame className="size-3.5 text-orange-500" />;
+  if (section === "matches") return <Sparkles className="size-3.5 text-cyan-500" />;
   return <Sparkles className="size-3.5 text-blue-600" />;
 }
 
@@ -42,11 +43,11 @@ export default function SuggestionList({
             onClick={() => onSelect(item)}
             className={cn(
               "group flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left transition-all duration-200",
-              section === "ai"
+              section === "ai" || section === "matches"
                 ? "hover:bg-blue-50 hover:shadow-[0_8px_24px_-16px_rgba(37,99,235,0.65)] dark:hover:bg-blue-500/10"
                 : "hover:bg-slate-50 dark:hover:bg-white/5",
               selected
-                ? section === "ai"
+                ? section === "ai" || section === "matches"
                   ? "bg-blue-50 shadow-[0_10px_24px_-14px_rgba(37,99,235,0.75)] dark:bg-blue-500/10"
                   : "bg-slate-100 dark:bg-white/10"
                 : "",

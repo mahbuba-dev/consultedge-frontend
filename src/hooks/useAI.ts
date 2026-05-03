@@ -4,12 +4,15 @@ import { useQuery, type UseQueryOptions } from "@tanstack/react-query";
 
 import {
   aiChat,
+  aiIndustryCreation,
   aiDocumentAnalysis,
   aiSearch,
   aiSummary,
   getAIRecommendations,
 } from "@/src/services/ai.service";
 import type {
+  AIIndustryCreationRequest,
+  AIIndustryCreationResponse,
   AIChatRequest,
   AIChatResponse,
   AIDocumentAnalysisRequest,
@@ -34,7 +37,14 @@ type ExtraOptions<T> = Omit<
 
 /** Cached for 10 minutes. */
 export function useAIRecommendations(
-  payload?: AIRecommendationRequest,
+  payload?: Partial<AIRecommendationRequest> & {
+    behavior?: {
+      recentExpertIds?: string[];
+      industryIds?: string[];
+      recentSearches?: string[];
+      clickedCategories?: string[];
+    };
+  },
   options?: ExtraOptions<AIRecommendationResponse>,
 ) {
   return useQuery({
@@ -46,13 +56,27 @@ export function useAIRecommendations(
   });
 }
 
+export function useAIIndustryCreation(
+  payload: AIIndustryCreationRequest,
+  options?: ExtraOptions<AIIndustryCreationResponse>,
+) {
+  return useQuery({
+    queryKey: ["ai-industry-creation", payload] as const,
+    queryFn: () => aiIndustryCreation(payload),
+    enabled: payload.industryName.trim().length > 1,
+    staleTime: 5 * MIN,
+    gcTime: 20 * MIN,
+    ...options,
+  });
+}
+
 /** Cached for 2 minutes. */
 export function useAISearch(
   payload: AISearchRequest,
   options?: ExtraOptions<AISearchResponse>,
 ) {
   return useQuery({
-    queryKey: ["ai-search", payload.query, payload.limit ?? null, payload.source ?? null] as const,
+    queryKey: ["ai-search", payload] as const,
     queryFn: () => aiSearch(payload),
     enabled: payload.query.trim().length >= 2,
     staleTime: 2 * MIN,
@@ -67,12 +91,7 @@ export function useAISummary(
   options?: ExtraOptions<AISummaryResponse>,
 ) {
   return useQuery({
-    queryKey: [
-      "ai-summary",
-      payload.topic,
-      payload.kind ?? null,
-      (payload.industryIds ?? []).join(","),
-    ] as const,
+    queryKey: ["ai-summary", payload] as const,
     queryFn: () => aiSummary(payload),
     enabled: payload.topic.trim().length > 0,
     staleTime: 30 * MIN,
@@ -88,7 +107,7 @@ export function useAISummary(
  */
 export function useAIChat(payload: AIChatRequest, options?: ExtraOptions<AIChatResponse>) {
   return useQuery({
-    queryKey: ["ai-chat", payload.message] as const,
+    queryKey: ["ai-chat", payload] as const,
     queryFn: () => aiChat(payload),
     enabled: payload.message.trim().length > 0,
     staleTime: 0,
@@ -102,12 +121,7 @@ export function useAIDocumentAnalysis(
   options?: ExtraOptions<AIDocumentAnalysisResponse>,
 ) {
   return useQuery({
-    queryKey: [
-      "ai-document-analysis",
-      payload.documentUrl ?? null,
-      payload.mode ?? null,
-      payload.text?.slice(0, 64) ?? null,
-    ] as const,
+    queryKey: ["ai-document-analysis", payload] as const,
     queryFn: () => aiDocumentAnalysis(payload),
     enabled: Boolean(payload.text || payload.documentUrl),
     staleTime: 30 * MIN,

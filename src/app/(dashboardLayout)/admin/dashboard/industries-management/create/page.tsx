@@ -11,7 +11,7 @@ export default function CreateIndustryPage() {
         className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_15%_20%,rgba(59,130,246,0.18),transparent_45%),radial-gradient(circle_at_85%_75%,rgba(34,211,238,0.18),transparent_45%)]"
       />
 
-      <div className="mx-auto max-w-3xl space-y-6">
+      <div className="mx-auto max-w-360 space-y-6">
         {/* Top bar */}
         <div className="flex items-center justify-between">
           <Link

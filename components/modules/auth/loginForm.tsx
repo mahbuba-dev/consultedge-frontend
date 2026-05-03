@@ -215,7 +215,7 @@ const LoginForm = ({ redirectPath, passwordReset = false }: LoginFormProps) => {
             </Alert>
           )}
 
-          {/* Demo login endpoint */}
+          {/* Demo login — uses pre-seeded demo credentials via server action */}
           <Button
             type="button"
             variant="outline"
@@ -225,17 +225,22 @@ const LoginForm = ({ redirectPath, passwordReset = false }: LoginFormProps) => {
               try {
                 const result = (await mutateDemoLogin()) as any;
 
-                if (!result?.success) {
+                // Server action returned a plain error object (no redirect happened)
+                if (result && result.success === false) {
                   setServerError(
-                    result?.message ||
-                      "We couldn't sign you in with demo mode right now. Please try again.",
+                    result.message ||
+                      "Demo login failed. Please try again or use the regular login.",
                   );
                 }
+                // If result is undefined/null the redirect already fired — do nothing.
               } catch (error: any) {
+                // Next.js redirect() surfaces as a thrown NEXT_REDIRECT error on
+                // the client when called from a server action via React Query.
+                // This is expected behaviour — just let the navigation proceed.
                 if (
                   (typeof error?.digest === "string" &&
                     error.digest.startsWith("NEXT_REDIRECT")) ||
-                  String(error?.message || "").includes("NEXT_REDIRECT")
+                  String(error?.message ?? "").includes("NEXT_REDIRECT")
                 ) {
                   return;
                 }
@@ -247,7 +252,7 @@ const LoginForm = ({ redirectPath, passwordReset = false }: LoginFormProps) => {
             className="w-full justify-center gap-2 rounded-full border-blue-200 bg-blue-50/70 text-blue-700 hover:bg-blue-100 hover:text-blue-800 dark:border-cyan-400/30 dark:bg-cyan-500/10 dark:text-cyan-200 dark:hover:bg-cyan-500/15"
           >
             <Sparkles className="size-4" aria-hidden="true" />
-            {isDemoPending ? "Starting demo session..." : "Continue with demo account"}
+            {isDemoPending ? "Starting demo session…" : "Continue with demo account"}
           </Button>
 
           {/* Submit Button */}

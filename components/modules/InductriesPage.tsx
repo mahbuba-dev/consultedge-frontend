@@ -2,6 +2,11 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { getAllIndustries } from "@/src/services/industry.services";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
+
+const PAGE_SIZE = 12;
+
 export default function IndustriesPage() {
   const { data: industriesResponse, isLoading } = useQuery({
     queryKey: ["industries"],
@@ -9,6 +14,9 @@ export default function IndustriesPage() {
   });
 
   const industries = industriesResponse?.data || [];
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(industries.length / PAGE_SIZE));
+  const pagedIndustries = industries.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   if (isLoading) {
     return <div className="p-6 text-center">Loading industries...</div>;
@@ -26,7 +34,7 @@ export default function IndustriesPage() {
 
       {/* Grid Layout */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {industries.map((industry: any) => (
+        {pagedIndustries.map((industry: any) => (
           <div
             key={industry.id}
             className="border rounded-xl p-4 hover:shadow-md transition bg-white"
@@ -68,6 +76,58 @@ export default function IndustriesPage() {
         <div className="text-center text-gray-500 mt-10">
           No industries found.
         </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex flex-wrap items-center justify-center gap-1 pt-8">
+          <Button
+            variant="outline"
+            size="sm"
+            className="rounded-xl"
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+          >
+            Previous
+          </Button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1)
+            .filter((page) => page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1)
+            .reduce<(number | "...")[]>((acc, page, idx, arr) => {
+              if (idx > 0 && (page as number) - (arr[idx - 1] as number) > 1) acc.push("...");
+              acc.push(page);
+              return acc;
+            }, [])
+            .map((item, idx) =>
+              item === "..." ? (
+                <span key={`ellipsis-${idx}`} className="px-1 text-sm text-gray-400">…</span>
+              ) : (
+                <Button
+                  key={item}
+                  variant={currentPage === item ? "default" : "outline"}
+                  size="sm"
+                  className="h-9 w-9 rounded-xl p-0"
+                  onClick={() => setCurrentPage(item as number)}
+                >
+                  {item}
+                </Button>
+              ),
+            )}
+          <Button
+            variant="outline"
+            size="sm"
+            className="rounded-xl"
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+          >
+            Next
+          </Button>
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <p className="text-center text-sm text-gray-500 mt-3">
+          Page {currentPage} of {totalPages} · {industries.length} total
+        </p>
       )}
     </div>
   );

@@ -118,6 +118,7 @@ export default function BookSessionPanel({
   useEffect(() => {
     if (openSignal <= 0) return;
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsBookingOpen((prev) => (prev ? prev : true));
   }, [openSignal]);
 

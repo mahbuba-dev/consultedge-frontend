@@ -113,46 +113,42 @@ export default function EditProfile() {
           className="space-y-4"
         >
           {/* Name */}
-          <form.Field
-            name="name"
-            children={(field) => (
+          <form.Field name="name">
+            {(field) => (
               <Input
                 value={field.state.value ?? ""}
                 onChange={(e) => field.handleChange(e.target.value)}
                 placeholder="Full Name"
               />
             )}
-          />
+          </form.Field>
 
           {/* Email */}
-          <form.Field
-            name="email"
-            children={(field) => (
+          <form.Field name="email">
+            {(field) => (
               <Input
                 value={field.state.value ?? ""}
                 onChange={(e) => field.handleChange(e.target.value)}
                 placeholder="Email"
               />
             )}
-          />
+          </form.Field>
 
           {/* Expert Fields */}
           {user.role === "EXPERT" && (
             <>
-              <form.Field
-                name="title"
-                children={(field) => (
+              <form.Field name="title">
+                {(field) => (
                   <Input
                     value={field.state.value ?? ""}
                     onChange={(e) => field.handleChange(e.target.value)}
                     placeholder="Title"
                   />
                 )}
-              />
+              </form.Field>
 
-              <form.Field
-                name="experience"
-                children={(field) => (
+              <form.Field name="experience">
+                {(field) => (
                   <Input
                     type="number"
                     value={field.state.value ?? ""}
@@ -162,33 +158,31 @@ export default function EditProfile() {
                     placeholder="Experience (years)"
                   />
                 )}
-              />
+              </form.Field>
 
-              <form.Field
-                name="industryId"
-                children={(field) => (
+              <form.Field name="industryId">
+                {(field) => (
                   <Input
                     value={field.state.value ?? ""}
                     onChange={(e) => field.handleChange(e.target.value)}
                     placeholder="Industry ID"
                   />
                 )}
-              />
+              </form.Field>
             </>
           )}
 
           {/* Client Fields */}
           {user.role === "CLIENT" && (
-            <form.Field
-              name="fullName"
-              children={(field) => (
+            <form.Field name="fullName">
+              {(field) => (
                 <Input
                   value={field.state.value ?? ""}
                   onChange={(e) => field.handleChange(e.target.value)}
                   placeholder="Client Full Name"
                 />
               )}
-            />
+            </form.Field>
           )}
 
           <Button type="submit" disabled={mutation.isPending} className="w-full">

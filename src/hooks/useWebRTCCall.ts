@@ -247,12 +247,14 @@ export const useWebRTCCall = (roomId?: string) => {
       offEvent("signal", handleSignal);
       offEvent("call_ended", handleCallEnded);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId, currentUser?.userId, offEvent, onEvent]);
 
   useEffect(() => {
     return () => {
       cleanupCall();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return {

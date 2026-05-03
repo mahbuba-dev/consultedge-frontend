@@ -65,7 +65,14 @@ export default function TrendingExperts({ experts }: TrendingExpertsProps) {
   if (!showSkeleton && trending.length === 0) return null;
 
   return (
-    <section className="rounded-[2.25rem] border border-orange-100/70 bg-linear-to-br from-white via-orange-50/40 to-amber-50/40 p-5 shadow-[0_30px_70px_-42px_rgba(251,146,60,0.35)] md:p-7 lg:p-8 dark:border-white/10 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900">
+    <section
+      id="trending-experts"
+      className="relative scroll-mt-28 overflow-hidden rounded-(--ce-shell-radius) border border-orange-100/70 bg-white/55 p-5 shadow-(--ce-shell-shadow-strong) backdrop-blur-2xl md:rounded-(--ce-shell-radius-md) md:p-7 lg:p-8 dark:rounded-(--ce-shell-radius-dark) dark:border-white/10 dark:bg-slate-950/45"
+    >
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-[linear-gradient(128deg,rgba(255,255,255,0.34),rgba(255,255,255,0.08)_42%,rgba(251,146,60,0.1)_100%)] dark:bg-[linear-gradient(128deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02)_42%,rgba(251,146,60,0.08)_100%)]"
+      />
       <div className="mb-6 flex flex-col gap-3 md:mb-8 md:flex-row md:items-end md:justify-between">
         <div className="max-w-2xl space-y-2">
           <Badge variant="secondary" className="gap-1 bg-orange-100 text-orange-700 dark:bg-orange-500/10 dark:text-orange-200">

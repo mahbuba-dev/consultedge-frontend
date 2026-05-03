@@ -60,6 +60,11 @@ import {
 } from "@/components/ui/select";
 import { getAllIndustries } from "@/src/services/industry.services";
 import { getExperts } from "@/src/services/expert.services";
+import { aiChatOpenAIFallback } from "@/src/services/ai.service";
+import {
+  trackCategoryClick,
+  trackIndustryExplore,
+} from "@/src/lib/aiPersonalization";
 import { IExpert } from "@/src/types/expert.types";
 import { IIndustry, IIndustryListResponse } from "@/src/types/industry.types";
 import { cn } from "@/src/lib/utils";
@@ -186,10 +191,21 @@ export default function ExpertsPageClient() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const [queryString, setQueryString] = useState(() => searchParams.toString());
+  const effectiveQueryString = useMemo(() => {
+    const params = new URLSearchParams(queryString);
+    if (!params.get("limit")) {
+      params.set("limit", "500");
+    }
+    return params.toString();
+  }, [queryString]);
   const currentSearchParams = useMemo(
-    () => new URLSearchParams(queryString),
-    [queryString],
+    () => new URLSearchParams(effectiveQueryString),
+    [effectiveQueryString],
   );
+  const [aiSearchSuggestions, setAiSearchSuggestions] = useState<SearchSuggestion[]>([]);
+  const aiSearchAbortRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 12;
 
   useEffect(() => {
     const nextQueryString = searchParams.toString();
@@ -211,8 +227,6 @@ export default function ExpertsPageClient() {
 
   const searchTerm = currentSearchParams.get("searchTerm") ?? "";
   const [liveSearchValue, setLiveSearchValue] = useState(searchTerm);
-  const [visibleCount, setVisibleCount] = useState(8);
-  const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const activeSortValue = `${currentSearchParams.get("sortBy") ?? "createdAt"}:${currentSearchParams.get("sortOrder") ?? "desc"}`;
   const hasExperienceRange = Boolean(
     currentSearchParams.get("experience[gte]") ||
@@ -223,8 +237,8 @@ export default function ExpertsPageClient() {
   );
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["experts", queryString],
-    queryFn: () => getExperts(queryString),
+    queryKey: ["experts", effectiveQueryString],
+    queryFn: () => getExperts(effectiveQueryString),
     staleTime: 60 * 1000,
   });
 
@@ -234,13 +248,13 @@ export default function ExpertsPageClient() {
     IIndustry[]
   >({
     queryKey: ["industries", "experts-filter-options"],
-    queryFn: getAllIndustries,
+    queryFn: () => getAllIndustries({ page: 1, limit: 100 }),
     select: (response) =>
       Array.isArray(response?.data) ? response.data : [],
     staleTime: 5 * 60 * 1000,
   });
 
-  const experts: IExpert[] = Array.isArray(data?.data) ? data.data : [];
+  const experts = useMemo<IExpert[]>(() => (Array.isArray(data?.data) ? data.data : []), [data]);
   const meta = data?.meta;
   const selectedIndustryId = currentSearchParams.get("industryId") ?? "all";
   const selectedVerification = currentSearchParams.get("isVerified") ?? "all";
@@ -248,6 +262,56 @@ export default function ExpertsPageClient() {
   useEffect(() => {
     setLiveSearchValue(searchTerm);
   }, [searchTerm]);
+
+  useEffect(() => {
+    if (aiSearchAbortRef.current) {
+      clearTimeout(aiSearchAbortRef.current);
+    }
+
+    const trimmed = liveSearchValue.trim();
+
+    if (trimmed.length < 2) {
+      setAiSearchSuggestions([]);
+      return;
+    }
+
+    aiSearchAbortRef.current = setTimeout(async () => {
+      try {
+        const resp = await aiChatOpenAIFallback({
+          context: "expert-search",
+          message: [
+            `A user on a consulting platform typed this search query: "${trimmed}".`,
+            "Suggest 4 relevant expert titles or specializations they might be looking for.",
+            "Return ONLY a comma-separated list, e.g.: Financial Advisor, Investment Strategist, CFO Consultant, Capital Markets Expert",
+          ].join("\n"),
+        });
+
+        const raw = resp.reply ?? "";
+        const parsed: SearchSuggestion[] = raw
+          .split(/,|\n/)
+          .map((s) => s.replace(/^\s*[-•*\d.]+\s*/, "").trim())
+          .filter((s) => s.length > 2 && s.length < 60)
+          .slice(0, 4)
+          .map((label, i) => ({
+            id: `openai-${i}-${label}`,
+            label,
+            value: label,
+            kind: "title" as const,
+            helperText: "OpenAI suggestion based on your query",
+          }));
+
+        setAiSearchSuggestions(parsed);
+      } catch {
+        setAiSearchSuggestions([]);
+      }
+    }, 600);
+
+    return () => {
+      if (aiSearchAbortRef.current) {
+        clearTimeout(aiSearchAbortRef.current);
+      }
+    };
+  }, [liveSearchValue]);
 
   const displayedExperts = useMemo(() => {
     const minExperience = parseOptionalNumber(
@@ -359,23 +423,6 @@ export default function ExpertsPageClient() {
   ]);
 
   const totalExperts = displayedExperts.length;
-  const verifiedExpertsCount = useMemo(
-    () => displayedExperts.filter((expert) => Boolean(expert.isVerified)).length,
-    [displayedExperts],
-  );
-  const averageExperience = useMemo(() => {
-    if (!displayedExperts.length) {
-      return 0;
-    }
-
-    const totalExperience = displayedExperts.reduce(
-      (sum, expert) => sum + Number(expert.experience ?? 0),
-      0,
-    );
-
-    return Math.round(totalExperience / displayedExperts.length);
-  }, [displayedExperts]);
-
   const updateUrlParams = useCallback(
     (
       updater: (params: URLSearchParams) => void,
@@ -441,6 +488,23 @@ export default function ExpertsPageClient() {
 
   const handleSelectFilterChange = useCallback(
     (filterId: "industryId" | "isVerified", value: string) => {
+      if (filterId === "industryId") {
+        if (value === "all") {
+          trackCategoryClick("All industries");
+        } else {
+          const selectedIndustry = industries.find((industry) => industry.id === value);
+          if (selectedIndustry?.name) {
+            trackCategoryClick(selectedIndustry.name);
+            trackIndustryExplore(selectedIndustry.name);
+          }
+        }
+      }
+
+      if (filterId === "isVerified") {
+        if (value === "true") trackCategoryClick("Verified experts");
+        if (value === "false") trackCategoryClick("Unverified experts");
+      }
+
       updateUrlParams((params) => {
         if (value === "all") {
           params.delete(filterId);
@@ -450,11 +514,21 @@ export default function ExpertsPageClient() {
         params.set(filterId, value);
       });
     },
-    [updateUrlParams],
+    [industries, updateUrlParams],
   );
 
   const handleQuickRange = useCallback(
     (field: RangeField, preset?: RangePreset) => {
+      if (!preset) {
+        trackCategoryClick(field === "experience" ? "Experience (reset)" : "Price (reset)");
+      } else {
+        trackCategoryClick(
+          field === "experience"
+            ? `Experience ${preset.label}`
+            : `Price ${preset.label}`,
+        );
+      }
+
       updateUrlParams((params) => {
         params.delete(`${field}[gte]`);
         params.delete(`${field}[lte]`);
@@ -496,43 +570,23 @@ export default function ExpertsPageClient() {
     );
   };
 
-  const aiSuggestions = useMemo(
-    () => buildAISuggestions(liveSearchValue, experts, industries),
-    [liveSearchValue, experts, industries],
-  );
+  const aiSuggestions = useMemo(() => {
+    const local = buildAISuggestions(liveSearchValue, experts, industries);
+    const openaiIds = new Set(aiSearchSuggestions.map((s) => s.label.toLowerCase()));
+    const dedupedLocal = local.filter((s) => !openaiIds.has(s.label.toLowerCase()));
+    return [...aiSearchSuggestions, ...dedupedLocal].slice(0, 8);
+  }, [liveSearchValue, experts, industries, aiSearchSuggestions]);
 
   useEffect(() => {
-    setVisibleCount(8);
+    setCurrentPage(1);
   }, [displayedExperts.length, queryString]);
 
+  const totalPages = Math.max(1, Math.ceil(displayedExperts.length / PAGE_SIZE));
+
   const visibleExperts = useMemo(
-    () => displayedExperts.slice(0, visibleCount),
-    [displayedExperts, visibleCount],
+    () => displayedExperts.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
+    [displayedExperts, currentPage, PAGE_SIZE],
   );
-
-  const hasMoreVisibleExperts = visibleCount < displayedExperts.length;
-
-  useEffect(() => {
-    if (!hasMoreVisibleExperts || !loadMoreRef.current) {
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const [entry] = entries;
-        if (!entry?.isIntersecting) {
-          return;
-        }
-
-        setVisibleCount((current) => Math.min(current + 8, displayedExperts.length));
-      },
-      { rootMargin: "220px 0px" },
-    );
-
-    observer.observe(loadMoreRef.current);
-
-    return () => observer.disconnect();
-  }, [displayedExperts.length, hasMoreVisibleExperts]);
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 py-6">
@@ -565,6 +619,9 @@ export default function ExpertsPageClient() {
               suggestions={aiSuggestions}
               onValueChange={setLiveSearchValue}
               onSuggestionSelect={(suggestion) => {
+                if (suggestion.kind === "industry") {
+                  trackCategoryClick(suggestion.value);
+                }
                 handleSearch(suggestion.value);
               }}
               onDebouncedChange={handleSearch}
@@ -744,11 +801,9 @@ export default function ExpertsPageClient() {
               ) : null}
             </p>
 
-            {meta ? (
-              <p className="text-sm text-muted-foreground">
-                Showing {visibleExperts.length} of {displayedExperts.length}
-              </p>
-            ) : null}
+            <p className="text-sm text-muted-foreground">
+              Showing {Math.min((currentPage - 1) * PAGE_SIZE + 1, totalExperts)}–{Math.min(currentPage * PAGE_SIZE, totalExperts)} of {totalExperts}
+            </p>
           </div>
 
           <div className="animate-in fade-in-0 slide-in-from-bottom-2 grid grid-cols-1 gap-4 duration-500 md:grid-cols-2 xl:grid-cols-4">
@@ -757,12 +812,48 @@ export default function ExpertsPageClient() {
             ))}
           </div>
 
-          {hasMoreVisibleExperts ? (
-            <div className="pt-2">
-              <div ref={loadMoreRef} className="h-8" aria-hidden="true" />
-              <p className="text-center text-xs text-muted-foreground">
-                Loading more experts as you scroll...
-              </p>
+          {totalPages > 1 ? (
+            <div className="flex flex-wrap items-center justify-center gap-1 pt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-xl"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              >
+                Previous
+              </Button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter((page) => page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1)
+                .reduce<(number | "...")[]>((acc, page, idx, arr) => {
+                  if (idx > 0 && (page as number) - (arr[idx - 1] as number) > 1) acc.push("...");
+                  acc.push(page);
+                  return acc;
+                }, [])
+                .map((item, idx) =>
+                  item === "..." ? (
+                    <span key={`ellipsis-${idx}`} className="px-1 text-sm text-muted-foreground">…</span>
+                  ) : (
+                    <Button
+                      key={item}
+                      variant={currentPage === item ? "default" : "outline"}
+                      size="sm"
+                      className="h-9 w-9 rounded-xl p-0"
+                      onClick={() => setCurrentPage(item as number)}
+                    >
+                      {item}
+                    </Button>
+                  ),
+                )}
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-xl"
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              >
+                Next
+              </Button>
             </div>
           ) : null}
         </>
@@ -781,11 +872,7 @@ export default function ExpertsPageClient() {
         </Card>
       )}
 
-      {meta && meta.totalPages > 1 && !hasMoreVisibleExperts ? (
-        <div className="rounded-2xl border px-4 py-3 text-center text-sm text-muted-foreground">
-          You reached the end of the current result set.
-        </div>
-      ) : null}
+
     </div>
   );
 }

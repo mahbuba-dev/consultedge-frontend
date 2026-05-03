@@ -147,6 +147,8 @@ const buildEditFormState = (client?: IUserManagementItem | null) => ({
   address: client?.address ?? "",
 });
 
+import { useServerDataTable } from "@/src/hooks/useServerDataTable";
+
 export default function ClientManageTable() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterValues, setFilterValues] = useState<DataTableFilterValues>({});
@@ -154,9 +156,26 @@ export default function ClientManageTable() {
   const [editForm, setEditForm] = useState(buildEditFormState());
   const [clientToDelete, setClientToDelete] = useState<IUserManagementItem | null>(null);
 
+  const {
+    paginationState,
+    onPaginationChange,
+    sortingState,
+    onSortingChange,
+    queryParams,
+  } = useServerDataTable({ defaultPageSize: 10 });
+
   const { data, isLoading, isFetching, isError, error, refetch } = useQuery({
-    queryKey: ["client-management-table"],
-    queryFn: () => getAllClients(),
+    queryKey: ["client-management-table", queryParams],
+    queryFn: () =>
+      getAllClients({
+        page: queryParams.page,
+        limit: queryParams.limit,
+        sortBy: queryParams.sortBy,
+        sortOrder: queryParams.sortOrder,
+        searchTerm: searchTerm.trim() || undefined,
+      }),
+    staleTime: 60 * 1000,
+    placeholderData: (prev) => prev,
   });
 
   const updateMutation = useMutation({
@@ -279,6 +298,14 @@ export default function ClientManageTable() {
             columns={columns}
             isLoading={isLoading || isFetching}
             emptyMessage="No clients match the current search or filters."
+            pagination={{
+              state: paginationState,
+              onPaginationChange,
+            }}
+            sorting={{
+              state: sortingState,
+              onSortingChange,
+            }}
             actions={{
               items: (client) => [
                 {

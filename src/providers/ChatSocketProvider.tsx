@@ -199,7 +199,7 @@ export function ChatSocketProvider({ children }: { children: React.ReactNode }) 
     if (!currentUser) {
       const client = getChatSocketClient();
       client?.disconnect();
-      setConnectionState("disconnected");
+      previousConnectionStateRef.current = "disconnected";
       return;
     }
 

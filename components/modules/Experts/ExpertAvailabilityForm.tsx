@@ -10,7 +10,6 @@ import {
   Clock,
   Loader2,
   Sparkles,
-  Timer,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -79,24 +78,24 @@ export default function ExpertAvailabilityForm() {
     return slotsPerDay * totalDays;
   };
 
-  const expectedSlotCount = getExpectedSlotCount();
+  const _expectedSlotCount = getExpectedSlotCount();
 
   // Helpers for the live preview panel
-  const formatPreviewDate = (iso: string) => {
+  const _formatPreviewDate = (iso: string) => {
     if (!iso) return "—";
     const [y, m, d] = iso.split("-").map(Number);
     if (!y || !m || !d) return "—";
     return format(new Date(y, m - 1, d), "EEE, MMM d");
   };
 
-  const formatPreviewTime = (time: string) => {
+  const _formatPreviewTime = (time: string) => {
     if (!time) return "—";
     const [hh, mm] = time.split(":").map(Number);
     if (Number.isNaN(hh) || Number.isNaN(mm)) return "—";
     return format(new Date(2000, 0, 1, hh, mm), "h:mm a");
   };
 
-  const daySpanForPreview = (() => {
+  const _daySpanForPreview = (() => {
     const { startDate, endDate } = formState;
     if (!startDate || !endDate) return null;
     const [y1, m1, d1] = startDate.split("-").map(Number);

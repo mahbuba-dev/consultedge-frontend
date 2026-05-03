@@ -74,7 +74,7 @@ export default function PaymentSuccessContent() {
     queryFn: () => getMyBookings({ limit: 50, sortBy: "date", sortOrder: "desc" }),
   });
 
-  const bookings = useMemo(() => (Array.isArray(data?.data) ? data.data : []), [data?.data]);
+  const bookings = useMemo(() => (Array.isArray(data?.data) ? data.data : []), [data]);
 
   const matchedConsultation = useMemo(() => {
     return bookings.find(

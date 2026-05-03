@@ -5,10 +5,35 @@ import type {
 } from "@/src/types/industry.types";
 import { httpClient } from "../lib/axious/httpClient";
 
+type IndustryQueryParams = {
+  page?: number;
+  limit?: number;
+  searchTerm?: string;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+  [key: string]: unknown;
+};
+
 // GET ALL
-export const getAllIndustries = async () => {
+export const getAllIndustries = async (
+  params?: IndustryQueryParams | string,
+) => {
   try {
-    const res = await httpClient.get<IIndustry[]>("/industries");
+    if (typeof params === "string") {
+      const res = await httpClient.get<IIndustry[]>(
+        params ? `/industries?${params}` : "/industries",
+      );
+
+      return {
+        ...res,
+        data: Array.isArray(res.data) ? res.data : [],
+      };
+    }
+
+    const res = await httpClient.get<IIndustry[]>("/industries", {
+      params: (params ?? {}) as Record<string, unknown>,
+      silent: true,
+    });
 
     return {
       ...res,

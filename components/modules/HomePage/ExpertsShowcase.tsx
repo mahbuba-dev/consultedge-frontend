@@ -1,12 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import {
   ArrowRight,
   BadgeCheck,
   BriefcaseBusiness,
-  Sparkles,
+  Target,
   Wallet,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -15,20 +15,35 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import RecDebugPanel from "@/components/modules/HomePage/RecDebugPanel";
 import {
   getBehavior,
-  hasPersonalSignal,
   recommendExperts,
-  type ScoredExpert,
+  type BehaviorState,
 } from "@/src/lib/aiPersonalization";
+import { useUserActivity } from "@/src/hooks/useUserActivity";
 import { getAIRecommendations } from "@/src/services/ai.service";
 import type { IExpert } from "@/src/types/expert.types";
 
 interface ExpertsShowcaseProps {
   experts: IExpert[];
-  /** Maximum cards rendered (capped at 4). */
+  /** Maximum cards rendered (capped at 6). */
   limit?: number;
 }
+
+type DisplayExpertCard = {
+  key: string;
+  href: string;
+  name: string;
+  title: string;
+  specialization: string;
+  description: string;
+  experienceYears: number;
+  fee: number;
+  whyReason: string;
+  profilePhoto?: string | null;
+  isVerified?: boolean;
+};
 
 const getInitials = (name: string) =>
   name
@@ -50,84 +65,114 @@ const formatFee = (value?: number | null) =>
 const fallbackBio =
   "Focused 1:1 guidance for strategy, growth, operations, and decision-making support.";
 
+const normalizeName = (value: string) => value.trim().toLowerCase();
+
+const emptyBehaviorState: BehaviorState = {
+  industryWeights: {},
+  recentSearches: [],
+  recentExpertIds: [],
+  clickedCategories: [],
+  updatedAt: 0,
+};
+
+const formatWhyReason = (value: string) =>
+  value
+    .replace(/^(?:\s*why\s*:\s*)+/i, "")
+    .replace(/^\s*because\s+you\s+/i, "Based on your ")
+    .trim();
+
 export default function ExpertsShowcase({ experts, limit = 4 }: ExpertsShowcaseProps) {
-  const cap = Math.min(limit, 4);
-  const [tick, setTick] = useState(0);
-  const [hydrated, setHydrated] = useState(false);
+  const cap = Math.max(4, Math.min(limit, 6));
+  const { hydrated, signals, mode, activityCount } = useUserActivity();
+  const isPersonalized = hydrated && mode === "personalized";
 
-  useEffect(() => {
-    setHydrated(true);
-    const handler = () => setTick((t) => t + 1);
-    window.addEventListener("consultedge:behavior-updated", handler);
-    return () => window.removeEventListener("consultedge:behavior-updated", handler);
-  }, []);
-
-  const isPersonalised = useMemo(
-    () => hydrated && hasPersonalSignal(getBehavior()),
-    [hydrated, tick],
+  const recommendationPayload = useMemo(
+    () => ({
+      viewedExperts: signals.viewedExperts,
+      exploredIndustries: signals.exploredIndustries,
+      searchHistory: signals.searchHistory,
+      clickedCategories: signals.clickedCategories,
+    }),
+    [signals],
   );
 
-  const behaviorPayload = useMemo(() => {
-    if (!hydrated) return undefined;
-    const b = getBehavior();
-    return {
-      industryIds: Object.entries(b.industryWeights)
-        .sort((a, c) => c[1] - a[1])
-        .map(([id]) => id),
-      recentSearches: b.recentSearches,
-      recentExpertIds: b.recentExpertIds,
-      hasSignal: hasPersonalSignal(b),
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hydrated, tick]);
-
   const { data: aiResult, isPending: aiLoading } = useQuery({
-    queryKey: ["ai-recommendations", cap, behaviorPayload],
-    queryFn: () =>
-      getAIRecommendations({
-        limit: cap,
-        source: "homepage",
-        behavior: behaviorPayload,
-      }),
+    queryKey: ["ai-recommendations", cap, recommendationPayload],
+    queryFn: () => getAIRecommendations(recommendationPayload),
     enabled: hydrated,
     staleTime: 1000 * 60 * 10,
     gcTime: 1000 * 60 * 30,
   });
 
-  const expertsById = useMemo(() => {
-    const m = new Map<string, IExpert>();
-    for (const e of experts) m.set(e.id, e);
-    return m;
+  const expertsByName = useMemo(() => {
+    const map = new Map<string, IExpert>();
+    for (const expert of experts) {
+      map.set(normalizeName(expert.fullName), expert);
+    }
+    return map;
   }, [experts]);
 
-  const items: Array<{ expert: IExpert; reason?: string }> = useMemo(() => {
-    const backendItems = aiResult?.data?.items ?? [];
-    if (backendItems.length > 0) {
-      const resolved = backendItems
-        .map((it) => {
-          const expert = it.expert ?? expertsById.get(it.expertId);
-          return expert ? { expert, reason: it.reason } : null;
-        })
-        .filter((x): x is { expert: IExpert; reason?: string } => Boolean(x))
-        .slice(0, cap);
-      if (resolved.length > 0) return resolved;
+  const localRanked = useMemo(
+    () => recommendExperts(experts, cap, hydrated ? getBehavior() : emptyBehaviorState),
+    [experts, cap, hydrated, signals],
+  );
+
+  const localReasonByName = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const item of localRanked) {
+      map.set(normalizeName(item.expert.fullName), item.reason);
+    }
+    return map;
+  }, [localRanked]);
+
+  const items: DisplayExpertCard[] = useMemo(() => {
+    const backendExperts = aiResult?.data?.experts ?? [];
+
+    if (backendExperts.length > 0) {
+      return backendExperts.slice(0, cap).map((expert, index) => {
+        const matched = expertsByName.get(normalizeName(expert.name));
+        return {
+          key: `ai-${index}-${expert.name}`,
+          href: matched ? `/experts/${matched.id}` : "/experts",
+          name: expert.name,
+          title: expert.title || "Consultant",
+          specialization: expert.specialization || "General Consulting",
+          description: expert.description || fallbackBio,
+          experienceYears: Number(expert.experienceYears ?? 0),
+          fee: Number(expert.fee ?? 0),
+          whyReason:
+            expert.whyReason || localReasonByName.get(normalizeName(expert.name)) || "",
+          profilePhoto: matched?.profilePhoto,
+          isVerified: matched?.isVerified,
+        };
+      });
     }
 
-    if (isPersonalised) {
-      return recommendExperts(experts, cap).map((s: ScoredExpert) => ({
-        expert: s.expert,
-        reason: s.reason,
-      }));
-    }
-    return experts.slice(0, cap).map((expert) => ({ expert }));
-  }, [aiResult, expertsById, isPersonalised, experts, cap]);
+    return localRanked.map((item) => ({
+      key: item.expert.id,
+      href: `/experts/${item.expert.id}`,
+      name: item.expert.fullName,
+      title: item.expert.title || "Consultant",
+      specialization: item.expert.industry?.name || "General Consulting",
+      description: item.expert.bio?.trim() || fallbackBio,
+      experienceYears: Number(item.expert.experience ?? 0),
+      fee: Number(item.expert.consultationFee ?? item.expert.price ?? 0),
+      whyReason: item.reason,
+      profilePhoto: item.expert.profilePhoto,
+      isVerified: item.expert.isVerified,
+    }));
+  }, [aiResult, cap, expertsByName, localReasonByName, localRanked]);
 
   const showSkeleton = hydrated && aiLoading && items.length === 0;
 
   if (!showSkeleton && !items.length) return null;
 
   return (
-    <section className="relative overflow-hidden rounded-[2.25rem] border border-cyan-100/70 bg-linear-to-br from-white via-cyan-50/40 to-blue-50/55 p-5 shadow-[0_30px_70px_-42px_rgba(37,99,235,0.35)] md:p-7 lg:p-8 dark:border-white/10 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900">
+    <section id="experts-showcase" className="relative scroll-mt-28 overflow-hidden rounded-(--ce-shell-radius) border border-cyan-100/70 bg-white/52 p-5 shadow-(--ce-shell-shadow-strong) backdrop-blur-2xl md:rounded-(--ce-shell-radius-md) md:p-7 lg:p-8 dark:rounded-(--ce-shell-radius-dark) dark:border-white/10 dark:bg-slate-950/42">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-[linear-gradient(126deg,rgba(255,255,255,0.42),rgba(255,255,255,0.1)_42%,rgba(34,211,238,0.12)_100%)] dark:bg-[linear-gradient(126deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03)_42%,rgba(34,211,238,0.08)_100%)]"
+      />
       <div
         aria-hidden
         className="pointer-events-none absolute -top-24 -right-20 size-72 rounded-full bg-cyan-300/20 blur-3xl dark:bg-cyan-500/10"
@@ -143,19 +188,20 @@ export default function ExpertsShowcase({ experts, limit = 4 }: ExpertsShowcaseP
             variant="secondary"
             className="gap-1 bg-cyan-100 text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-200"
           >
-            <Sparkles className="size-3.5" />
-            {isPersonalised ? "Recommended for you" : "Top experts today"}
+            <Target className="size-3.5" />
+            {isPersonalized ? "Picked for your interests" : "Great first matches"}
           </Badge>
           <h2 className="text-2xl font-bold tracking-tight md:text-3xl lg:text-4xl">
-            {isPersonalised
-              ? "Curated from the industries you’ve been exploring"
-              : "Meet standout professionals ready for high-impact consulting"}
+            {isPersonalized
+              ? "Curated from the industries you've been exploring"
+              : "Start with proven experts trusted by growing teams"}
           </h2>
           <p className="text-sm text-muted-foreground md:text-base">
-            {isPersonalised
-              ? "Our AI ranks specialists that match your recent activity. We fall back to a fast on-device model if the service is offline."
-              : "Browse a couple of profiles and this row will quietly tailor itself to what you’re looking for."}
+            {isPersonalized
+              ? "Our AI ranks specialists that match your recent activity."
+              : "Selected from verified specialists, weekly momentum, and quality signals so you can book with confidence."}
           </p>
+          <RecDebugPanel mode={mode} activityCount={activityCount} />
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -164,7 +210,9 @@ export default function ExpertsShowcase({ experts, limit = 4 }: ExpertsShowcaseP
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400/70 opacity-70" />
               <span className="relative inline-flex size-2 rounded-full bg-cyan-500" />
             </span>
-            {isPersonalised ? "Personalised live" : "Updated today"}
+            {mode === "personalized"
+              ? `Learning from your activity • ${activityCount} signals`
+              : "Smart starter picks"}
           </span>
           <Button
             asChild
@@ -181,13 +229,11 @@ export default function ExpertsShowcase({ experts, limit = 4 }: ExpertsShowcaseP
       <div className="relative grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {showSkeleton
           ? Array.from({ length: cap }).map((_, i) => <ExpertCardSkeleton key={i} />)
-          : items.map(({ expert, reason }, index) => {
-              const expertPrice = expert.price ?? expert.consultationFee;
-              const bio = expert.bio?.trim() || fallbackBio;
+          : items.map((item, index) => {
               return (
                 <Link
-                  key={expert.id}
-                  href={`/experts/${expert.id}`}
+                  key={item.key}
+                  href={item.href}
                   className="group block h-full"
                   style={{ animationDelay: `${110 + index * 70}ms` }}
                 >
@@ -204,11 +250,11 @@ export default function ExpertsShowcase({ experts, limit = 4 }: ExpertsShowcaseP
                             size="default"
                             className="size-12 border-2 border-cyan-100 ring-2 ring-cyan-50 dark:border-white/15 dark:ring-white/10"
                           >
-                            {expert.profilePhoto ? (
-                              <AvatarImage src={expert.profilePhoto} alt={expert.fullName} />
+                            {item.profilePhoto ? (
+                              <AvatarImage src={item.profilePhoto} alt={item.name} />
                             ) : null}
                             <AvatarFallback className="text-slate-900">
-                              {getInitials(expert.fullName)}
+                              {getInitials(item.name)}
                             </AvatarFallback>
                           </Avatar>
                           <span className="absolute -bottom-0.5 -right-0.5 z-20 flex">
@@ -221,26 +267,26 @@ export default function ExpertsShowcase({ experts, limit = 4 }: ExpertsShowcaseP
 
                         <div className="min-w-0 flex-1 space-y-0.5">
                           <h3 className="line-clamp-1 flex items-center gap-1.5 text-sm font-semibold text-foreground">
-                            {expert.fullName}
-                            {expert.isVerified ? (
+                            {item.name}
+                            {item.isVerified ? (
                               <BadgeCheck className="size-3.5 shrink-0 text-cyan-600 dark:text-cyan-300" />
                             ) : null}
                           </h3>
-                          <p className="line-clamp-1 text-xs text-muted-foreground">{expert.title}</p>
-                          {expert.industry?.name ? (
-                            <p className="line-clamp-1 text-[11px] font-medium text-cyan-700 dark:text-cyan-300">
-                              {expert.industry.name}
-                            </p>
-                          ) : null}
+                          <p className="line-clamp-1 text-xs text-muted-foreground">{item.title}</p>
+                          <p className="line-clamp-1 text-[11px] font-medium text-cyan-700 dark:text-cyan-300">
+                            {item.specialization}
+                          </p>
                         </div>
                       </div>
 
-                      <p className="line-clamp-2 text-sm text-gray-600 dark:text-gray-300">{bio}</p>
+                      <p className="line-clamp-2 text-sm text-gray-600 dark:text-gray-300">
+                        {item.description || fallbackBio}
+                      </p>
 
-                      {reason ? (
+                      {item.whyReason ? (
                         <div className="rounded-lg border border-cyan-100 bg-cyan-50/60 px-2 py-1.5 text-[11px] text-cyan-800 dark:border-cyan-500/20 dark:bg-cyan-500/5 dark:text-cyan-200">
-                          <span className="font-medium">Why:</span>{" "}
-                          <span className="opacity-90">{reason}</span>
+                          <span className="font-medium">Why this pick:</span>{" "}
+                          <span className="opacity-90">{formatWhyReason(item.whyReason)}</span>
                         </div>
                       ) : null}
 
@@ -251,7 +297,7 @@ export default function ExpertsShowcase({ experts, limit = 4 }: ExpertsShowcaseP
                             <span className="text-[9px] font-medium uppercase tracking-wide">Exp</span>
                           </div>
                           <p className="text-xs font-semibold text-foreground">
-                            {expert.experience} {Number(expert.experience) === 1 ? "yr" : "yrs"}
+                            {item.experienceYears} {item.experienceYears === 1 ? "yr" : "yrs"}
                           </p>
                         </div>
 
@@ -261,7 +307,7 @@ export default function ExpertsShowcase({ experts, limit = 4 }: ExpertsShowcaseP
                             <span className="text-[9px] font-medium uppercase tracking-wide">Fee</span>
                           </div>
                           <p className="text-xs font-semibold text-foreground">
-                            {formatFee(expertPrice)}
+                            {formatFee(item.fee)}
                           </p>
                         </div>
                       </div>

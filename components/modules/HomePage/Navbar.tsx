@@ -5,10 +5,12 @@ import NavbarClient from "./NavbarClient";
 
 const baseNavItems = [
   { label: "Home", href: "/" },
+  { label: "Experts", href: "/experts" },
   { label: "Industries", href: "/industries" },
- { label: "Experts", href: "/experts" },
+  { label: "Insights", href: "/insights" },
   { label: "Process", href: "/process" },
   { label: "Contact", href: "/contact" },
+  { label: "Apply Expert", href: "/apply-expert" },
 ];
 
 const Navbar = async () => {
@@ -18,9 +20,7 @@ const Navbar = async () => {
     ? getDefaultDashboardRoute(user.role as UserRole)
     : "/dashboard";
 
-  const navItems = isLoggedIn
-    ? [...baseNavItems, { label: "Dashboard", href: dashboardHref }]
-    : baseNavItems;
+  const navItems = baseNavItems;
 
   const userLabel = user?.name || user?.client?.fullName || user?.expert?.fullName;
 

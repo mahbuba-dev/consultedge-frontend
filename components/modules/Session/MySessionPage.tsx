@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { CalendarClock, CheckCircle2, Clock, RefreshCw, Sparkles, AlertTriangle } from "lucide-react";
 
@@ -133,16 +133,15 @@ export default function MySessionPage() {
 
   const [activeTab, setActiveTab] = useState<"upcoming" | "completed" | "missed">("upcoming");
 
-  useEffect(() => {
-    if (activeTab === "missed" && missed.length === 0 && upcoming.length > 0) {
-      setActiveTab("upcoming");
-    }
-  }, [activeTab, missed.length, upcoming.length]);
+  const resolvedActiveTab =
+    activeTab === "missed" && missed.length === 0 && upcoming.length > 0
+      ? "upcoming"
+      : activeTab;
 
   const visibleList =
-    activeTab === "upcoming"
+    resolvedActiveTab === "upcoming"
       ? upcoming
-      : activeTab === "completed"
+      : resolvedActiveTab === "completed"
         ? completed
         : missed;
 
@@ -271,7 +270,7 @@ export default function MySessionPage() {
       ) : (
         <>
           <ConsultationTabs
-            activeTab={activeTab}
+            activeTab={resolvedActiveTab}
             setActiveTab={setActiveTab}
             upcomingCount={upcoming.length}
             completedCount={completed.length}
@@ -281,9 +280,9 @@ export default function MySessionPage() {
           {visibleList.length === 0 ? (
             <Card className="border-dashed border-slate-200/70 bg-white/60 dark:border-white/10 dark:bg-slate-900/60">
               <CardContent className="py-10 text-center text-sm text-muted-foreground">
-                {activeTab === "upcoming"
+                {resolvedActiveTab === "upcoming"
                   ? "No upcoming sessions."
-                  : activeTab === "completed"
+                  : resolvedActiveTab === "completed"
                     ? "No completed sessions yet."
                     : "No missed sessions."}
               </CardContent>

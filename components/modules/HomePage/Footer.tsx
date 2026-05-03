@@ -5,13 +5,14 @@ import { useEffect, useRef } from "react";
 import {
   ArrowRight,
   CalendarRange,
+  Gem,
   Mail,
   MapPin,
   Phone,
   ShieldCheck,
-  Sparkles,
   Users,
 } from "lucide-react";
+import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube } from "react-icons/fa6";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -31,10 +32,10 @@ const platformLinks = [
 ];
 
 const socialLinks = [
-  { label: "in", name: "LinkedIn", href: "https://www.linkedin.com/company/consultedge-global-/" },
-  { label: "fb", name: "Facebook", href: "https://www.facebook.com/ConsultEdgeGlb/" },
-  { label: "ig", name: "Instagram", href: "https://www.instagram.com/cegglobal/" },
-  { label: "yt", name: "YouTube", href: "https://www.youtube.com/@ConsultEdge.Global" },
+  { name: "LinkedIn", icon: FaLinkedinIn, href: "https://www.linkedin.com/company/consultedge-global-/" },
+  { name: "Facebook", icon: FaFacebookF, href: "https://www.facebook.com/ConsultEdgeGlb/" },
+  { name: "Instagram", icon: FaInstagram, href: "https://www.instagram.com/cegglobal/" },
+  { name: "YouTube", icon: FaYoutube, href: "https://www.youtube.com/@ConsultEdge.Global" },
 ];
 
 const trustSignals = [
@@ -106,13 +107,13 @@ export default function Footer() {
         }
       `}</style>
 
-      <div ref={footerRef} className="mx-auto w-full max-w-360 px-4 pt-4 md:px-6">
+      <div ref={footerRef} className="mx-auto w-full max-w-360 px-4 pt-8 md:px-6">
         {/* CTA SECTION */}
         <div className="relative overflow-hidden rounded-[2.1rem] border border-cyan-400/20 bg-linear-to-r from-blue-950 via-slate-900 to-cyan-950 p-6 shadow-[0_24px_70px_-30px_rgba(34,211,238,0.3)] md:p-8 lg:p-10">
           <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div className="space-y-4">
               <Badge className="border-white/15 bg-white/10 text-white">
-                <Sparkles className="mr-1 size-3.5" />
+                <Gem className="mr-1 size-3.5" />
                 Need help getting started?
               </Badge>
 
@@ -157,13 +158,13 @@ export default function Footer() {
       </div>
 
       {/* MAIN FOOTER */}
-      <div className="mx-auto grid w-full max-w-360 gap-10 px-4 py-12 md:grid-cols-[1.2fr_0.7fr_0.7fr_0.95fr] md:px-6">
+      <div className="mx-auto mt-2 grid w-full max-w-360 items-start gap-10 px-4 py-12 md:grid-cols-[1.1fr_0.75fr_0.75fr_1fr] md:px-6">
 
         {/* BRAND */}
         <div className="space-y-5">
           <Link href="/" className="inline-flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-linear-to-br from-blue-600 via-cyan-600 to-sky-500 text-white">
-              <Sparkles className="size-5" />
+              <Gem className="size-5" />
             </div>
             <div>
               <p className="text-xl font-semibold text-white">ConsultEdge</p>
@@ -176,16 +177,21 @@ export default function Footer() {
           </p>
 
           <div className="flex gap-2">
-            {socialLinks.map((s) => (
-              <a
-                key={s.name}
-                href={s.href}
-                target="_blank"
-                className="footer-social-anim flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-xs"
-              >
-                {s.label}
-              </a>
-            ))}
+            {socialLinks.map((s) => {
+              const Icon = s.icon;
+              return (
+                <a
+                  key={s.name}
+                  href={s.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={s.name}
+                  className="footer-social-anim flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-200"
+                >
+                  <Icon className="size-4" />
+                </a>
+              );
+            })}
           </div>
         </div>
 
@@ -228,25 +234,30 @@ export default function Footer() {
         </div>
 
         {/* CONTACT */}
-        <div className="space-y-4 text-sm text-slate-300">
-          <div className="flex items-start gap-2">
-            <Mail className="size-4" />
+        <div>
+          <h3 className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
+            Contact
+          </h3>
+          <div className="space-y-4 text-sm text-slate-300">
+          <div className="flex items-center gap-2">
+            <Mail className="size-4 shrink-0" />
             sales@consultedge.global
           </div>
-          <div className="flex items-start gap-2">
-            <Phone className="size-4" />
+          <div className="flex items-center gap-2">
+            <Phone className="size-4 shrink-0" />
             +91 84482 96800
           </div>
-          <div className="flex items-start gap-2">
-            <MapPin className="size-4" />
+          <div className="flex items-center gap-2">
+            <MapPin className="size-4 shrink-0" />
             Expert consultation support worldwide
+          </div>
           </div>
         </div>
       </div>
 
       {/* BOTTOM BAR */}
       <div className="border-t border-white/10">
-        <div className="mx-auto flex max-w-360 flex-col justify-between gap-2 px-4 py-4 text-sm text-slate-400 md:flex-row md:px-6">
+        <div className="mx-auto flex max-w-360 flex-col items-center justify-between gap-2 px-4 py-4 text-sm text-slate-400 md:flex-row md:px-6">
           <p>© {new Date().getFullYear()} ConsultEdge</p>
           <div className="flex gap-4">
             <Link href="/experts" className="hover:text-white">Browse experts</Link>

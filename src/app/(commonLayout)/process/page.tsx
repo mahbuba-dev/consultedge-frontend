@@ -8,7 +8,7 @@ export const metadata = {
 
 export default function HowItWorksRoute() {
   return (
-    <div className="mx-auto w-full max-w-[1440px] px-4 md:px-6">
+    <div className="mx-auto w-full max-w-360 px-4 md:px-6">
       <HowItWorksPage />
     </div>
   );

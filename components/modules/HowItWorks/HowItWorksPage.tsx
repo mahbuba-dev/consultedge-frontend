@@ -12,8 +12,9 @@ import {
   MessageCircle,
   Search,
   ShieldCheck,
-  Sparkles,
+  Route,
   Star,
+  Timer,
   TrendingUp,
   Video,
   Zap,
@@ -39,7 +40,7 @@ function CountUp({
   const [count, setCount] = useState(0);
 
   useEffect(() => {
-    let start = 0;
+    const start = 0;
     const startTime = performance.now();
 
     const animate = (now: number) => {
@@ -167,7 +168,7 @@ export default function HowItWorksPage() {
       {/* ── Page header ─────────────────────────────────────────────── */}
       <section className="space-y-5 text-center">
         <Badge className="border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950/50 dark:text-blue-300">
-          <Sparkles className="mr-1.5 size-3.5" />
+          <Route className="mr-1.5 size-3.5" />
           Simple by design
         </Badge>
         <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white md:text-5xl">
@@ -298,7 +299,7 @@ export default function HowItWorksPage() {
 
         <div className="relative flex flex-col items-center gap-8 text-center">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-500/30 bg-blue-500/10 px-3.5 py-1.5 text-xs font-semibold tracking-wide text-blue-300">
-            <Sparkles className="size-3" />
+            <Timer className="size-3" />
             Start in under 2 minutes
           </span>
 

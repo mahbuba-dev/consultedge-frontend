@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,15 +17,14 @@ export default function ReviewModal({ open, onSubmit, onClose, loading, consulta
 	const [rating, setRating] = useState(0);
 	const [comment, setComment] = useState("");
 
-	useEffect(() => {
-		if (!open) {
-			setRating(0);
-			setComment("");
-		}
-	}, [open]);
+	const handleClose = () => {
+		setRating(0);
+		setComment("");
+		onClose();
+	};
 
 	return (
-		<Dialog open={open} onOpenChange={onClose}>
+		<Dialog open={open} onOpenChange={(nextOpen) => (!nextOpen ? handleClose() : undefined)}>
 			<DialogContent className="max-w-md">
 				<DialogHeader>
 					<DialogTitle className="flex items-center gap-2">
@@ -66,7 +65,7 @@ export default function ReviewModal({ open, onSubmit, onClose, loading, consulta
 >
   Submit Review
 </Button>
-					<Button variant="ghost" onClick={onClose} className="w-full">
+					<Button variant="ghost" onClick={handleClose} className="w-full">
 						Skip
 					</Button>
 				</div>

@@ -1,5 +1,3 @@
-import type { IExpert } from "./expert.types";
-
 export type AIRequestSource = "homepage" | "navbar" | "experts-page" | "newsletter" | "content";
 
 export interface AIBehaviorContext {
@@ -14,57 +12,88 @@ export interface AIBehaviorContext {
 // Recommendations
 // ---------------------------------------------
 export interface AIRecommendationRequest {
-  limit?: number;
-  source?: AIRequestSource;
-  behavior?: AIBehaviorContext;
-  /** Optional industry filter id. */
-  industryId?: string;
+  viewedExperts: string[];
+  exploredIndustries: string[];
+  searchHistory: string[];
+  clickedCategories: string[];
 }
 
-export interface AIRecommendationItem {
-  expertId: string;
-  /** Optional pre-resolved expert payload from backend. */
-  expert?: IExpert;
-  score: number;
-  reason?: string;
+export interface AIRecommendationExpert {
+  name: string;
+  title: string;
+  specialization: string;
+  description: string;
+  experienceYears: number;
+  fee: number;
+  whyReason: string;
+  rankingScore: number;
 }
 
 export interface AIRecommendationResponse {
-  items: AIRecommendationItem[];
-  generatedAt: string;
-  /** Optional hint for what the recommendation is for. */
-  intent?: "personalized" | "trending" | "fallback";
+  mode: "cold-start" | "personalized";
+  activityCount: number;
+  experts: AIRecommendationExpert[];
+}
+
+// ---------------------------------------------
+// Admin industry creation
+// ---------------------------------------------
+export interface AIIndustryCreationRequest {
+  industryName: string;
+}
+
+export interface AIIndustryCreationResponse {
+  industryName: string;
+  industryDescription: string;
+  idealExpertTypes: string[];
+  commonUseCases: string[];
+  shortTagline: string;
 }
 
 // ---------------------------------------------
 // Search
 // ---------------------------------------------
-export interface AISearchRequest {
-  query: string;
-  limit?: number;
-  source?: AIRequestSource;
-  behavior?: AIBehaviorContext;
+export interface AISearchUserActivity {
+  viewedExperts: string[];
+  exploredIndustries: string[];
+  searchHistory: string[];
+  clickedCategories: string[];
 }
 
-export interface AISearchSuggestion {
+export interface AISearchRequest {
+  query: string;
+  userActivity: AISearchUserActivity;
+}
+
+export type AISearchResultType = "expert" | "industry" | "testimonial" | "trending";
+
+export interface AISearchResultItem {
+  id: string;
+  type: AISearchResultType;
   label: string;
-  type: "expert" | "industry" | "topic";
-  href?: string;
-  /** Linked entity id when type !== "topic". */
-  refId?: string;
+  subLabel?: string;
+  expertId?: string;
+  slug?: string;
+  matchScore?: number;
 }
 
 export interface AISearchResponse {
-  query: string;
-  suggestions: AISearchSuggestion[];
-  experts: IExpert[];
-  rewrittenQuery?: string;
+  experts: AISearchResultItem[];
+  industries: AISearchResultItem[];
+  testimonials: AISearchResultItem[];
+  trending: AISearchResultItem[];
+  aiSuggestions: AISearchResultItem[];
+  recentSearches: string[];
 }
 
 // ---------------------------------------------
 // Summary (used by content suggestions + newsletter preview)
 // ---------------------------------------------
 export interface AISummaryRequest {
+  /** Raw text to summarize (backend expects this field). */
+  text?: string;
+  /** Optional audience hint passed to backend summarizer. */
+  audience?: string;
   /** Free-form topic, industry name, or query string. */
   topic: string;
   industryIds?: string[];
@@ -129,6 +158,59 @@ export interface AIDocumentAnalysisRequest {
 }
 
 export interface AIDocumentAnalysisResponse {
+  // ---------------------------------------------
+  // Persistent AI Chat (dashboard chatbot)
+  // ---------------------------------------------
+  export type AIMessageFeedback = "LIKE" | "DISLIKE" | null;
+
+  export interface AIPersistentMessage {
+    id: string;
+    role: "user" | "assistant";
+    content: string;
+    feedback: AIMessageFeedback;
+    model: string | null;
+    provider: string | null;
+    tokensUsed: number;
+    latencyMs: number;
+    createdAt: string;
+  }
+
+  export interface AIConversationSummary {
+    id: string;
+    title: string;
+    preview: string;
+    lastMessageRole: "user" | "assistant";
+    lastMessageAt: string;
+    messageCount: number;
+    createdAt: string;
+    updatedAt: string;
+  }
+
+  export interface AIConversationDetail {
+    id: string;
+    title: string;
+    createdAt: string;
+    updatedAt: string;
+    messages: AIPersistentMessage[];
+  }
+
+  export interface AISendMessageRequest {
+    message: string;
+    context?: string;
+    conversationId?: string;
+  }
+
+  export interface AISendMessageResponse {
+    conversation: {
+      id: string;
+      title: string;
+      createdAt: string;
+      updatedAt: string;
+    };
+    userMessage: AIPersistentMessage;
+    assistantMessage: AIPersistentMessage;
+  }
+
   summary?: string;
   keyPoints?: string[];
   risks?: string[];

@@ -236,7 +236,7 @@
 
 
 import { ApiResponse } from "@/src/types/api.types";
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 
 // ---------------------------------------------
 // Normalize API Base URL
@@ -408,9 +408,14 @@ const httpPost = async <TData>(
 ): Promise<ApiResponse<TData>> => {
   try {
     const instance = await axiosInstance();
+    // When data is FormData, remove the default "Content-Type: application/json"
+    // header so the browser can set "multipart/form-data" with the correct boundary.
+    const isFormData = typeof FormData !== "undefined" && data instanceof FormData;
     const response = await instance.post<ApiResponse<TData>>(endpoint, data, {
       params: options?.params,
-      headers: options?.headers,
+      headers: isFormData
+        ? { "Content-Type": undefined, ...options?.headers }
+        : options?.headers,
       withCredentials: options?.withCredentials,
     });
     return response.data;

@@ -42,14 +42,11 @@ export default function VerifyEmailPage() {
   const [serversuccess, setServersuccess] = useState<string | null>(null);
 
   const [timer, setTimer] = useState(120);
-  const [canResend, setCanResend] = useState(false);
+  const canResend = timer <= 0;
 
   // Countdown timer
   useEffect(() => {
-    if (timer <= 0) {
-      setCanResend(true);
-      return;
-    }
+    if (timer <= 0) return;
 
     const interval = setInterval(() => setTimer((t) => t - 1), 1000);
     return () => clearInterval(interval);
@@ -76,7 +73,6 @@ export default function VerifyEmailPage() {
       setServerError(null);
       toast.success("A new OTP has been sent to your email.");
       setTimer(120);
-      setCanResend(false);
     },
     onError: (err: any) => {
       const raw = err?.response?.data?.message || err?.message;
@@ -96,7 +92,7 @@ export default function VerifyEmailPage() {
       setServersuccess(null);
 
       try {
-        const res = await verifyMutation.mutateAsync({
+        const _res = await verifyMutation.mutateAsync({
           email: email!,
           otp: value.otp,
         });

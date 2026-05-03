@@ -7,8 +7,8 @@ import {
   CheckCircle2,
   Loader2,
   Mail,
+  Newspaper,
   Send,
-  Sparkles,
   TrendingUp,
 } from "lucide-react";
 
@@ -31,31 +31,33 @@ const BASE_TOPICS = [
 ];
 
 export default function SmartNewsletter({ industries }: SmartNewsletterProps) {
+  const [hydrated, setHydrated] = useState(false);
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
-  const [hydrated, setHydrated] = useState(false);
   const [tick, setTick] = useState(0);
 
   useEffect(() => {
     setHydrated(true);
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw) as { email?: string; subscribed?: boolean };
-        if (parsed.subscribed) setSubscribed(true);
-        if (parsed.email) setEmail(parsed.email);
-      }
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as { email?: string; subscribed?: boolean };
+      setEmail(parsed.email ?? "");
+      setSubscribed(Boolean(parsed.subscribed));
     } catch {
-      /* ignore */
+      // Ignore malformed localStorage payloads.
     }
+  }, []);
+
+  useEffect(() => {
     const handler = () => setTick((t) => t + 1);
     window.addEventListener("consultedge:behavior-updated", handler);
     return () => window.removeEventListener("consultedge:behavior-updated", handler);
   }, []);
 
   const personalised = useMemo(
-    () => hydrated && hasPersonalSignal(getBehavior()),
+    () => (hydrated ? hasPersonalSignal(getBehavior()) : false),
     [hydrated, tick],
   );
 
@@ -92,7 +94,7 @@ export default function SmartNewsletter({ industries }: SmartNewsletterProps) {
         kind: "newsletter-preview",
         source: "newsletter",
       }),
-    enabled: hydrated && previewTopic.length > 0,
+    enabled: previewTopic.length > 0,
     staleTime: 1000 * 60 * 30,
     gcTime: 1000 * 60 * 60,
   });
@@ -111,7 +113,7 @@ export default function SmartNewsletter({ industries }: SmartNewsletterProps) {
     if (!trimmed) return;
     // simple HTML5-grade validation; backend will revalidate
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
-      toast.error("That email doesn't look right.");
+      toast.error("That email doesn\'t look right.");
       return;
     }
 
@@ -137,7 +139,11 @@ export default function SmartNewsletter({ industries }: SmartNewsletterProps) {
   };
 
   return (
-    <section className="relative overflow-hidden rounded-[2.25rem] border border-blue-100/70 bg-linear-to-br from-white via-blue-50/40 to-cyan-50/40 p-6 shadow-[0_30px_70px_-42px_rgba(37,99,235,0.35)] md:p-9 dark:border-white/10 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900">
+    <section id="newsletter-section" className="relative scroll-mt-28 overflow-hidden rounded-(--ce-shell-radius) border border-blue-100/70 bg-white/50 p-6 shadow-(--ce-shell-shadow-strong) backdrop-blur-2xl md:rounded-(--ce-shell-radius-md) md:p-9 dark:rounded-(--ce-shell-radius-dark) dark:border-white/10 dark:bg-slate-950/44">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-[linear-gradient(128deg,rgba(255,255,255,0.45),rgba(255,255,255,0.08)_44%,rgba(56,189,248,0.1)_100%)] dark:bg-[linear-gradient(128deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02)_44%,rgba(56,189,248,0.08)_100%)]"
+      />
       <div
         aria-hidden
         className="pointer-events-none absolute -top-20 right-0 size-60 rounded-full bg-cyan-300/20 blur-3xl dark:bg-cyan-500/10"
@@ -196,9 +202,9 @@ export default function SmartNewsletter({ industries }: SmartNewsletterProps) {
             <div className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-200">
               <CheckCircle2 className="size-5 shrink-0" />
               <div>
-                <p className="font-medium">You're subscribed</p>
+                <p className="font-medium">You&apos;re subscribed</p>
                 <p className="text-xs opacity-80">
-                  Look out for the next issue — we'll keep it short.
+                  Look out for the next issue - we&apos;ll keep it short.
                 </p>
               </div>
             </div>
@@ -211,7 +217,7 @@ export default function SmartNewsletter({ industries }: SmartNewsletterProps) {
 
         <div className="rounded-2xl border border-blue-200/60 bg-white/80 p-5 backdrop-blur dark:border-white/10 dark:bg-slate-900/70">
           <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-200">
-            <Sparkles className="size-3.5" />
+            <Newspaper className="size-3.5" />
             {personalised ? "Your next issue will include" : "What you'll get"}
           </div>
           <ul className="space-y-2.5">

@@ -16,7 +16,6 @@ type ExpertDetailsProps = {
 export default function BookConsultationButton({
   expert,
   availability = [],
-  testimonials = [],
   isLoggedIn = false,
   userRole,
 }: ExpertDetailsProps) {

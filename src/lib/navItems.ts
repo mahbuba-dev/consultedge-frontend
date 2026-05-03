@@ -1,3 +1,4 @@
+import { zhCN } from "date-fns/locale";
 import { NavSection } from "../types/dashboard.types";
 import { getDefaultDashboardRoute, UserRole } from "./authUtilis";
 
@@ -158,6 +159,16 @@ export const clientNavItems: NavSection[] = [
         icon: "MessageCircleMore",
       },
       
+    ],
+  },
+  {
+    title: "AI",
+    items: [
+      {
+        title: "AI Assistant",
+        href: "/dashboard/ai-chat",
+        icon: "Sparkles",
+      },
     ],
   },
  

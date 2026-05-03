@@ -56,9 +56,11 @@ const DataTableSearch = ({
   }, []);
 
   useEffect(() => {
+    if (value === initialValue) return;
     skipNextDebounceRef.current = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setValue(initialValue);
-  }, [initialValue]);
+  }, [initialValue, value]);
 
   useEffect(() => {
     if (skipNextDebounceRef.current) {
@@ -142,7 +144,7 @@ const DataTableSearch = ({
                 }}
                 className={cn(
                   "group flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left transition-all duration-200",
-                  "hover:-translate-y-[1px] hover:bg-blue-50/80 dark:hover:bg-blue-500/10",
+                  "hover:-translate-y-px hover:bg-blue-50/80 dark:hover:bg-blue-500/10",
                 )}
               >
                 <span className="shrink-0 rounded-full bg-white/75 p-1 shadow-sm dark:bg-slate-900/70">

@@ -8,11 +8,37 @@ import { ArrowUpRight } from "lucide-react";
 // during the Vercel build (e.g. Render cold start).
 export const dynamic = "force-dynamic";
 
-export default async function IndustriesPage() {
-  const industriesResponse = await getAllIndustries();
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+
+const PAGE_SIZE = 12;
+
+export default async function IndustriesPage({
+  searchParams,
+}: {
+  searchParams?: SearchParams;
+}) {
+  const resolvedSearchParams = (await searchParams) ?? {};
+  const requestedPage = Number(
+    Array.isArray(resolvedSearchParams.page)
+      ? resolvedSearchParams.page[0]
+      : resolvedSearchParams.page,
+  );
+  const currentPage = Number.isFinite(requestedPage) && requestedPage > 0 ? requestedPage : 1;
+
+  const industriesResponse = await getAllIndustries({
+    page: currentPage,
+    limit: PAGE_SIZE,
+    sortBy: "createdAt",
+    sortOrder: "desc",
+  });
   const industries: IIndustry[] = Array.isArray(industriesResponse?.data)
     ? industriesResponse.data
     : [];
+  const meta = industriesResponse?.meta;
+  const totalPages = Math.max(1, Number(meta?.totalPages ?? 1));
+  const safePage = Math.min(currentPage, totalPages);
+  const previousPage = Math.max(1, safePage - 1);
+  const nextPage = Math.min(totalPages, safePage + 1);
 
   return (
     <main className="relative min-h-screen overflow-hidden py-12 px-4 md:px-12">
@@ -26,7 +52,7 @@ export default async function IndustriesPage() {
         className="pointer-events-none absolute inset-0 -z-10 bg-linear-to-b from-white via-blue-50/40 to-cyan-50/30 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900"
       />
 
-      <section className="max-w-6xl mx-auto">
+      <section className="mx-auto max-w-360">
         <div className="mx-auto mb-12 max-w-2xl text-center">
           <span className="mb-4 inline-flex items-center gap-2 rounded-full border border-blue-200/70 bg-white/70 px-3 py-1 text-xs font-medium text-blue-700 backdrop-blur dark:border-white/10 dark:bg-white/5 dark:text-cyan-200">
             Industries
@@ -81,6 +107,36 @@ export default async function IndustriesPage() {
             </Link>
           ))}
         </div>
+
+        {totalPages > 1 ? (
+          <div className="mt-8 flex items-center justify-between rounded-2xl border border-blue-200/70 bg-white/70 px-4 py-3 dark:border-white/10 dark:bg-slate-950/50">
+            <Link
+              href={safePage <= 1 ? "/industries" : `/industries?page=${previousPage}`}
+              className={`rounded-xl border px-4 py-2 text-sm font-medium transition ${
+                safePage <= 1
+                  ? "pointer-events-none opacity-50"
+                  : "hover:border-blue-300 hover:bg-blue-50 dark:hover:border-blue-400/40 dark:hover:bg-slate-900"
+              }`}
+            >
+              Previous
+            </Link>
+
+            <p className="text-sm text-muted-foreground">
+              Page <span className="font-medium text-foreground">{safePage}</span> of {totalPages}
+            </p>
+
+            <Link
+              href={safePage >= totalPages ? `/industries?page=${safePage}` : `/industries?page=${nextPage}`}
+              className={`rounded-xl border px-4 py-2 text-sm font-medium transition ${
+                safePage >= totalPages
+                  ? "pointer-events-none opacity-50"
+                  : "hover:border-blue-300 hover:bg-blue-50 dark:hover:border-blue-400/40 dark:hover:bg-slate-900"
+              }`}
+            >
+              Next
+            </Link>
+          </div>
+        ) : null}
       </section>
     </main>
   );

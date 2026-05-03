@@ -82,25 +82,22 @@ export default function PredictiveCoupon({
   consultationFee,
   forceShow,
 }: PredictiveCouponProps) {
-  const [hydrated, setHydrated] = useState(false);
   const [tick, setTick] = useState(0);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    setHydrated(true);
     const handler = () => setTick((t) => t + 1);
     window.addEventListener("consultedge:behavior-updated", handler);
     return () => window.removeEventListener("consultedge:behavior-updated", handler);
   }, []);
 
   const offer = useMemo<CouponOffer | null>(() => {
-    if (!hydrated) return null;
     const picked = pickCoupon({ industryName: industryName ?? null });
 
     // Only show first-visit on the first session unless explicitly forced.
     if (picked?.tone === "first-visit" && !forceShow) return null;
     return picked;
-  }, [hydrated, industryName, forceShow, tick]);
+  }, [industryName, forceShow, tick]);
 
   // Track impression
   useEffect(() => {

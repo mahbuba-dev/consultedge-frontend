@@ -1,18 +1,22 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
 import {
   ArrowRight,
+  BriefcaseBusiness,
+  ChevronDown,
   LayoutDashboard,
   LogIn,
   LogOut,
   Menu,
   Moon,
-  Sparkles,
+  Settings,
   Sun,
+  UserCircle2,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -32,8 +36,14 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import LogoutButton from "@/components/modules/auth/LogoutButton";
-import AISearchBar from "@/components/AI/AISearchBar";
+import HomeSearchBar from "@/components/modules/HomePage/search/HomeSearchBar";
 
 interface NavItem {
   label: string;
@@ -65,11 +75,6 @@ const NavbarClient = ({
 }: NavbarClientProps) => {
   const pathname = usePathname();
   const { resolvedTheme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const isActiveRoute = (href: string) => {
     if (href === "/") {
@@ -79,8 +84,36 @@ const NavbarClient = ({
     return pathname?.startsWith(href);
   };
 
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   const isDarkMode = mounted && resolvedTheme === "dark";
   const themeLabel = isDarkMode ? "Light mode" : "Dark mode";
+
+  const visiblePrimary = navItems.filter(
+    (item) => item.label === "Home" || item.label === "Experts",
+  );
+  const discoverItems = navItems.filter((item) =>
+    ["Industries", "Insights", "Testimonials", "Process", "FAQ"].includes(item.label),
+  );
+  const moreItems = navItems.filter(
+    (item) =>
+      !visiblePrimary.some((x) => x.href === item.href) &&
+      !discoverItems.some((x) => x.href === item.href),
+  );
+
+  const isAdmin = role === "ADMIN";
+  const isExpert = role === "EXPERT";
+  const bookingHref = isAdmin
+    ? "/admin/dashboard/bookings-management"
+    : isExpert
+    ? "/expert/dashboard/my-sessions"
+    : "/dashboard/consultations";
+  const bookingLabel = isAdmin
+    ? "Bookings Management"
+    : isExpert
+    ? "My Sessions"
+    : "My Bookings";
 
   const handleThemeToggle = (e?: React.MouseEvent<HTMLButtonElement>) => {
     const button = e?.currentTarget;
@@ -104,8 +137,8 @@ const NavbarClient = ({
         <div className="relative flex items-center justify-between gap-3 rounded-[1.35rem] border border-white/60 bg-white/80 px-3 py-2.5 shadow-[0_20px_45px_-28px_rgba(15,23,42,0.45)] backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/70 overflow-visible">
           <div className="navbar-gradient-motion" aria-hidden="true" />
           <Link href="/" className="group flex min-w-0 items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br from-blue-600 via-cyan-600 to-sky-500 text-white shadow-lg shadow-blue-500/25 transition-transform duration-200 ease-out group-hover:scale-102 group-hover:drop-shadow-[0_2px_12px_rgba(59,130,246,0.25)]">
-              <Sparkles className="size-5" />
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl shadow-lg shadow-blue-500/25 transition-transform duration-200 ease-out group-hover:scale-102 group-hover:drop-shadow-[0_2px_12px_rgba(59,130,246,0.25)]">
+              <Image src="/logo-consultedge.png" alt="ConsultEdge" width={40} height={40} className="h-full w-full object-contain" />
             </div>
 
             <div className="min-w-0">
@@ -124,7 +157,7 @@ const NavbarClient = ({
           </Link>
 
           <nav className="hidden items-center gap-1 rounded-full border border-slate-200/70 bg-white/75 px-2 py-1 shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-950/60 lg:flex">
-            {navItems.map((item) => {
+            {visiblePrimary.map((item) => {
               const isActive = isActiveRoute(item.href);
 
               return (
@@ -146,11 +179,77 @@ const NavbarClient = ({
                 </Link>
               );
             })}
+
+            {discoverItems.length > 0 ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="h-9 rounded-full px-3 text-sm font-medium text-muted-foreground hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-slate-800 dark:hover:text-blue-200"
+                  >
+                    Discover
+                    <ChevronDown className="ml-1 size-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-52 rounded-2xl border border-slate-200/70 bg-white/95 p-1.5 shadow-xl dark:border-white/10 dark:bg-slate-950/95">
+                  {discoverItems.map((item) => {
+                    const isActive = isActiveRoute(item.href);
+                    return (
+                      <DropdownMenuItem key={item.href} asChild>
+                        <Link
+                          href={item.href}
+                          className={`rounded-xl px-3 py-2 text-sm ${
+                            isActive
+                              ? "bg-blue-50 font-medium text-blue-700 dark:bg-blue-500/10 dark:text-blue-200"
+                              : "text-foreground"
+                          }`}
+                        >
+                          {item.label}
+                        </Link>
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : null}
+
+            {moreItems.length > 0 ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="h-9 rounded-full px-3 text-sm font-medium text-muted-foreground hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-slate-800 dark:hover:text-blue-200"
+                  >
+                    More
+                    <ChevronDown className="ml-1 size-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48 rounded-2xl border border-slate-200/70 bg-white/95 p-1.5 shadow-xl dark:border-white/10 dark:bg-slate-950/95">
+                  {moreItems.map((item) => {
+                    const isActive = isActiveRoute(item.href);
+                    return (
+                      <DropdownMenuItem key={item.href} asChild>
+                        <Link
+                          href={item.href}
+                          className={`rounded-xl px-3 py-2 text-sm ${
+                            isActive
+                              ? "bg-blue-50 font-medium text-blue-700 dark:bg-blue-500/10 dark:text-blue-200"
+                              : "text-foreground"
+                          }`}
+                        >
+                          {item.label}
+                        </Link>
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : null}
           </nav>
 
           <div className="hidden items-center gap-2.5 lg:flex">
             <div className="hidden w-64 xl:block">
-              <AISearchBar />
+              <HomeSearchBar />
             </div>
             <TooltipProvider delayDuration={300}>
               {/* Theme toggle */}
@@ -163,7 +262,7 @@ const NavbarClient = ({
                     onClick={handleThemeToggle}
                     className="relative size-9 rounded-full border border-slate-200/80 bg-white/80 text-slate-600 backdrop-blur transition-transform duration-300 hover:scale-110 hover:bg-blue-50 hover:text-blue-700 dark:border-white/10 dark:bg-slate-900/70 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-blue-300"
                   >
-                    {isDarkMode ? <Sun className="size-4" /> : <Moon className="size-4" />}
+                    {!mounted ? <Moon className="size-4" /> : isDarkMode ? <Sun className="size-4" /> : <Moon className="size-4" />}
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" className="text-xs">
@@ -174,79 +273,61 @@ const NavbarClient = ({
               {isLoggedIn ? (
                 <>
                   {/* Avatar chip with name tooltip */}
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="flex size-9 cursor-default items-center justify-center rounded-full bg-linear-to-br from-blue-600 to-cyan-500 text-xs font-bold text-white shadow-sm ring-2 ring-blue-200/60 dark:ring-blue-500/20">
-                        {getInitials(userLabel)}
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom" className="text-xs">
-                      <span className="font-semibold">{userLabel ?? "ConsultEdge user"}</span>
-                      {role ? (
-                        <span className="ml-1.5 font-normal uppercase tracking-wide text-muted-foreground">
-                          · {role}
-                        </span>
-                      ) : null}
-                    </TooltipContent>
-                  </Tooltip>
-
-                  {/* Dashboard */}
-                  <Tooltip>
-                    <TooltipTrigger asChild>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
                       <Button
-                        asChild
-                          variant="ghost"
-                          size="icon"
-                          className="size-9 rounded-full border border-slate-200/80 bg-white/80 text-slate-600 backdrop-blur hover:bg-blue-50 hover:text-blue-700 dark:border-white/10 dark:bg-slate-900/70 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-blue-300"
-                        >
-                        <Link href={dashboardHref}>
-                          <LayoutDashboard className="size-4" />
-                        </Link>
+                        variant="ghost"
+                        className="h-9 rounded-full border border-slate-200/80 bg-white/80 px-2.5 text-slate-700 backdrop-blur hover:bg-blue-50 hover:text-blue-700 dark:border-white/10 dark:bg-slate-900/70 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-blue-200"
+                      >
+                        <span className="mr-2 flex size-6 items-center justify-center rounded-full bg-linear-to-br from-blue-600 to-cyan-500 text-[10px] font-bold text-white">
+                          {getInitials(userLabel)}
+                        </span>
+                        <span className="max-w-22 truncate text-xs font-semibold">{userLabel ?? "Profile"}</span>
+                        <ChevronDown className="ml-1 size-4" />
                       </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom" className="text-xs">
-                      Dashboard
-                    </TooltipContent>
-                  </Tooltip>
-
-                  {/* Logout */}
-                  <LogoutButton className="inline-flex h-9 items-center justify-center rounded-full border border-slate-200/80 bg-white/80 px-3 text-xs font-medium text-slate-600 backdrop-blur transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-60 dark:border-white/10 dark:bg-slate-900/70 dark:text-slate-300 dark:hover:bg-red-950/40 dark:hover:text-red-400">
-                    <LogOut className="mr-1.5 size-3.5" />
-                    Log out
-                  </LogoutButton>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56 rounded-2xl border border-slate-200/70 bg-white/95 p-1.5 shadow-xl dark:border-white/10 dark:bg-slate-950/95">
+                      <DropdownMenuItem asChild>
+                        <Link href={dashboardHref} className="rounded-xl px-3 py-2 text-sm">
+                          <LayoutDashboard className="mr-2 size-4" />
+                          Dashboard
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href={bookingHref} className="rounded-xl px-3 py-2 text-sm">
+                          <BriefcaseBusiness className="mr-2 size-4" />
+                          {bookingLabel}
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/my-profile" className="rounded-xl px-3 py-2 text-sm">
+                          <Settings className="mr-2 size-4" />
+                          Settings
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="p-0 focus:bg-transparent">
+                        <LogoutButton className="inline-flex h-9 w-full items-center rounded-xl px-3 text-sm text-red-600 transition-colors hover:bg-red-50 dark:text-red-300 dark:hover:bg-red-950/30">
+                          <LogOut className="mr-2 size-4" />
+                          Logout
+                        </LogoutButton>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </>
               ) : (
                 <>
-                  {/* Log in */}
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        asChild
-                          variant="ghost"
-                          size="icon"
-                          className="size-9 rounded-full border border-slate-200/80 bg-white/80 text-slate-600 backdrop-blur hover:bg-blue-50 hover:text-blue-700 dark:border-white/10 dark:bg-slate-900/70 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-blue-300"
-                        >
-                        <Link href="/login">
-                          <LogIn className="size-4" />
-                        </Link>
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom" className="text-xs">
-                      Log in
-                    </TooltipContent>
-                  </Tooltip>
-
-                  {/* Get started */}
                   <Button
                     asChild
                     size="sm"
-                    className="rounded-full bg-linear-to-r from-blue-600 to-cyan-500 px-4 text-xs font-semibold text-white hover:from-blue-700 hover:to-cyan-600"
+                    variant="outline"
+                    className="rounded-full border-slate-200 bg-white/90 px-4 text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-700 dark:border-white/10 dark:bg-slate-900/70 dark:text-slate-200 dark:hover:bg-slate-800"
                   >
-                    <Link href="/register" className="text-white">
-                      Get Started
-                      <ArrowRight className="ml-1.5 size-3.5" />
+                    <Link href="/login" className="text-inherit">
+                      <LogIn className="mr-1.5 size-3.5" />
+                      Login
                     </Link>
                   </Button>
+
                 </>
               )}
             </TooltipProvider>
@@ -265,8 +346,14 @@ const NavbarClient = ({
                 <SheetHeader className="px-4 pb-2">
                   <div className="rounded-2xl border border-slate-200/70 bg-linear-to-br from-blue-50 via-white to-cyan-50 p-4 text-left dark:border-white/10 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900">
                     <div className="mb-3 flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-linear-to-br from-blue-600 via-cyan-600 to-sky-500 text-white shadow-lg shadow-blue-500/20">
-                        <Sparkles className="size-5" />
+                      <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-2xl shadow-lg shadow-blue-500/20">
+                        <Image
+                          src="/logo-consultedge.png"
+                          alt="ConsultEdge"
+                          width={40}
+                          height={40}
+                          className="h-full w-full object-contain"
+                        />
                       </div>
                       <div>
                         <SheetTitle>ConsultEdge</SheetTitle>
@@ -286,7 +373,7 @@ const NavbarClient = ({
                 </SheetHeader>
 
                 <div className="px-4 pb-3">
-                  <AISearchBar variant="mobile" />
+                  <HomeSearchBar variant="mobile" />
                 </div>
 
                 <div className="flex flex-1 flex-col gap-2 px-4 pb-4">
@@ -317,7 +404,7 @@ const NavbarClient = ({
                     onClick={handleThemeToggle}
                     className="relative w-full justify-center rounded-full dark:border-white/10 dark:bg-slate-950/70 dark:text-slate-100"
                   >
-                    {isDarkMode ? <Sun className="mr-2 size-4" /> : <Moon className="mr-2 size-4" />}
+                    {!mounted ? <Moon className="mr-2 size-4" /> : isDarkMode ? <Sun className="mr-2 size-4" /> : <Moon className="mr-2 size-4" />}
                     {themeLabel}
                   </Button>
 
@@ -328,6 +415,24 @@ const NavbarClient = ({
                           <Link href={dashboardHref}>
                             <LayoutDashboard className="mr-2 size-4" />
                             Dashboard
+                          </Link>
+                        </Button>
+                      </SheetClose>
+
+                      <SheetClose asChild>
+                        <Button asChild variant="outline" className="w-full justify-center rounded-full dark:border-white/10 dark:bg-slate-950/70 dark:text-slate-100">
+                          <Link href={bookingHref}>
+                            <BriefcaseBusiness className="mr-2 size-4" />
+                            {bookingLabel}
+                          </Link>
+                        </Button>
+                      </SheetClose>
+
+                      <SheetClose asChild>
+                        <Button asChild variant="outline" className="w-full justify-center rounded-full dark:border-white/10 dark:bg-slate-950/70 dark:text-slate-100">
+                          <Link href="/my-profile">
+                            <Settings className="mr-2 size-4" />
+                            Settings
                           </Link>
                         </Button>
                       </SheetClose>
@@ -343,7 +448,7 @@ const NavbarClient = ({
                         <Button asChild variant="outline" className="w-full rounded-full dark:border-white/10 dark:bg-slate-950/70 dark:text-slate-100">
                           <Link href="/login">
                             <LogIn className="mr-2 size-4" />
-                            Log in
+                            Login
                           </Link>
                         </Button>
                       </SheetClose>
@@ -351,9 +456,15 @@ const NavbarClient = ({
                       <SheetClose asChild>
                         <Button asChild className="w-full rounded-full bg-linear-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600">
                           <Link href="/register">
-                            Get Started
+                            Sign up
                             <ArrowRight className="ml-2 size-4" />
                           </Link>
+                        </Button>
+                      </SheetClose>
+
+                      <SheetClose asChild>
+                        <Button asChild variant="outline" className="w-full rounded-full dark:border-white/10 dark:bg-slate-950/70 dark:text-slate-100">
+                          <Link href="/apply-expert">Apply Expert</Link>
                         </Button>
                       </SheetClose>
                     </>

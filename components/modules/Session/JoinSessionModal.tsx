@@ -13,7 +13,7 @@ interface JoinSessionModalProps {
 }
 
 export default function JoinSessionModal({ open, scheduledStart, onJoin, onClose, loading }: JoinSessionModalProps) {
-	const [now, setNow] = useState(Date.now());
+	const [now, setNow] = useState(0);
 	const startTime = useMemo(() => new Date(scheduledStart).getTime(), [scheduledStart]);
 	const canJoin = now >= startTime - 2 * 60 * 1000; // Allow join 2 min before start
 	const countdown = Math.max(0, Math.floor((startTime - now) / 1000));

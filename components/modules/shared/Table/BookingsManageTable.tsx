@@ -11,6 +11,7 @@ import Table, {
   type DataTableFilterConfig,
   type DataTableFilterValues,
 } from "@/components/modules/Table/Table";
+import { useServerDataTable } from "@/src/hooks/useServerDataTable";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -197,9 +198,27 @@ export default function BookingsManageTable() {
   const [nextStatus, setNextStatus] = useState<ConsultationStatus>("PENDING");
   const [isCancelUnpaidOpen, setIsCancelUnpaidOpen] = useState(false);
 
+  // Server-side pagination with URL sync
+  const {
+    paginationState,
+    onPaginationChange,
+    sortingState,
+    onSortingChange,
+    queryParams,
+  } = useServerDataTable({ defaultPageSize: 10 });
+
   const { data, isLoading, isFetching, isError, error, refetch } = useQuery({
-    queryKey: ["bookings-management-table"],
-    queryFn: () => getAllBookings(),
+    queryKey: ["bookings-management-table", queryParams],
+    queryFn: () =>
+      getAllBookings({
+        page: queryParams.page,
+        limit: queryParams.limit,
+        sortBy: queryParams.sortBy,
+        sortOrder: queryParams.sortOrder,
+        searchTerm: searchTerm.trim() || undefined,
+      }),
+    staleTime: 60 * 1000,
+    placeholderData: (prev) => prev,
   });
 
   const updateMutation = useMutation({
@@ -314,6 +333,14 @@ export default function BookingsManageTable() {
             columns={columns}
             isLoading={isLoading || isFetching}
             emptyMessage="No bookings match the current search or filters."
+            pagination={{
+              state: paginationState,
+              onPaginationChange,
+            }}
+            sorting={{
+              state: sortingState,
+              onSortingChange,
+            }}
             actions={{
               items: (booking) => [
                 {

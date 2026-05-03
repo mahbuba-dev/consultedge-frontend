@@ -19,6 +19,7 @@ import {
 } from "@/src/services/testimonial.services";
 import type { ITestimonial } from "@/src/types/testimonial.types";
 import Table, { type DataTableFilterValues } from "./Table";
+import { useServerDataTable } from "@/src/hooks/useServerDataTable";
 
 type TestimonialWithFallbacks = ITestimonial & {
   fullName?: string | null;
@@ -38,6 +39,8 @@ type TestimonialWithFallbacks = ITestimonial & {
   sessionDate?: string | null;
   date?: string | null;
 };
+
+const THIRTY_DAYS_IN_MS = 30 * 24 * 60 * 60 * 1000;
 
 const getReviewerName = (review: ITestimonial) => {
   const rawReview = review as TestimonialWithFallbacks;
@@ -262,12 +265,40 @@ export default function ReviewsManagementTable() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterValues, setFilterValues] = useState<DataTableFilterValues>({});
 
-  const { data: reviews = [], isLoading, isFetching, isError, error, refetch } =
-    useQuery<ITestimonial[]>({
-      queryKey: ["reviews-management-table"],
-      queryFn: () => getAllTestimonialsForAdmin(100),
+  // -------------------------------------------------------------------
+  // Server-side pagination with URL sync
+  // -------------------------------------------------------------------
+  const {
+    paginationState,
+    onPaginationChange,
+    sortingState,
+    onSortingChange,
+    queryParams,
+  } = useServerDataTable({ defaultPageSize: 10 });
+
+  const { data: reviewsResponse, isLoading, isFetching, isError, error, refetch } =
+    useQuery({
+      // Include queryParams in the key so React Query refetches on page/limit change
+      queryKey: ["reviews-management-table", queryParams],
+      queryFn: () =>
+        getAllTestimonialsForAdmin({
+          page: queryParams.page,
+          limit: queryParams.limit,
+          sortBy: queryParams.sortBy,
+          sortOrder: queryParams.sortOrder,
+          searchTerm: searchTerm.trim() || undefined,
+        }),
       staleTime: 60 * 1000,
+      placeholderData: (prev) => prev,
     });
+
+  // The service returns ITestimonial[] directly — we store the flat array.
+  // If/when the backend starts returning paginated { data, meta } shape,
+  // replace the two lines below with proper extraction + pass meta to Table.
+  const reviews = useMemo(
+    () => (Array.isArray(reviewsResponse) ? reviewsResponse : []),
+    [reviewsResponse],
+  );
 
   const filteredReviews = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
@@ -276,7 +307,7 @@ export default function ReviewsManagementTable() {
       typeof filterValues.visibility === "string" ? filterValues.visibility : undefined;
     const timeframeFilter =
       typeof filterValues.timeframe === "string" ? filterValues.timeframe : undefined;
-    const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    const thirtyDaysAgo = new Date().getTime() - THIRTY_DAYS_IN_MS;
 
     return reviews.filter((review) => {
       const reviewDate = new Date(review.createdAt).getTime();
@@ -369,7 +400,6 @@ export default function ReviewsManagementTable() {
     Boolean(searchTerm.trim()) || Object.values(filterValues).some(Boolean);
 
   return (
-    <>
       <div className="space-y-6">
         <ReviewSummaryCards reviews={reviews} />
 
@@ -409,6 +439,14 @@ export default function ReviewsManagementTable() {
                   ? "No reviews match the current search or filters."
                   : "No client reviews have been submitted yet."
               }
+              pagination={{
+                state: paginationState,
+                onPaginationChange,
+              }}
+              sorting={{
+                state: sortingState,
+                onSortingChange,
+              }}
               search={{
                 initialValue: searchTerm,
                 placeholder: "Search by client, expert, or feedback...",
@@ -533,6 +571,5 @@ export default function ReviewsManagementTable() {
           </CardContent>
         </Card>
       </div>
-    </>
   );
 }

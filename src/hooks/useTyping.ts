@@ -47,6 +47,7 @@ export const useTyping = (roomId?: string) => {
 
       sendTyping(false);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return {

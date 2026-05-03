@@ -6,9 +6,9 @@ import {
   ArrowRight,
   BookOpen,
   Clock,
+  Lightbulb,
   LineChart,
   Mail,
-  Sparkles,
   Target,
   Wand2,
 } from "lucide-react";
@@ -17,7 +17,12 @@ import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { getBehavior, hasPersonalSignal } from "@/src/lib/aiPersonalization";
+import {
+  getBehavior,
+  hasPersonalSignal,
+  trackCategoryClick,
+  trackIndustryExplore,
+} from "@/src/lib/aiPersonalization";
 import { aiSummary } from "@/src/services/ai.service";
 import type { IIndustry } from "@/src/types/industry.types";
 
@@ -32,8 +37,15 @@ interface InsightTemplate {
   description: (industry: string) => string;
   readMinutes: number;
   icon: typeof BookOpen;
-  href: string;
 }
+
+const toInsightSlug = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
 
 const TEMPLATES: InsightTemplate[] = [
   {
@@ -44,7 +56,6 @@ const TEMPLATES: InsightTemplate[] = [
       `A pragmatic blueprint built from how top ${i} consultants on ConsultEdge advise founders right now.`,
     readMinutes: 8,
     icon: Target,
-    href: "/experts",
   },
   {
     id: "guide",
@@ -54,7 +65,6 @@ const TEMPLATES: InsightTemplate[] = [
       `Vetting checklist, sample briefs, and red flags to watch for when bringing a ${i} expert onto your team.`,
     readMinutes: 6,
     icon: BookOpen,
-    href: "/experts",
   },
   {
     id: "trends",
@@ -64,7 +74,6 @@ const TEMPLATES: InsightTemplate[] = [
       `A short, opinionated look at the moves real ${i} operators are making, with anonymised session takeaways.`,
     readMinutes: 5,
     icon: LineChart,
-    href: "/industries",
   },
   {
     id: "case",
@@ -74,7 +83,6 @@ const TEMPLATES: InsightTemplate[] = [
       `Behind-the-scenes of a 30-day ${i} engagement — goals, traps, and the deliverables that actually moved the needle.`,
     readMinutes: 7,
     icon: Wand2,
-    href: "/process",
   },
 ];
 
@@ -86,18 +94,16 @@ const ICON_BY_TYPE: Record<string, typeof BookOpen> = {
 };
 
 export default function ContentSuggestions({ industries }: ContentSuggestionsProps) {
-  const [hydrated, setHydrated] = useState(false);
   const [tick, setTick] = useState(0);
 
   useEffect(() => {
-    setHydrated(true);
     const handler = () => setTick((t) => t + 1);
     window.addEventListener("consultedge:behavior-updated", handler);
     return () => window.removeEventListener("consultedge:behavior-updated", handler);
   }, []);
 
   const focusIndustry = useMemo<IIndustry | null>(() => {
-    if (!hydrated || industries.length === 0) return industries[0] ?? null;
+    if (industries.length === 0) return industries[0] ?? null;
     const { industryWeights } = getBehavior();
     const sorted = Object.entries(industryWeights).sort((a, b) => b[1] - a[1]);
     for (const [id] of sorted) {
@@ -105,16 +111,13 @@ export default function ContentSuggestions({ industries }: ContentSuggestionsPro
       if (found) return found;
     }
     return industries[0] ?? null;
-  }, [industries, hydrated, tick]);
+  }, [industries, tick]);
 
-  const personalised =
-    !!focusIndustry && hydrated && hasPersonalSignal(getBehavior());
+  const personalised = !!focusIndustry && hasPersonalSignal(getBehavior());
   const industryName = focusIndustry?.name ?? "consulting";
 
-  const dayKey = useMemo(() => Math.floor(Date.now() / (1000 * 60 * 60 * 24)), []);
-
   const { data: aiResult, isPending: aiLoading } = useQuery({
-    queryKey: ["ai-content-summary", industryName, focusIndustry?.id],
+    queryKey: ["ai-content-summary", industryName, focusIndustry ?? null],
     queryFn: () =>
       aiSummary({
         topic: industryName,
@@ -122,7 +125,7 @@ export default function ContentSuggestions({ industries }: ContentSuggestionsPro
         kind: "content-suggestions",
         source: "homepage",
       }),
-    enabled: hydrated,
+    enabled: true,
     staleTime: 1000 * 60 * 30, // 30 minutes
     gcTime: 1000 * 60 * 60,
   });
@@ -147,33 +150,42 @@ export default function ContentSuggestions({ industries }: ContentSuggestionsPro
         description: it.description,
         readMinutes: it.readMinutes ?? 6,
         icon: ICON_BY_TYPE[it.type ?? ""] ?? BookOpen,
-        href: it.href || "/industries",
+        href: `/insights/${toInsightSlug(it.title)}?topic=${encodeURIComponent(industryName)}&type=${encodeURIComponent(it.type || "Insight")}`,
       }));
     }
-    // Heuristic fallback: 4 templates, deterministic per day
-    const offset = dayKey % TEMPLATES.length;
+    // Heuristic fallback: deterministic from industry name for SSR/CSR consistency.
+    const baseHash = industryName
+      .split("")
+      .reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
+    const offset = baseHash % TEMPLATES.length;
     return Array.from({ length: 4 }, (_, i) => {
       const t = TEMPLATES[(offset + i) % TEMPLATES.length];
+      const title = t.title(industryName);
       return {
         id: t.id,
         type: t.type,
-        title: t.title(industryName),
+        title,
         description: t.description(industryName),
         readMinutes: t.readMinutes,
         icon: t.icon,
-        href: t.href,
+        href: `/insights/${toInsightSlug(title)}?topic=${encodeURIComponent(industryName)}&type=${encodeURIComponent(t.type)}`,
       };
     });
-  }, [aiResult, dayKey, industryName]);
+  }, [aiResult, industryName]);
 
-  const showSkeleton = hydrated && aiLoading && items.length === 0;
+  const showSkeleton = aiLoading && items.length === 0;
 
   return (
-    <section className="rounded-[2.25rem] border border-emerald-100/70 bg-linear-to-br from-white via-emerald-50/40 to-teal-50/40 p-5 shadow-[0_30px_70px_-42px_rgba(16,185,129,0.35)] md:p-7 lg:p-8 dark:border-white/10 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900">
-      <div className="mb-6 flex flex-col gap-4 md:mb-8 md:flex-row md:items-end md:justify-between">
+    <section id="insights-section" className="relative scroll-mt-28 overflow-hidden rounded-(--ce-shell-radius) border border-emerald-100/70 bg-white/50 p-5 shadow-(--ce-shell-shadow-strong) backdrop-blur-2xl md:rounded-(--ce-shell-radius-md) md:p-7 lg:p-8 dark:rounded-(--ce-shell-radius-dark) dark:border-white/10 dark:bg-slate-950/44">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-[linear-gradient(126deg,rgba(255,255,255,0.42),rgba(255,255,255,0.08)_44%,rgba(16,185,129,0.09)_100%)] dark:bg-[linear-gradient(126deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02)_44%,rgba(16,185,129,0.07)_100%)]"
+      />
+
+      <div className="relative mb-6 flex flex-col gap-4 md:mb-8 md:flex-row md:items-end md:justify-between">
         <div className="max-w-2xl space-y-2">
           <Badge variant="secondary" className="gap-1 bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-200">
-            <Sparkles className="size-3.5" />
+            <Lightbulb className="size-3.5" />
             {personalised ? `Insights tuned to ${industryName}` : "Insights to read next"}
           </Badge>
           <h2 className="text-2xl font-bold tracking-tight md:text-3xl">
@@ -190,8 +202,14 @@ export default function ContentSuggestions({ industries }: ContentSuggestionsPro
           </p>
         </div>
         <Button asChild variant="outline" className="h-10 rounded-full border-emerald-200 px-5 text-sm dark:border-white/15">
-          <Link href="/industries">
-            Browse all topics <ArrowRight className="ml-1.5 size-4" />
+          <Link
+            href="/insights"
+            onClick={() => {
+              trackCategoryClick(industryName);
+              trackIndustryExplore(industryName);
+            }}
+          >
+            Browse all insights <ArrowRight className="ml-1.5 size-4" />
           </Link>
         </Button>
       </div>
@@ -230,9 +248,7 @@ export default function ContentSuggestions({ industries }: ContentSuggestionsPro
 
       <div className="mt-5 flex items-center gap-2 rounded-2xl border border-emerald-200/60 bg-white/70 px-4 py-3 text-xs text-emerald-900 dark:border-white/10 dark:bg-slate-900/60 dark:text-emerald-200">
         <Mail className="size-3.5 shrink-0" />
-        <span className="flex-1">
-          Want these landing in your inbox once a week? Subscribe below — fully personalised to the industries you explore.
-        </span>
+        <span className="flex-1">Want these landing in your inbox once a week? Subscribe below — fully personalised to the industries you explore.</span>
       </div>
     </section>
   );

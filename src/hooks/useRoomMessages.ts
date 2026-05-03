@@ -269,7 +269,14 @@ export const useRoomMessages = (roomId?: string) => {
   };
 
   return {
-    ...messagesQuery,
+    data: messagesQuery.data,
+    isLoading: messagesQuery.isLoading,
+    isPending: messagesQuery.isPending,
+    isFetching: messagesQuery.isFetching,
+    isError: messagesQuery.isError,
+    error: messagesQuery.error,
+    refetch: messagesQuery.refetch,
+    status: messagesQuery.status,
     messages: useMemo(() => mergeUniqueMessages(messagesQuery.data ?? []), [messagesQuery.data]),
     applyOptimisticReaction,
     sendMessage: sendMessageMutation.mutateAsync,

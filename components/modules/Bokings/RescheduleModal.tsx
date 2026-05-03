@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format, parseISO } from "date-fns";
 
@@ -55,6 +55,7 @@ export default function RescheduleModal({
   isSubmitting = false,
 }: RescheduleModalProps) {
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
+  const [currentTimestamp, setCurrentTimestamp] = useState(0);
   const expertId = booking.expert?.id ?? booking.expertId ?? "";
 
   const { data, isLoading, isError, error } = useQuery({
@@ -68,8 +69,7 @@ export default function RescheduleModal({
     enabled: open && Boolean(expertId),
   });
 
-  const availableSlots = useMemo(() => {
-    const now = Date.now();
+  const availableSlots = (() => {
     const items = Array.isArray(data?.data) ? data.data : [];
 
     return items
@@ -83,7 +83,7 @@ export default function RescheduleModal({
           !slot.isDeleted &&
           slot.id !== booking.expertScheduleId &&
           Boolean(parsed) &&
-          (parsed?.getTime() ?? 0) > now
+          (parsed?.getTime() ?? 0) > currentTimestamp
         );
       })
       .sort((left, right) => {
@@ -91,10 +91,17 @@ export default function RescheduleModal({
         const rightTime = parseDateSafe(getSlotStartDateTime(right))?.getTime() ?? 0;
         return leftTime - rightTime;
       });
-  }, [booking.expertScheduleId, data?.data]);
+  })();
+
+  useEffect(() => {
+    if (!open) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setCurrentTimestamp(new Date().getTime());
+  }, [open]);
 
   useEffect(() => {
     if (!open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedSlot(null);
       return;
     }

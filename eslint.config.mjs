@@ -19,9 +19,15 @@ export default defineConfig([
       "@tanstack/query": query,
     },
     rules: {
-      "@typescript-eslint/no-unused-vars": "warn",
+      "@typescript-eslint/no-unused-vars": ["warn", {
+        vars: "all",
+        varsIgnorePattern: "^_",
+        args: "after-used",
+        argsIgnorePattern: "^_",
+        ignoreRestSiblings: true,
+      }],
       "@typescript-eslint/no-explicit-any": "warn",
-      "@tanstack/query/stable-query-key": "error",
+      "@tanstack/query/stable-query-client": "error",
       "@tanstack/query/exhaustive-deps": "error",
       "@tanstack/query/no-rest-destructuring": "warn",
       "react/jsx-no-useless-fragment": "warn",

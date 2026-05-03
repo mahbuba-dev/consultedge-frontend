@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import {
   Mail,
@@ -236,10 +237,10 @@ export default function ContactPage() {
                 size="sm"
                 className="mt-3 rounded-full bg-linear-to-r from-blue-600 to-cyan-500 text-white shadow-md shadow-cyan-500/25 hover:from-blue-700 hover:to-cyan-600"
               >
-                <a href="/experts">
+                <Link href="/experts">
                   Browse experts
                   <ArrowRight className="ml-1.5 size-3.5" />
-                </a>
+                </Link>
               </Button>
             </div>
           </div>

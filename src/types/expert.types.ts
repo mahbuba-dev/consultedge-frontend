@@ -10,6 +10,7 @@ export interface IExpert {
   consultationFee?: number;
   isVerified?: boolean;
   profilePhoto: string | null;
+  resumeUrl?: string | null;
   industryId: string;
   industry?: {
     id: string;
@@ -40,6 +41,7 @@ export interface IApplyExpertPayload {
   consultationFee: number;
   industryId: string;
   profilePhoto?: File | null;
+  resume?: File | null;
 }
 
 export type ExpertVerificationStatus = "APPROVED" | "REJECTED" | "PENDING";

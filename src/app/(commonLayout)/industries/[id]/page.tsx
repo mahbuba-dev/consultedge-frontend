@@ -2,8 +2,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
-  ArrowRight,
-  ArrowUpRight,
   BadgeCheck,
   Building2,
   CalendarRange,
@@ -15,6 +13,11 @@ import {
 import ExpertCard from "@/components/modules/Experts/ExpertCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  IndustryHeroCTA,
+  IndustryViewAllCTA,
+  IndustryRelatedLink,
+} from "./_IndustryCTAs";
 
 import { getExperts } from "@/src/services/expert.services";
 import {
@@ -115,7 +118,7 @@ export default async function IndustryDetailPage({ params }: PageProps) {
 
       {/* Hero */}
       <section className="relative px-4 pt-10 md:px-12 md:pt-14">
-        <div className="mx-auto max-w-6xl">
+        <div className="mx-auto max-w-360">
           <Link
             href="/industries"
             className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground transition hover:text-foreground"
@@ -156,12 +159,10 @@ export default async function IndustryDetailPage({ params }: PageProps) {
               ) : null}
 
               <div className="flex flex-wrap items-center justify-center gap-3 pt-2 md:justify-start">
-                <Button asChild className="rounded-full">
-                  <Link href={`/experts?industryId=${industry.id}`}>
-                    Find experts in {industry.name}
-                    <ArrowRight className="ml-2 size-4" aria-hidden="true" />
-                  </Link>
-                </Button>
+                <IndustryHeroCTA
+                  industryId={industry.id}
+                  industryName={industry.name}
+                />
                 <Button asChild variant="outline" className="rounded-full">
                   <Link href="/contact">Talk to our team</Link>
                 </Button>
@@ -173,7 +174,7 @@ export default async function IndustryDetailPage({ params }: PageProps) {
 
       {/* Key info / Specifications */}
       <section className="px-4 pt-12 md:px-12">
-        <div className="mx-auto max-w-6xl">
+        <div className="mx-auto max-w-360">
           <h2 className="mb-6 text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
             Key information
           </h2>
@@ -202,7 +203,7 @@ export default async function IndustryDetailPage({ params }: PageProps) {
 
       {/* Overview */}
       <section className="px-4 pt-12 md:px-12">
-        <div className="mx-auto max-w-6xl">
+        <div className="mx-auto max-w-360">
           <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-[0_30px_80px_-40px_rgba(15,23,42,0.25)] backdrop-blur md:p-10 dark:border-white/10 dark:bg-slate-900/70">
             <h2 className="text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
               Overview
@@ -217,7 +218,7 @@ export default async function IndustryDetailPage({ params }: PageProps) {
 
       {/* Related experts */}
       <section className="px-4 pt-12 md:px-12">
-        <div className="mx-auto max-w-6xl">
+        <div className="mx-auto max-w-360">
           <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
             <div>
               <h2 className="text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
@@ -228,13 +229,10 @@ export default async function IndustryDetailPage({ params }: PageProps) {
               </p>
             </div>
             {relatedExperts.length > 0 ? (
-              <Link
-                href={`/experts?industryId=${industry.id}`}
-                className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-cyan-300 dark:hover:text-cyan-200"
-              >
-                View all
-                <ArrowUpRight className="size-4" aria-hidden="true" />
-              </Link>
+              <IndustryViewAllCTA
+                industryId={industry.id}
+                industryName={industry.name}
+              />
             ) : null}
           </div>
 
@@ -260,15 +258,16 @@ export default async function IndustryDetailPage({ params }: PageProps) {
       {/* Related industries */}
       {relatedIndustries.length > 0 ? (
         <section className="px-4 pt-12 md:px-12">
-          <div className="mx-auto max-w-6xl">
+          <div className="mx-auto max-w-360">
             <h2 className="mb-6 text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
               Related industries
             </h2>
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
               {relatedIndustries.map((item) => (
-                <Link
+                <IndustryRelatedLink
                   key={item.id}
-                  href={`/industries/${item.id}`}
+                  industryId={item.id}
+                  industryName={item.name}
                   className="group relative flex h-full min-h-55 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white/80 p-6 text-center shadow-[0_18px_45px_-30px_rgba(15,23,42,0.25)] backdrop-blur transition duration-300 hover:-translate-y-1 hover:border-cyan-300 hover:shadow-[0_28px_70px_-26px_rgba(34,211,238,0.45)] focus-visible:-translate-y-1 focus-visible:border-cyan-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 dark:border-white/10 dark:bg-slate-900/70 dark:hover:border-cyan-400/40 dark:focus-visible:ring-offset-slate-950"
                 >
                   {item.icon ? (
@@ -294,7 +293,7 @@ export default async function IndustryDetailPage({ params }: PageProps) {
                       {item.description}
                     </p>
                   ) : null}
-                </Link>
+                </IndustryRelatedLink>
               ))}
             </div>
           </div>

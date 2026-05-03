@@ -310,6 +310,105 @@
   will-change: transform, opacity, filter;
 }
 
+@keyframes consultedge-bg-particle-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  50% {
+    transform: translate3d(var(--particle-x, 8px), var(--particle-y, -12px), 0);
+  }
+}
+
+@keyframes consultedge-bg-orb-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate3d(var(--orb-x, 14px), var(--orb-y, -16px), 0) scale(1.045);
+  }
+}
+
+@keyframes consultedge-hand-wave {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  10% {
+    transform: rotate(15deg);
+  }
+
+  20% {
+    transform: rotate(-10deg);
+  }
+
+  30% {
+    transform: rotate(14deg);
+  }
+
+  40% {
+    transform: rotate(-6deg);
+  }
+
+  50% {
+    transform: rotate(9deg);
+  }
+
+  60% {
+    transform: rotate(0deg);
+  }
+}
+
+.consultedge-bg-particle {
+  opacity: var(--particle-opacity, 0.08);
+  animation: consultedge-bg-particle-drift var(--particle-duration, 40s) ease-in-out infinite;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+}
+
+.consultedge-bg-orb {
+  opacity: var(--orb-opacity, 0.14);
+  filter: blur(var(--orb-blur, 30px));
+  animation: consultedge-bg-orb-drift var(--orb-duration, 72s) ease-in-out infinite;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+}
+
+.consultedge-hand-wave {
+  display: inline-block;
+  transform-origin: 72% 72%;
+  animation: consultedge-hand-wave 1.6s ease-in-out infinite;
+}
+.consultedge-ai-scrollbar [data-radix-scroll-area-viewport] {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.consultedge-ai-scrollbar [data-radix-scroll-area-viewport]::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.consultedge-ai-scrollbar [data-slot="scroll-area-scrollbar"][data-orientation="vertical"] {
+  width: 12px;
+  padding: 2px;
+  background: linear-gradient(180deg, rgba(6, 182, 212, 0.12), rgba(59, 130, 246, 0.16));
+  border-left: 1px solid rgba(56, 189, 248, 0.22);
+  border-radius: 999px;
+}
+
+.consultedge-ai-scrollbar [data-slot="scroll-area-thumb"] {
+  background: linear-gradient(180deg, rgba(34, 211, 238, 0.96), rgba(59, 130, 246, 0.95));
+  box-shadow: 0 0 12px rgba(14, 165, 233, 0.45);
+}
+
+.consultedge-ai-scrollbar [data-slot="scroll-area-thumb"]:hover {
+  background: linear-gradient(180deg, rgba(14, 165, 233, 1), rgba(79, 70, 229, 0.98));
+}
+
 @media (prefers-reduced-motion: reduce) {
   .consultedge-reveal,
   .consultedge-reveal--visible {
@@ -330,6 +429,17 @@
     animation: none !important;
     filter: none !important;
   }
+
+  .consultedge-bg-particle,
+  .consultedge-bg-orb {
+    animation: none !important;
+    transform: none !important;
+  }
+
+  .consultedge-hand-wave {
+    animation: none !important;
+    transform: none !important;
+  }
 }
 
 @layer base {
@@ -346,6 +456,51 @@
   input[type="password"]::-ms-reveal,
   input[type="password"]::-ms-clear {
     display: none;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Premium glow scrollbar — dark theme first, light theme override    */
+  /* ------------------------------------------------------------------ */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    background: rgba(148, 163, 184, 0.25);
+    box-shadow: 0 0 6px 0 rgba(99, 179, 255, 0.18);
+    transition: background 240ms ease, box-shadow 240ms ease;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(99, 179, 255, 0.45);
+    box-shadow:
+      0 0 10px 1px rgba(99, 179, 255, 0.35),
+      0 0 20px 2px rgba(59, 130, 246, 0.18);
+  }
+
+  /* Dark mode — slightly stronger glow */
+  .dark ::-webkit-scrollbar-thumb {
+    background: rgba(99, 179, 255, 0.2);
+    box-shadow: 0 0 8px 0 rgba(99, 179, 255, 0.25);
+  }
+
+  .dark ::-webkit-scrollbar-thumb:hover {
+    background: rgba(99, 179, 255, 0.5);
+    box-shadow:
+      0 0 12px 2px rgba(99, 179, 255, 0.4),
+      0 0 24px 4px rgba(59, 130, 246, 0.22);
+  }
+
+  /* Firefox */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(99, 179, 255, 0.22) transparent;
   }
 }
 
@@ -434,7 +589,7 @@
 /* -- Premium glassmorphic scrollbars ----------------------------- */
 html {
   scrollbar-width: thin;
-  scrollbar-color: rgba(226, 232, 240, 0.18) rgba(2, 6, 23, 0.04);
+  scrollbar-color: rgba(59, 130, 246, 0.28) rgba(2, 6, 23, 0.04);
 }
 
 *::-webkit-scrollbar {
@@ -453,14 +608,15 @@ html {
 
 *::-webkit-scrollbar-thumb {
   border-radius: 9px;
-  border: 1px solid rgba(226, 232, 240, 0.22);
+  border: 2px solid transparent;
+  background-clip: padding-box;
   background: linear-gradient(
     180deg,
-    rgba(248, 250, 252, 0.1),
-    rgba(226, 232, 240, 0.08)
+    rgba(59, 130, 246, 0.22),
+    rgba(6, 182, 212, 0.16)
   );
-  box-shadow: inset 0 0 0.5px rgba(255, 255, 255, 0.24),
-    0 2px 8px rgba(15, 23, 42, 0.14);
+  box-shadow: inset 0 0 0.5px rgba(186, 230, 253, 0.28),
+    0 2px 8px rgba(59, 130, 246, 0.1);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   transition: background 180ms ease, box-shadow 180ms ease, transform 180ms ease,
@@ -470,20 +626,19 @@ html {
 *::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(
     180deg,
-    rgba(248, 250, 252, 0.12),
-    rgba(226, 232, 240, 0.1)
+    rgba(59, 130, 246, 0.34),
+    rgba(6, 182, 212, 0.26)
   );
-  border-color: rgba(226, 232, 240, 0.28);
-  box-shadow: inset 0 0 8px rgba(255, 255, 255, 0.06),
-    0 2px 10px rgba(15, 23, 42, 0.16);
-  transform: scale(1.01);
+  box-shadow: inset 0 0 6px rgba(186, 230, 253, 0.14),
+    0 2px 12px rgba(59, 130, 246, 0.18);
+  transform: scaleX(1.08);
 }
 
 *::-webkit-scrollbar-thumb:active {
   background: linear-gradient(
     180deg,
-    rgba(248, 250, 252, 0.13),
-    rgba(226, 232, 240, 0.11)
+    rgba(59, 130, 246, 0.42),
+    rgba(6, 182, 212, 0.32)
   );
 }
 
@@ -496,28 +651,109 @@ html {
 }
 
 .dark *::-webkit-scrollbar-thumb {
-  border-color: rgba(226, 232, 240, 0.16);
   background: linear-gradient(
     180deg,
-    rgba(148, 163, 184, 0.16),
-    rgba(100, 116, 139, 0.12)
+    rgba(59, 130, 246, 0.32),
+    rgba(6, 182, 212, 0.22)
   );
-  box-shadow: inset 0 0 0.5px rgba(255, 255, 255, 0.12),
-    0 2px 8px rgba(2, 6, 23, 0.26);
+  box-shadow: inset 0 0 0.5px rgba(186, 230, 253, 0.18),
+    0 2px 8px rgba(2, 6, 23, 0.3);
 }
 
 .dark *::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(
     180deg,
-    rgba(148, 163, 184, 0.18),
-    rgba(100, 116, 139, 0.14)
+    rgba(59, 130, 246, 0.44),
+    rgba(6, 182, 212, 0.34)
   );
-  box-shadow: inset 0 0 8px rgba(255, 255, 255, 0.04),
-    0 2px 10px rgba(2, 6, 23, 0.3);
+  box-shadow: inset 0 0 8px rgba(186, 230, 253, 0.1),
+    0 2px 14px rgba(59, 130, 246, 0.22);
 }
 
 @media (prefers-reduced-motion: reduce) {
   *::-webkit-scrollbar-thumb {
     transition: none;
+  }
+}
+
+/* ── Blast animation system ──────────────────────────────────────────── */
+
+/**
+ * ce-particle: tiny frosted-glass dot that flies outward from burst center.
+ * --tx / --ty are set inline per particle (computed from angle + distance).
+ */
+@keyframes ce-particle-out {
+  0% {
+    transform: translate(-50%, -50%) translate(0px, 0px) scale(1.1);
+    opacity: 0.88;
+    filter: blur(0px);
+  }
+  65% {
+    opacity: 0.45;
+  }
+  100% {
+    transform: translate(-50%, -50%) translate(var(--tx, 0px), var(--ty, 0px)) scale(0.2);
+    opacity: 0;
+    filter: blur(2px);
+  }
+}
+
+/**
+ * ce-ripple: expanding ring — very low opacity, vanishes quickly.
+ */
+@keyframes ce-ripple-out {
+  0% {
+    transform: translate(-50%, -50%) scale(0.06);
+    opacity: 0.26;
+  }
+  70% {
+    opacity: 0.08;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(3.8);
+    opacity: 0;
+  }
+}
+
+.ce-particle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  animation: ce-particle-out 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: transform, opacity, filter;
+  pointer-events: none;
+}
+
+.dark .ce-particle {
+  /* Soft sky-blue tint in dark mode for a glassy feel */
+  background: rgba(186, 230, 253, 0.72);
+}
+
+.ce-ripple {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  animation: ce-ripple-out 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: transform, opacity;
+  pointer-events: none;
+}
+
+.dark .ce-ripple {
+  border-color: rgba(186, 230, 253, 0.16);
+}
+
+/* Honor prefers-reduced-motion — hide instantly */
+@media (prefers-reduced-motion: reduce) {
+  .ce-particle,
+  .ce-ripple {
+    display: none !important;
   }
 }

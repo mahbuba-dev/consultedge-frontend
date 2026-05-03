@@ -7,7 +7,6 @@ import {
   BadgeCheck,
   BriefcaseBusiness,
   CalendarDays,
-  DollarSign,
   Mail,
   Phone,
   ShieldCheck,

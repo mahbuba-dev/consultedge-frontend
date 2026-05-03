@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { AlertCircle, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
@@ -49,7 +49,6 @@ export default function ChatWorkspace({
   readOnly = false,
 }: ChatWorkspaceProps) {
   const router = useRouter();
-  const [isHydrated, setIsHydrated] = useState(false);
   const attemptedRoomTargetRef = useRef<string | null>(null);
   const roomTargetId = participantId ?? expertId;
 
@@ -284,37 +283,6 @@ export default function ChatWorkspace({
 
   const incomingCallerName =
     incomingCall?.callerName || getParticipantDisplayName(otherParticipant) || "ConsultEdge user";
-
-  useEffect(() => {
-    setIsHydrated(true);
-  }, []);
-
-  if (!isHydrated) {
-    return (
-      <div className="space-y-4">
-        <div className="grid gap-4 xl:grid-cols-[340px_minmax(0,1fr)]">
-          <ChatSidebar
-            rooms={[]}
-            currentUserId={undefined}
-            selectedRoomId={undefined}
-            isLoading
-            isRefreshing={false}
-            title={title}
-            description={description}
-            role={null}
-            onRefresh={() => undefined}
-            onSelectRoom={() => undefined}
-          />
-
-          <div className="hidden min-h-[70vh] flex-col rounded-2xl border bg-background shadow-sm xl:flex">
-            <div className="flex h-full items-center justify-center p-6 text-sm text-muted-foreground">
-              Loading conversation...
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   const hasActiveRoom = Boolean(selectedRoom);
 
