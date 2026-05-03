@@ -90,6 +90,7 @@ export interface IExpertSchedule {
 export interface IBookConsultationPayload {
   expertId: string;
   expertScheduleId: string;
+  couponCode?: string;
 }
 
 export interface IBookConsultationResult {

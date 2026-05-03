@@ -20,6 +20,7 @@ import {
 // import { bookConsultation, bookConsultationWithPayLater } from "@/src/services/bookings";
 import type { IExpertAvailability } from "@/src/types/expert.types";
 import { bookConsultation, bookConsultationWithPayLater } from "@/src/services/bookings.service";
+import type { ICouponValidationResult } from "@/src/services/coupon.service";
 import { isPlaceholderSlotId } from "@/src/lib/seededExpertContent";
 
 type AvailabilityCalendarProps = {
@@ -70,6 +71,7 @@ export default function AvailabilityCalendar({
   const pathname = usePathname();
 
   const [actionLoading, setActionLoading] = useState<"pay-now" | "pay-later" | null>(null);
+  const [appliedCoupon, setAppliedCoupon] = useState<ICouponValidationResult | null>(null);
 
   const sortedAvailability = useMemo(() => {
     return [...availability]
@@ -183,6 +185,7 @@ export default function AvailabilityCalendar({
         const result = await bookConsultation({
           expertId,
           expertScheduleId: selectedSlot.id,
+          ...(appliedCoupon?.code ? { couponCode: appliedCoupon.code } : {}),
         });
 
         if (result.paymentUrl) {
@@ -201,6 +204,7 @@ export default function AvailabilityCalendar({
       await bookConsultationWithPayLater({
         expertId,
         expertScheduleId: selectedSlot.id,
+        ...(appliedCoupon?.code ? { couponCode: appliedCoupon.code } : {}),
       });
 
       toast.success("Slot reserved successfully ✨", {
@@ -332,6 +336,8 @@ export default function AvailabilityCalendar({
         isLoggedIn={isLoggedIn}
         isClient={userRole === "CLIENT"}
         actionLoading={actionLoading}
+        appliedCoupon={appliedCoupon}
+        onCouponChange={setAppliedCoupon}
         onBookNow={() => handleBookAction("pay-now")}
         onPayLater={() => handleBookAction("pay-later")}
       />
