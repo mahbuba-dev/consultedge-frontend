@@ -121,17 +121,17 @@ const AdminDashboardContent = () => {
               </p>
             </div>
 
-            <div className="flex flex-wrap gap-3 pt-1">
-              <Link href="/admin/dashboard/industries-management">
-                <Button className="bg-white text-slate-900 shadow-md hover:bg-white/90">
+            <div className="flex flex-col gap-3 pt-1 sm:flex-row sm:flex-wrap">
+              <Link href="/admin/dashboard/industries-management" className="w-full sm:w-auto">
+                <Button className="w-full bg-white text-slate-900 shadow-md hover:bg-white/90 sm:w-52">
                   <Layers className="mr-2 size-4" />
                   Manage industries
                 </Button>
               </Link>
-              <Link href="/admin/dashboard/expert-management">
+              <Link href="/admin/dashboard/expert-management" className="w-full sm:w-auto">
                 <Button
                   variant="outline"
-                  className="border-white/40 bg-white/10 text-white backdrop-blur hover:bg-white/20 hover:text-white"
+                  className="w-full border-white/40 bg-white/10 text-white backdrop-blur hover:bg-white/20 hover:text-white sm:w-52"
                 >
                   Review experts
                   <ArrowUpRight className="ml-2 size-4" />

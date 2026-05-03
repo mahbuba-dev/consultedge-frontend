@@ -104,7 +104,7 @@ const NavbarClient = ({
     ? "/expert/dashboard/my-sessions"
     : "/dashboard/consultations";
   const bookingLabel = isAdmin
-    ? "Bookings Management"
+    ? "Bookings"
     : isExpert
     ? "My Sessions"
     : "My Bookings";
@@ -365,32 +365,32 @@ const NavbarClient = ({
                 {isLoggedIn ? (
                   <div className="grid grid-cols-2 gap-2 px-4 pb-2">
                     <SheetClose asChild>
-                      <Button asChild variant="outline" size="sm" className="w-full justify-center rounded-full text-xs dark:border-white/10 dark:bg-slate-950/70 dark:text-slate-100">
+                      <Button asChild variant="outline" size="sm" className="w-full min-w-0 justify-center rounded-full px-2 text-xs dark:border-white/10 dark:bg-slate-950/70 dark:text-slate-100">
                         <Link href={dashboardHref}>
-                          <LayoutDashboard className="mr-1.5 size-3.5" />
-                          Dashboard
+                          <LayoutDashboard className="mr-1.5 size-3.5 shrink-0" />
+                          <span className="truncate">Dashboard</span>
                         </Link>
                       </Button>
                     </SheetClose>
                     <SheetClose asChild>
-                      <Button asChild variant="outline" size="sm" className="w-full justify-center rounded-full text-xs dark:border-white/10 dark:bg-slate-950/70 dark:text-slate-100">
+                      <Button asChild variant="outline" size="sm" className="w-full min-w-0 justify-center rounded-full px-2 text-xs dark:border-white/10 dark:bg-slate-950/70 dark:text-slate-100">
                         <Link href={bookingHref}>
-                          <BriefcaseBusiness className="mr-1.5 size-3.5" />
-                          {bookingLabel}
+                          <BriefcaseBusiness className="mr-1.5 size-3.5 shrink-0" />
+                          <span className="truncate">{bookingLabel}</span>
                         </Link>
                       </Button>
                     </SheetClose>
                     <SheetClose asChild>
-                      <Button asChild variant="outline" size="sm" className="w-full justify-center rounded-full text-xs dark:border-white/10 dark:bg-slate-950/70 dark:text-slate-100">
+                      <Button asChild variant="outline" size="sm" className="w-full min-w-0 justify-center rounded-full px-2 text-xs dark:border-white/10 dark:bg-slate-950/70 dark:text-slate-100">
                         <Link href="/my-profile">
-                          <Settings className="mr-1.5 size-3.5" />
-                          Settings
+                          <Settings className="mr-1.5 size-3.5 shrink-0" />
+                          <span className="truncate">Settings</span>
                         </Link>
                       </Button>
                     </SheetClose>
-                    <LogoutButton className="inline-flex h-8 w-full items-center justify-center rounded-full bg-linear-to-r from-blue-600 to-cyan-500 text-xs font-medium text-white transition-colors hover:from-blue-700 hover:to-cyan-600 disabled:opacity-60">
-                      <LogOut className="mr-1.5 size-3.5" />
-                      Logout
+                    <LogoutButton className="inline-flex h-8 w-full min-w-0 items-center justify-center rounded-full bg-linear-to-r from-blue-600 to-cyan-500 px-2 text-xs font-medium text-white transition-colors hover:from-blue-700 hover:to-cyan-600 disabled:opacity-60">
+                      <LogOut className="mr-1.5 size-3.5 shrink-0" />
+                      <span className="truncate">Logout</span>
                     </LogoutButton>
                   </div>
                 ) : (
