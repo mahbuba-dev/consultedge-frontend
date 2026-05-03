@@ -38,6 +38,33 @@ const variedFallbackBios = [
   "Supports founders with offer strategy, positioning, and retention-focused customer journeys.",
 ] as const;
 
+const localFallbackTrending = [
+  {
+    name: "Ryan Coleman",
+    title: "Go-To-Market Advisor",
+    industry: "Sales Strategy",
+    bio: "Supports teams with pricing, positioning, and repeatable pipeline growth.",
+  },
+  {
+    name: "Fatima Noor",
+    title: "Brand & Demand Consultant",
+    industry: "Marketing",
+    bio: "Builds demand generation systems focused on conversion and retention.",
+  },
+  {
+    name: "Leo Martins",
+    title: "Technical Program Specialist",
+    industry: "Technical Teams",
+    bio: "Improves cross-functional delivery with practical program execution frameworks.",
+  },
+  {
+    name: "Hana Kim",
+    title: "Leadership Coach",
+    industry: "Executive Coaching",
+    bio: "Helps leaders improve clarity, decision velocity, and team alignment.",
+  },
+] as const;
+
 const getInitials = (name: string) =>
   name
     .split(" ")
@@ -131,33 +158,47 @@ export default function TrendingExperts({ experts }: TrendingExpertsProps) {
   }, [aiResult, expertsById, heuristicTrending]);
 
   const cards: TrendingCard[] = useMemo(() => {
-    if (trending.length > 0) {
-      const used = new Set<string>();
-      const unique = trending
-        .filter((expert) => {
-          const key = normalizeName(expert.fullName);
-          if (used.has(key)) return false;
-          used.add(key);
-          return true;
-        })
-        .slice(0, MAX)
-        .map((expert, index) => ({
-          key: expert.id,
-          href: `/experts/${expert.id}`,
-          name: expert.fullName,
-          title: expert.title || "Consultant",
-          industry: expert.industry?.name,
-          bio:
-            expert.bio?.trim() ||
-            variedFallbackBios[index % variedFallbackBios.length] ||
-            fallbackBio,
-          profilePhoto: expert.profilePhoto || null,
-        }));
+    const used = new Set<string>();
+    const primary = trending
+      .filter((expert) => {
+        const key = normalizeName(expert.fullName);
+        if (used.has(key)) return false;
+        used.add(key);
+        return true;
+      })
+      .slice(0, MAX)
+      .map((expert, index) => ({
+        key: expert.id,
+        href: `/experts/${expert.id}`,
+        name: expert.fullName,
+        title: expert.title || "Consultant",
+        industry: expert.industry?.name,
+        bio:
+          expert.bio?.trim() ||
+          variedFallbackBios[index % variedFallbackBios.length] ||
+          fallbackBio,
+        profilePhoto: expert.profilePhoto || null,
+      }));
 
-      return unique;
+    if (primary.length >= MAX) return primary;
+
+    const padded = [...primary];
+    for (let i = 0; i < localFallbackTrending.length && padded.length < MAX; i += 1) {
+      const fallback = localFallbackTrending[i];
+      const key = normalizeName(fallback.name);
+      if (used.has(key)) continue;
+      used.add(key);
+      padded.push({
+        key: `trending-fallback-${i}`,
+        href: "/experts",
+        name: fallback.name,
+        title: fallback.title,
+        industry: fallback.industry,
+        bio: fallback.bio,
+      });
     }
 
-    return [];
+    return padded;
   }, [trending]);
   const isDevFallbackActive =
     process.env.NODE_ENV !== "production" && (aiResult?.data?.items?.length ?? 0) === 0;

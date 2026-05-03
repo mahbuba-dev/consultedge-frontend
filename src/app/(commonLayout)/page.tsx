@@ -110,7 +110,7 @@ const HomePage = async () => {
 
   const allExperts: IExpert[] =
     expertsResult.status === "fulfilled" && Array.isArray(expertsResult.value?.data)
-      ? expertsResult.value.data.filter((expert) => !expert?.isSeeded)
+      ? expertsResult.value.data
       : [];
 
   const allIndustries: IIndustry[] =
