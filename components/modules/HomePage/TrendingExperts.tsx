@@ -38,33 +38,6 @@ const variedFallbackBios = [
   "Supports founders with offer strategy, positioning, and retention-focused customer journeys.",
 ] as const;
 
-const localFallbackTrending = [
-  {
-    name: "Ryan Coleman",
-    title: "Go-To-Market Advisor",
-    industry: "Sales Strategy",
-    bio: "Supports teams with pricing, positioning, and repeatable pipeline growth.",
-  },
-  {
-    name: "Fatima Noor",
-    title: "Brand & Demand Consultant",
-    industry: "Marketing",
-    bio: "Builds demand generation systems focused on conversion and retention.",
-  },
-  {
-    name: "Leo Martins",
-    title: "Technical Program Specialist",
-    industry: "Technical Teams",
-    bio: "Improves cross-functional delivery with practical program execution frameworks.",
-  },
-  {
-    name: "Hana Kim",
-    title: "Leadership Coach",
-    industry: "Executive Coaching",
-    bio: "Helps leaders improve clarity, decision velocity, and team alignment.",
-  },
-] as const;
-
 const getInitials = (name: string) =>
   name
     .split(" ")
@@ -108,22 +81,18 @@ export default function TrendingExperts({ experts }: TrendingExpertsProps) {
     ];
     const seen = new Set<string>();
     const nonSeeded: IExpert[] = [];
-    const seededPool: IExpert[] = [];
 
     for (const expert of pool) {
       if (!expert?.id || seen.has(expert.id)) continue;
       seen.add(expert.id);
       if (isSeededExpert(expert)) {
-        seededPool.push(expert);
+        continue;
       } else {
         nonSeeded.push(expert);
       }
     }
 
-    // Prefer non-seeded (frontend-created) experts; fill remaining slots
-    // with seeded experts when there aren't enough real ones.
-    if (nonSeeded.length >= MAX) return nonSeeded;
-    return [...nonSeeded, ...seededPool];
+    return nonSeeded;
   }, [experts, fallbackExpertsResult]);
 
   const expertsById = useMemo(() => {
@@ -162,7 +131,7 @@ export default function TrendingExperts({ experts }: TrendingExpertsProps) {
 
   const cards: TrendingCard[] = useMemo(() => {
     const used = new Set<string>();
-    const primary = trending
+    return trending
       .filter((expert) => {
         const key = normalizeName(expert.fullName);
         if (used.has(key)) return false;
@@ -182,26 +151,6 @@ export default function TrendingExperts({ experts }: TrendingExpertsProps) {
           fallbackBio,
         profilePhoto: expert.profilePhoto || null,
       }));
-
-    if (primary.length >= MAX) return primary;
-
-    const padded = [...primary];
-    for (let i = 0; i < localFallbackTrending.length && padded.length < MAX; i += 1) {
-      const fallback = localFallbackTrending[i];
-      const key = normalizeName(fallback.name);
-      if (used.has(key)) continue;
-      used.add(key);
-      padded.push({
-        key: `trending-fallback-${i}`,
-        href: "/experts",
-        name: fallback.name,
-        title: fallback.title,
-        industry: fallback.industry,
-        bio: fallback.bio,
-      });
-    }
-
-    return padded;
   }, [trending]);
   const isDevFallbackActive =
     process.env.NODE_ENV !== "production" && (aiResult?.data?.items?.length ?? 0) === 0;

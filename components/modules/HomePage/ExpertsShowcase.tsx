@@ -69,41 +69,6 @@ const formatFee = (value?: number | null) =>
 const fallbackBio =
   "Focused 1:1 guidance for strategy, growth, operations, and decision-making support.";
 
-const localFallbackExperts = [
-  {
-    name: "Alex Morgan",
-    title: "Growth Strategy Consultant",
-    specialization: "Business Growth",
-    description: "Helps teams shape scalable growth loops and GTM execution plans.",
-    experienceYears: 10,
-    fee: 120,
-  },
-  {
-    name: "Nadia Rahman",
-    title: "Operations Excellence Advisor",
-    specialization: "Operations",
-    description: "Designs lean operating models to improve quality and delivery speed.",
-    experienceYears: 8,
-    fee: 95,
-  },
-  {
-    name: "Victor Chen",
-    title: "Product & CX Consultant",
-    specialization: "Customer Experience",
-    description: "Aligns product strategy with measurable customer outcomes and retention.",
-    experienceYears: 9,
-    fee: 110,
-  },
-  {
-    name: "Sara Patel",
-    title: "Finance & Planning Specialist",
-    specialization: "Financial Planning",
-    description: "Builds practical financial plans for founders and growth-stage teams.",
-    experienceYears: 11,
-    fee: 130,
-  },
-] as const;
-
 const normalizeName = (value: string) => value.trim().toLowerCase();
 
 const isSeededExpert = (expert: IExpert) => {
@@ -187,23 +152,18 @@ export default function ExpertsShowcase({ experts, limit = 4 }: ExpertsShowcaseP
     ];
     const seen = new Set<string>();
     const nonSeeded: IExpert[] = [];
-    const seededPool: IExpert[] = [];
 
     for (const expert of pool) {
       if (!expert?.id || seen.has(expert.id)) continue;
       seen.add(expert.id);
-      if (isSeededExpert(expert)) {
-        seededPool.push(expert);
-      } else {
+      if (!isSeededExpert(expert)) {
         nonSeeded.push(expert);
       }
     }
 
-    // Prefer non-seeded (frontend-created) experts; fall back to seeded ones
-    // only when there aren't enough real experts to fill the grid.
-    if (nonSeeded.length >= cap) return nonSeeded;
-    return [...nonSeeded, ...seededPool];
-  }, [experts, fallbackExpertsResult, cap]);
+    // Curated section should only show frontend-created (non-seeded) experts.
+    return nonSeeded;
+  }, [experts, fallbackExpertsResult]);
 
   const expertsByName = useMemo(() => {
     const map = new Map<string, IExpert>();
@@ -269,34 +229,7 @@ export default function ExpertsShowcase({ experts, limit = 4 }: ExpertsShowcaseP
     }));
   }, [aiResult, cap, expertsByName, localReasonByName, localRanked]);
 
-  const displayItems = useMemo(() => {
-    const primary = dedupeDisplayCards(items, cap);
-    if (primary.length >= cap) return primary;
-
-    const used = new Set(primary.map((item) => normalizeName(item.name)));
-    const padded: DisplayExpertCard[] = [...primary];
-
-    for (let i = 0; i < localFallbackExperts.length && padded.length < cap; i += 1) {
-      const expert = localFallbackExperts[i];
-      const key = normalizeName(expert.name);
-      if (used.has(key)) continue;
-      used.add(key);
-      padded.push({
-        key: `local-fallback-${i}`,
-        href: "/experts",
-        name: expert.name,
-        title: expert.title,
-        specialization: expert.specialization,
-        description: expert.description,
-        experienceYears: expert.experienceYears,
-        fee: expert.fee,
-        whyReason: "Popular pick",
-        profilePhoto: buildAvatarUrl(expert.name),
-      });
-    }
-
-    return padded;
-  }, [items, cap]);
+  const displayItems = useMemo(() => dedupeDisplayCards(items, cap), [items, cap]);
   const isDevFallbackActive =
     process.env.NODE_ENV !== "production" &&
     hydrated &&
