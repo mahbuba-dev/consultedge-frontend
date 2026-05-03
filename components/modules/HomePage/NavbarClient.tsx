@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import {
@@ -16,10 +15,8 @@ import {
   Moon,
   Settings,
   Sun,
-  UserCircle2,
 } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -63,8 +60,8 @@ const getInitials = (value?: string | null) =>
     ?.split(" ")
     .map((part) => part[0])
     .join("")
-    .slice(0, 2)
-    .toUpperCase() || "CE";
+    .slice(0, 1)
+    .toUpperCase() || "C";
 
 const NavbarClient = ({
   navItems,
@@ -84,10 +81,7 @@ const NavbarClient = ({
     return pathname?.startsWith(href);
   };
 
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-
-  const isDarkMode = mounted && resolvedTheme === "dark";
+  const isDarkMode = resolvedTheme === "dark";
   const themeLabel = isDarkMode ? "Light mode" : "Dark mode";
 
   const visiblePrimary = navItems.filter(
@@ -131,7 +125,7 @@ const NavbarClient = ({
 
   return (
     <header
-      className="sticky top-0 z-50 border-b border-slate-200/70 bg-white/45 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/35"
+      className="sticky top-0 z-50 border-b border-slate-200/70 bg-white/30 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/35"
     >
       <div className="mx-auto w-full max-w-360 px-4 py-3 md:px-6">
         <div className="relative flex items-center justify-between gap-3 rounded-[1.35rem] border border-white/60 bg-white/80 px-3 py-2.5 shadow-[0_20px_45px_-28px_rgba(15,23,42,0.45)] backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/70 overflow-visible">
@@ -254,7 +248,7 @@ const NavbarClient = ({
                     onClick={handleThemeToggle}
                     className="relative size-9 rounded-full border border-slate-200/80 bg-white/80 text-slate-600 backdrop-blur transition-transform duration-300 hover:scale-110 hover:bg-blue-50 hover:text-blue-700 dark:border-white/10 dark:bg-slate-900/70 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-blue-300"
                   >
-                    {!mounted ? <Moon className="size-4" /> : isDarkMode ? <Sun className="size-4" /> : <Moon className="size-4" />}
+                    {isDarkMode ? <Sun className="size-4" /> : <Moon className="size-4" />}
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" className="text-xs">
@@ -263,64 +257,58 @@ const NavbarClient = ({
               </Tooltip>
 
               {isLoggedIn ? (
-                <>
-                  {/* Avatar chip with name tooltip */}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        className="h-9 rounded-full border border-slate-200/80 bg-white/80 px-2.5 text-slate-700 backdrop-blur hover:bg-blue-50 hover:text-blue-700 dark:border-white/10 dark:bg-slate-900/70 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-blue-200"
-                      >
-                        <span className="mr-2 flex size-6 items-center justify-center rounded-full bg-linear-to-br from-blue-600 to-cyan-500 text-[10px] font-bold text-white">
-                          {getInitials(userLabel)}
-                        </span>
-                        <span className="max-w-22 truncate text-xs font-semibold">{userLabel ?? "Profile"}</span>
-                        <ChevronDown className="ml-1 size-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56 rounded-2xl border border-slate-200/70 bg-white/95 p-1.5 shadow-xl dark:border-white/10 dark:bg-slate-950/95">
-                      <DropdownMenuItem asChild>
-                        <Link href={dashboardHref} className="rounded-xl px-3 py-2 text-sm">
-                          <LayoutDashboard className="mr-2 size-4" />
-                          Dashboard
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link href={bookingHref} className="rounded-xl px-3 py-2 text-sm">
-                          <BriefcaseBusiness className="mr-2 size-4" />
-                          {bookingLabel}
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link href="/my-profile" className="rounded-xl px-3 py-2 text-sm">
-                          <Settings className="mr-2 size-4" />
-                          Settings
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="p-0 focus:bg-transparent">
-                        <LogoutButton className="inline-flex h-9 w-full items-center rounded-xl px-3 text-sm text-red-600 transition-colors hover:bg-red-50 dark:text-red-300 dark:hover:bg-red-950/30">
-                          <LogOut className="mr-2 size-4" />
-                          Logout
-                        </LogoutButton>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="h-9 rounded-full border border-slate-200/80 bg-white/80 px-2.5 text-slate-700 backdrop-blur hover:bg-blue-50 hover:text-blue-700 dark:border-white/10 dark:bg-slate-900/70 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-blue-200"
+                    >
+                      <span className="mr-2 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-blue-600 to-cyan-500 text-[11px] leading-none font-bold text-white">
+                        {getInitials(userLabel)}
+                      </span>
+                      <span className="max-w-22 truncate text-xs font-semibold">{userLabel ?? "Profile"}</span>
+                      <ChevronDown className="ml-1 size-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56 rounded-2xl border border-slate-200/70 bg-white/95 p-1.5 shadow-xl dark:border-white/10 dark:bg-slate-950/95">
+                    <DropdownMenuItem asChild>
+                      <Link href={dashboardHref} className="rounded-xl px-3 py-2 text-sm">
+                        <LayoutDashboard className="mr-2 size-4" />
+                        Dashboard
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href={bookingHref} className="rounded-xl px-3 py-2 text-sm">
+                        <BriefcaseBusiness className="mr-2 size-4" />
+                        {bookingLabel}
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/my-profile" className="rounded-xl px-3 py-2 text-sm">
+                        <Settings className="mr-2 size-4" />
+                        Settings
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="p-0 focus:bg-transparent">
+                      <LogoutButton className="inline-flex h-9 w-full items-center rounded-xl px-3 text-sm text-red-600 transition-colors hover:bg-red-50 dark:text-red-300 dark:hover:bg-red-950/30">
+                        <LogOut className="mr-2 size-4" />
+                        Logout
+                      </LogoutButton>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               ) : (
-                <>
-                  <Button
-                    asChild
-                    size="sm"
-                    variant="outline"
-                    className="rounded-full border-slate-200 bg-white/90 px-4 text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-700 dark:border-white/10 dark:bg-slate-900/70 dark:text-slate-200 dark:hover:bg-slate-800"
-                  >
-                    <Link href="/login" className="text-inherit">
-                      <LogIn className="mr-1.5 size-3.5" />
-                      Login
-                    </Link>
-                  </Button>
-
-                </>
+                <Button
+                  asChild
+                  size="sm"
+                  variant="outline"
+                  className="rounded-full border-slate-200 bg-white/90 px-4 text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-700 dark:border-white/10 dark:bg-slate-900/70 dark:text-slate-200 dark:hover:bg-slate-800"
+                >
+                  <Link href="/login" className="text-inherit">
+                    <LogIn className="mr-1.5 size-3.5" />
+                    Login
+                  </Link>
+                </Button>
               )}
             </TooltipProvider>
           </div>
@@ -396,7 +384,7 @@ const NavbarClient = ({
                     onClick={handleThemeToggle}
                     className="relative w-full justify-center rounded-full dark:border-white/10 dark:bg-slate-950/70 dark:text-slate-100"
                   >
-                    {!mounted ? <Moon className="mr-2 size-4" /> : isDarkMode ? <Sun className="mr-2 size-4" /> : <Moon className="mr-2 size-4" />}
+                    {isDarkMode ? <Sun className="mr-2 size-4" /> : <Moon className="mr-2 size-4" />}
                     {themeLabel}
                   </Button>
 

@@ -184,7 +184,7 @@ export default function ConsultationCard({
     .split(" ")
     .map((part) => part[0])
     .join("")
-    .slice(0, 2)
+    .slice(0, 1)
     .toUpperCase();
 
   const queryClient = useQueryClient();
@@ -291,7 +291,7 @@ export default function ConsultationCard({
             <div className="flex items-start gap-3">
               <Avatar size="lg" className="size-12 ring-2 ring-white/80">
                 <AvatarImage src={booking.expert?.profilePhoto || undefined} alt={expertName} />
-                <AvatarFallback>{expertInitials || "CE"}</AvatarFallback>
+                <AvatarFallback>{expertInitials || "C"}</AvatarFallback>
               </Avatar>
 
               <div>

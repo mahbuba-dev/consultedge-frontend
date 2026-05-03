@@ -126,7 +126,7 @@ const HomePage = async () => {
       : fallbackTestimonials;
 
   return (
-    <div className={`relative overflow-x-hidden pb-20 ${layoutPreset.surfaceClass}`}>
+    <div className={`relative overflow-x-hidden bg-white pb-20 dark:bg-slate-950 ${layoutPreset.surfaceClass}`}>
       <PremiumGlassBackground intensity={layoutPreset.backgroundIntensity} />
       <Banner />
 

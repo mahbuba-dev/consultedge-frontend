@@ -330,7 +330,7 @@ export default function AiChatWorkspace({ mode = "page" }: AiChatWorkspaceProps)
           </div>
 
         {/* Input bar */}
-        <div className="border-t border-border px-4 py-3">
+        <div className="border-t border-border px-3 py-2 sm:px-4 sm:py-3">
           {attachment && (
             <div className="mb-2 inline-flex items-center gap-2 rounded-lg border border-cyan-200/50 bg-white/70 px-2.5 py-1.5 text-xs text-foreground shadow-sm backdrop-blur-md dark:border-cyan-300/15 dark:bg-slate-900/50">
               <img
@@ -355,7 +355,7 @@ export default function AiChatWorkspace({ mode = "page" }: AiChatWorkspaceProps)
             </div>
           )}
 
-          <div className="flex items-end gap-2 rounded-xl border border-cyan-200/45 bg-white/60 px-3 py-2 shadow-[0_8px_32px_-20px_rgba(2,132,199,0.45)] backdrop-blur-xl transition-all focus-within:border-cyan-400/55 focus-within:ring-1 focus-within:ring-cyan-400/30 dark:border-cyan-300/15 dark:bg-slate-900/45">
+          <div className="flex items-end gap-1.5 rounded-xl border border-cyan-200/45 bg-white/60 px-2.5 py-1.5 shadow-[0_8px_32px_-20px_rgba(2,132,199,0.45)] backdrop-blur-xl transition-all focus-within:border-cyan-400/55 focus-within:ring-1 focus-within:ring-cyan-400/30 sm:gap-2 sm:px-3 sm:py-2 dark:border-cyan-300/15 dark:bg-slate-900/45">
             <input
               ref={attachmentInputRef}
               type="file"
@@ -379,9 +379,9 @@ export default function AiChatWorkspace({ mode = "page" }: AiChatWorkspaceProps)
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder=" Message AI Assistant...   (Enter to send, Shift+Enter for new line)"
+              placeholder="Message AI assistant..."
               className={cn(
-                "max-h-36 min-h-10 flex-1 resize-none border-0 bg-transparent p-0 text-sm shadow-none focus-visible:ring-0",
+                "max-h-36 min-h-10 flex-1 resize-none border-0 bg-transparent p-0 text-xs sm:text-sm shadow-none focus-visible:ring-0",
               )}
               rows={1}
               disabled={isLoading}
@@ -400,8 +400,11 @@ export default function AiChatWorkspace({ mode = "page" }: AiChatWorkspaceProps)
               )}
             </Button>
           </div>
-          <p className="mt-1.5 px-1 text-[11px] text-muted-foreground">
-            AI can make mistakes. Verify important information.
+          <p className="mt-1 px-0.5 text-[9px] leading-tight text-muted-foreground sm:text-[10px] md:text-[11px]">
+            Enter sends. Shift+Enter for new line.
+          </p>
+          <p className="mt-0.5 px-0.5 text-[9px] leading-tight text-muted-foreground sm:text-[10px] md:text-[11px]">
+            AI may be wrong. Verify important info.
           </p>
         </div>
       </div>

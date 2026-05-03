@@ -65,7 +65,7 @@ export default function ChatRoomListItem({
           />
         ) : null}
         <AvatarFallback>
-          {getParticipantDisplayName(primaryParticipant).slice(0, 2).toUpperCase()}
+          {getParticipantDisplayName(primaryParticipant).slice(0, 1).toUpperCase() || "U"}
         </AvatarFallback>
       </Avatar>
 

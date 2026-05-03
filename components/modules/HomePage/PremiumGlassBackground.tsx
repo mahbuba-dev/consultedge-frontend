@@ -110,7 +110,7 @@ export default function PremiumGlassBackground({
         ))}
       </div>
 
-      <div className="absolute inset-0 z-2 bg-[linear-gradient(180deg,rgba(2,6,23,0.08),rgba(2,6,23,0.22))] dark:bg-[linear-gradient(180deg,rgba(2,6,23,0.18),rgba(2,6,23,0.34))]" />
+      <div className="absolute inset-0 z-2 bg-[linear-gradient(180deg,rgba(255,255,255,0.64),rgba(248,250,252,0.38))] dark:bg-[linear-gradient(180deg,rgba(2,6,23,0.18),rgba(2,6,23,0.34))]" />
     </div>
   );
 }

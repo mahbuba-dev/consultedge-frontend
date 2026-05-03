@@ -2,7 +2,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { loginAction } from "@/src/app/(commonLayout)/(authRouteGroup)/login/_action";
-import { demoLoginAction } from "@/src/app/(commonLayout)/(authRouteGroup)/login/_action";
+import {
+  demoLoginAction,
+  expertDemoLoginAction,
+  adminDemoLoginAction,
+} from "@/src/app/(commonLayout)/(authRouteGroup)/login/_action";
 import AppField from "@/components/form/AppField";
 import AppSubmitButton from "@/components/form/AppSubmitButton";
 
@@ -74,6 +78,41 @@ const LoginForm = ({ redirectPath, passwordReset = false }: LoginFormProps) => {
   const { mutateAsync: mutateDemoLogin, isPending: isDemoPending } = useMutation({
     mutationFn: () => demoLoginAction(redirectPath),
   });
+
+  const { mutateAsync: mutateExpertDemo, isPending: isExpertDemoPending } = useMutation({
+    mutationFn: () => expertDemoLoginAction(redirectPath),
+  });
+
+  const { mutateAsync: mutateAdminDemo, isPending: isAdminDemoPending } = useMutation({
+    mutationFn: () => adminDemoLoginAction(redirectPath),
+  });
+
+  const isAnyDemoPending = isDemoPending || isExpertDemoPending || isAdminDemoPending;
+
+  const runDemo = async (
+    runner: () => Promise<unknown>,
+    fallbackMessage: string,
+  ) => {
+    setServerError(null);
+
+    try {
+      const result = (await runner()) as any;
+
+      if (result && result.success === false) {
+        setServerError(result.message || fallbackMessage);
+      }
+    } catch (error: any) {
+      if (
+        (typeof error?.digest === "string" &&
+          error.digest.startsWith("NEXT_REDIRECT")) ||
+        String(error?.message ?? "").includes("NEXT_REDIRECT")
+      ) {
+        return;
+      }
+
+      setServerError(getFriendlyAuthErrorMessage(error, "login"));
+    }
+  };
 
   /**
    * TanStack Form setup
@@ -216,44 +255,55 @@ const LoginForm = ({ redirectPath, passwordReset = false }: LoginFormProps) => {
           )}
 
           {/* Demo login — uses pre-seeded demo credentials via server action */}
-          <Button
-            type="button"
-            variant="outline"
-            onClick={async () => {
-              setServerError(null);
-
-              try {
-                const result = (await mutateDemoLogin()) as any;
-
-                // Server action returned a plain error object (no redirect happened)
-                if (result && result.success === false) {
-                  setServerError(
-                    result.message ||
-                      "Demo login failed. Please try again or use the regular login.",
-                  );
-                }
-                // If result is undefined/null the redirect already fired — do nothing.
-              } catch (error: any) {
-                // Next.js redirect() surfaces as a thrown NEXT_REDIRECT error on
-                // the client when called from a server action via React Query.
-                // This is expected behaviour — just let the navigation proceed.
-                if (
-                  (typeof error?.digest === "string" &&
-                    error.digest.startsWith("NEXT_REDIRECT")) ||
-                  String(error?.message ?? "").includes("NEXT_REDIRECT")
-                ) {
-                  return;
-                }
-
-                setServerError(getFriendlyAuthErrorMessage(error, "login"));
+          <div className="grid gap-2 sm:grid-cols-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() =>
+                runDemo(
+                  () => mutateDemoLogin(),
+                  "Demo login failed. Please try again or use the regular login.",
+                )
               }
-            }}
-            disabled={isPending || isDemoPending}
-            className="w-full justify-center gap-2 rounded-full border-blue-200 bg-blue-50/70 text-blue-700 hover:bg-blue-100 hover:text-blue-800 dark:border-cyan-400/30 dark:bg-cyan-500/10 dark:text-cyan-200 dark:hover:bg-cyan-500/15"
-          >
-            <Sparkles className="size-4" aria-hidden="true" />
-            {isDemoPending ? "Starting demo session…" : "Continue with demo account"}
-          </Button>
+              disabled={isPending || isAnyDemoPending}
+              className="w-full justify-center gap-2 rounded-full border-blue-200 bg-blue-50/70 text-blue-700 hover:bg-blue-100 hover:text-blue-800 dark:border-cyan-400/30 dark:bg-cyan-500/10 dark:text-cyan-200 dark:hover:bg-cyan-500/15"
+            >
+              <Sparkles className="size-4" aria-hidden="true" />
+              {isDemoPending ? "Starting…" : "Demo client"}
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() =>
+                runDemo(
+                  () => mutateExpertDemo(),
+                  "Expert demo login failed. Please try again later.",
+                )
+              }
+              disabled={isPending || isAnyDemoPending}
+              className="w-full justify-center gap-2 rounded-full border-emerald-200 bg-emerald-50/70 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 dark:border-emerald-400/30 dark:bg-emerald-500/10 dark:text-emerald-200 dark:hover:bg-emerald-500/15"
+            >
+              <Sparkles className="size-4" aria-hidden="true" />
+              {isExpertDemoPending ? "Starting…" : "Demo expert"}
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() =>
+                runDemo(
+                  () => mutateAdminDemo(),
+                  "Admin demo login failed. Please try again later.",
+                )
+              }
+              disabled={isPending || isAnyDemoPending}
+              className="w-full justify-center gap-2 rounded-full border-amber-200 bg-amber-50/70 text-amber-700 hover:bg-amber-100 hover:text-amber-800 dark:border-amber-400/30 dark:bg-amber-500/10 dark:text-amber-200 dark:hover:bg-amber-500/15"
+            >
+              <Sparkles className="size-4" aria-hidden="true" />
+              {isAdminDemoPending ? "Starting…" : "Demo admin"}
+            </Button>
+          </div>
 
           {/* Submit Button */}
           <form.Subscribe selector={(s) => [s.canSubmit, s.isSubmitting] as const}>

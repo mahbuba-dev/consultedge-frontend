@@ -188,8 +188,8 @@ export default function ChatRoomHeader({
           ) : null}
           <AvatarFallback>
             {getParticipantDisplayName(primaryParticipant)
-              .slice(0, 2)
-              .toUpperCase()}
+              .slice(0, 1)
+              .toUpperCase() || "U"}
           </AvatarFallback>
         </Avatar>
 

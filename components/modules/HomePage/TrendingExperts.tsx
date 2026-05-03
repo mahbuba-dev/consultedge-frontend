@@ -27,6 +27,13 @@ type TrendingCard = {
   profilePhoto?: string | null;
 };
 
+type LocalTrendingFallback = {
+  name: string;
+  title: string;
+  industry?: string;
+  bio: string;
+};
+
 const MAX = 4;
 const fallbackBio =
   "Trusted operator helping teams move faster with focused 1:1 sessions.";
@@ -38,12 +45,39 @@ const variedFallbackBios = [
   "Supports founders with offer strategy, positioning, and retention-focused customer journeys.",
 ] as const;
 
+const persistentTrendingFallback: LocalTrendingFallback[] = [
+  {
+    name: "Ryan Coleman",
+    title: "Go-To-Market Advisor",
+    industry: "Sales Strategy",
+    bio: "Supports teams with pricing, positioning, and repeatable pipeline growth.",
+  },
+  {
+    name: "Fatima Noor",
+    title: "Brand and Demand Consultant",
+    industry: "Marketing",
+    bio: "Builds demand generation systems focused on conversion and retention.",
+  },
+  {
+    name: "Leo Martins",
+    title: "Technical Program Specialist",
+    industry: "Technical Teams",
+    bio: "Improves cross-functional delivery with practical program execution frameworks.",
+  },
+  {
+    name: "Hana Kim",
+    title: "Leadership Coach",
+    industry: "Executive Coaching",
+    bio: "Helps leaders improve clarity, decision velocity, and team alignment.",
+  },
+] as const;
+
 const getInitials = (name: string) =>
   name
     .split(" ")
     .map((p) => p[0])
     .join("")
-    .slice(0, 2)
+    .slice(0, 1)
     .toUpperCase();
 
 const buildAvatarUrl = (name: string) =>
@@ -60,6 +94,15 @@ const isSeededExpert = (expert: IExpert) => {
   return email.endsWith("@consultedge.test");
 };
 
+const getFeaturedScore = (expert: IExpert) => {
+  const verified = expert.isVerified ? 4 : 0;
+  const hasPhoto = expert.profilePhoto ? 2 : 0;
+  const hasBio = expert.bio?.trim() ? 1 : 0;
+  const hasTitle = expert.title?.trim() ? 0.5 : 0;
+  const experience = Math.min(Number(expert.experience ?? 0), 15) / 15;
+  return verified + hasPhoto + hasBio + hasTitle + experience;
+};
+
 export default function TrendingExperts({ experts }: TrendingExpertsProps) {
   const { data: fallbackExpertsResult } = useQuery({
     queryKey: ["homepage-trending-fallback-experts", MAX],
@@ -74,17 +117,27 @@ export default function TrendingExperts({ experts }: TrendingExpertsProps) {
     gcTime: 1000 * 60 * 20,
   });
 
-  const candidateExperts = useMemo(() => {
+  const allExpertsPool = useMemo(() => {
     const pool = [
       ...experts,
       ...(Array.isArray(fallbackExpertsResult?.data) ? fallbackExpertsResult.data : []),
     ];
     const seen = new Set<string>();
-    const nonSeeded: IExpert[] = [];
+    const uniqueExperts: IExpert[] = [];
 
     for (const expert of pool) {
       if (!expert?.id || seen.has(expert.id)) continue;
       seen.add(expert.id);
+      uniqueExperts.push(expert);
+    }
+
+    return uniqueExperts;
+  }, [experts, fallbackExpertsResult]);
+
+  const candidateExperts = useMemo(() => {
+    const nonSeeded: IExpert[] = [];
+
+    for (const expert of allExpertsPool) {
       if (isSeededExpert(expert)) {
         continue;
       } else {
@@ -93,7 +146,12 @@ export default function TrendingExperts({ experts }: TrendingExpertsProps) {
     }
 
     return nonSeeded;
-  }, [experts, fallbackExpertsResult]);
+  }, [allExpertsPool]);
+
+  const featuredExperts = useMemo(
+    () => [...allExpertsPool].sort((a, b) => getFeaturedScore(b) - getFeaturedScore(a)).slice(0, MAX * 2),
+    [allExpertsPool],
+  );
 
   const expertsById = useMemo(() => {
     const m = new Map<string, IExpert>();
@@ -131,7 +189,7 @@ export default function TrendingExperts({ experts }: TrendingExpertsProps) {
 
   const cards: TrendingCard[] = useMemo(() => {
     const used = new Set<string>();
-    return trending
+    const primary = trending
       .filter((expert) => {
         const key = normalizeName(expert.fullName);
         if (used.has(key)) return false;
@@ -151,7 +209,47 @@ export default function TrendingExperts({ experts }: TrendingExpertsProps) {
           fallbackBio,
         profilePhoto: expert.profilePhoto || null,
       }));
-  }, [trending]);
+
+    if (primary.length >= MAX) {
+      return primary.slice(0, MAX);
+    }
+
+    const padded = [...primary];
+
+    for (const expert of featuredExperts) {
+      if (padded.length >= MAX) break;
+      const key = normalizeName(expert.fullName);
+      if (used.has(key)) continue;
+      used.add(key);
+      padded.push({
+        key: `featured-trending-${expert.id}`,
+        href: `/experts/${expert.id}`,
+        name: expert.fullName,
+        title: expert.title || "Consultant",
+        industry: expert.industry?.name,
+        bio: expert.bio?.trim() || fallbackBio,
+        profilePhoto: expert.profilePhoto || null,
+      });
+    }
+
+    for (let i = 0; i < persistentTrendingFallback.length && padded.length < MAX; i += 1) {
+      const fallback = persistentTrendingFallback[i];
+      const key = normalizeName(fallback.name);
+      if (used.has(key)) continue;
+      used.add(key);
+      padded.push({
+        key: `trending-fallback-${i}`,
+        href: "/experts",
+        name: fallback.name,
+        title: fallback.title,
+        industry: fallback.industry,
+        bio: fallback.bio,
+        profilePhoto: buildAvatarUrl(fallback.name),
+      });
+    }
+
+    return padded.slice(0, MAX);
+  }, [trending, featuredExperts]);
   const isDevFallbackActive =
     process.env.NODE_ENV !== "production" && (aiResult?.data?.items?.length ?? 0) === 0;
 

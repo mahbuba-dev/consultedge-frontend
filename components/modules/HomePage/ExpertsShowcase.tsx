@@ -46,12 +46,22 @@ type DisplayExpertCard = {
   isVerified?: boolean;
 };
 
+type LocalFallbackExpert = {
+  name: string;
+  title: string;
+  specialization: string;
+  description: string;
+  experienceYears: number;
+  fee: number;
+  whyReason: string;
+};
+
 const getInitials = (name: string) =>
   name
     .split(" ")
     .map((part) => part[0])
     .join("")
-    .slice(0, 2)
+    .slice(0, 1)
     .toUpperCase();
 
 const buildAvatarUrl = (name: string) =>
@@ -68,6 +78,45 @@ const formatFee = (value?: number | null) =>
 
 const fallbackBio =
   "Focused 1:1 guidance for strategy, growth, operations, and decision-making support.";
+
+const persistentFeaturedExperts: LocalFallbackExpert[] = [
+  {
+    name: "Ava Peterson",
+    title: "Growth Strategy Advisor",
+    specialization: "Growth Strategy",
+    description: "Helps startups tighten positioning, pricing, and go-to-market execution with pragmatic weekly guidance.",
+    experienceYears: 11,
+    fee: 140,
+    whyReason: "Featured expert",
+  },
+  {
+    name: "Nadia Rahman",
+    title: "Operations Excellence Consultant",
+    specialization: "Operations",
+    description: "Builds lean delivery systems, team rituals, and operating cadences that improve execution quality.",
+    experienceYears: 9,
+    fee: 125,
+    whyReason: "Featured expert",
+  },
+  {
+    name: "Daniel Brooks",
+    title: "Customer Experience Specialist",
+    specialization: "Customer Experience",
+    description: "Works with service teams on retention, journey design, and measurable client experience improvements.",
+    experienceYears: 10,
+    fee: 135,
+    whyReason: "Featured expert",
+  },
+  {
+    name: "Sara Kim",
+    title: "Brand and Demand Consultant",
+    specialization: "Marketing",
+    description: "Supports founders with offer clarity, channel focus, and repeatable demand generation systems.",
+    experienceYears: 8,
+    fee: 120,
+    whyReason: "Featured expert",
+  },
+] as const;
 
 const normalizeName = (value: string) => value.trim().toLowerCase();
 
@@ -109,6 +158,15 @@ const dedupeDisplayCards = (cards: DisplayExpertCard[], cap: number) => {
   return unique;
 };
 
+const getFeaturedScore = (expert: IExpert) => {
+  const verified = expert.isVerified ? 4 : 0;
+  const hasPhoto = expert.profilePhoto ? 2 : 0;
+  const hasBio = expert.bio?.trim() ? 1 : 0;
+  const hasTitle = expert.title?.trim() ? 0.5 : 0;
+  const experience = Math.min(Number(expert.experience ?? 0), 15) / 15;
+  return verified + hasPhoto + hasBio + hasTitle + experience;
+};
+
 export default function ExpertsShowcase({ experts, limit = 4 }: ExpertsShowcaseProps) {
   const cap = Math.max(4, Math.min(limit, 6));
   const { hydrated, signals, mode, activityCount } = useUserActivity();
@@ -145,17 +203,27 @@ export default function ExpertsShowcase({ experts, limit = 4 }: ExpertsShowcaseP
     gcTime: 1000 * 60 * 20,
   });
 
-  const candidateExperts = useMemo(() => {
+  const allExpertsPool = useMemo(() => {
     const pool = [
       ...experts,
       ...(Array.isArray(fallbackExpertsResult?.data) ? fallbackExpertsResult.data : []),
     ];
     const seen = new Set<string>();
-    const nonSeeded: IExpert[] = [];
+    const uniqueExperts: IExpert[] = [];
 
     for (const expert of pool) {
       if (!expert?.id || seen.has(expert.id)) continue;
       seen.add(expert.id);
+      uniqueExperts.push(expert);
+    }
+
+    return uniqueExperts;
+  }, [experts, fallbackExpertsResult]);
+
+  const candidateExperts = useMemo(() => {
+    const nonSeeded: IExpert[] = [];
+
+    for (const expert of allExpertsPool) {
       if (!isSeededExpert(expert)) {
         nonSeeded.push(expert);
       }
@@ -163,7 +231,12 @@ export default function ExpertsShowcase({ experts, limit = 4 }: ExpertsShowcaseP
 
     // Curated section should only show frontend-created (non-seeded) experts.
     return nonSeeded;
-  }, [experts, fallbackExpertsResult]);
+  }, [allExpertsPool]);
+
+  const featuredExperts = useMemo(
+    () => [...allExpertsPool].sort((a, b) => getFeaturedScore(b) - getFeaturedScore(a)).slice(0, cap * 2),
+    [allExpertsPool, cap],
+  );
 
   const expertsByName = useMemo(() => {
     const map = new Map<string, IExpert>();
@@ -229,7 +302,40 @@ export default function ExpertsShowcase({ experts, limit = 4 }: ExpertsShowcaseP
     }));
   }, [aiResult, cap, expertsByName, localReasonByName, localRanked]);
 
-  const displayItems = useMemo(() => dedupeDisplayCards(items, cap), [items, cap]);
+  const featuredFallbackCards = useMemo(
+    () =>
+      featuredExperts.map((expert) => ({
+        key: `featured-${expert.id}`,
+        href: `/experts/${expert.id}`,
+        name: expert.fullName,
+        title: expert.title || "Consultant",
+        specialization: expert.industry?.name || "General Consulting",
+        description: expert.bio?.trim() || fallbackBio,
+        experienceYears: Number(expert.experience ?? 0),
+        fee: Number(expert.consultationFee ?? expert.price ?? 0),
+        whyReason: expert.isVerified ? "Featured verified expert" : "Featured expert",
+        profilePhoto: expert.profilePhoto || null,
+        isVerified: expert.isVerified,
+      })),
+    [featuredExperts],
+  );
+
+  const persistentFallbackCards = useMemo(
+    () =>
+      persistentFeaturedExperts.map((expert, index) => ({
+        key: `persistent-featured-${index}`,
+        href: "/experts",
+        ...expert,
+        profilePhoto: buildAvatarUrl(expert.name),
+        isVerified: true,
+      })),
+    [],
+  );
+
+  const displayItems = useMemo(
+    () => dedupeDisplayCards([...items, ...featuredFallbackCards, ...persistentFallbackCards], cap),
+    [items, featuredFallbackCards, persistentFallbackCards, cap],
+  );
   const isDevFallbackActive =
     process.env.NODE_ENV !== "production" &&
     hydrated &&
