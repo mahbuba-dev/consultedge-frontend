@@ -73,6 +73,9 @@ const getInitials = (name: string) =>
     .slice(0, 2)
     .toUpperCase();
 
+const buildAvatarUrl = (name: string) =>
+  `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(name)}&radius=50&backgroundType=gradientLinear`;
+
   const normalizeName = (value: string) => value.trim().toLowerCase();
 
 const isSeededExpert = (expert: IExpert) => {
@@ -261,9 +264,7 @@ export default function TrendingExperts({ experts }: TrendingExpertsProps) {
 
                 <div className="flex items-center gap-3">
                   <Avatar size="default" className="size-12 border-2 border-orange-100 ring-2 ring-orange-50 dark:border-white/15 dark:ring-white/10">
-                    {card.profilePhoto ? (
-                      <AvatarImage src={card.profilePhoto} alt={card.name} />
-                    ) : null}
+                    <AvatarImage src={card.profilePhoto || buildAvatarUrl(card.name)} alt={card.name} />
                     <AvatarFallback>{getInitials(card.name)}</AvatarFallback>
                   </Avatar>
                   <div className="min-w-0 flex-1">

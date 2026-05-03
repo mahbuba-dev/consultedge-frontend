@@ -54,6 +54,9 @@ const getInitials = (name: string) =>
     .slice(0, 2)
     .toUpperCase();
 
+const buildAvatarUrl = (name: string) =>
+  `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(name)}&radius=50&backgroundType=gradientLinear`;
+
 const formatFee = (value?: number | null) =>
   typeof value === "number"
     ? new Intl.NumberFormat("en-US", {
@@ -288,6 +291,7 @@ export default function ExpertsShowcase({ experts, limit = 4 }: ExpertsShowcaseP
         experienceYears: expert.experienceYears,
         fee: expert.fee,
         whyReason: "Popular pick",
+        profilePhoto: buildAvatarUrl(expert.name),
       });
     }
 
@@ -385,17 +389,20 @@ export default function ExpertsShowcase({ experts, limit = 4 }: ExpertsShowcaseP
 
                   <div className="flex items-center gap-3">
                     <div className="relative flex items-center justify-center">
+                      {(() => {
+                        const avatarSrc = item.profilePhoto || buildAvatarUrl(item.name);
+                        return (
                       <Avatar
                         size="default"
                         className="size-12 border-2 border-cyan-100 ring-2 ring-cyan-50 dark:border-white/15 dark:ring-white/10"
                       >
-                        {item.profilePhoto ? (
-                          <AvatarImage src={item.profilePhoto} alt={item.name} />
-                        ) : null}
+                        <AvatarImage src={avatarSrc} alt={item.name} />
                         <AvatarFallback className="text-slate-900">
                           {getInitials(item.name)}
                         </AvatarFallback>
                       </Avatar>
+                        );
+                      })()}
                       <span className="absolute -bottom-0.5 -right-0.5 z-20 flex">
                         <span className="relative flex h-2.5 w-2.5">
                           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
