@@ -134,10 +134,10 @@ export default function ExpertDetails({
               ) : null}
             </div>
 
-            <div className="flex items-start gap-4">
+            <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:items-start sm:text-left">
               <div className="relative flex flex-col items-center">
                 <div className="relative">
-                  <Avatar  className="size-28 border-4 border-white/20 shadow-2xl md:size-36">
+                  <Avatar  className="size-24 border-4 border-white/20 shadow-2xl sm:size-28 md:size-36">
                     {expert.profilePhoto ? (
                       <AvatarImage src={expert.profilePhoto} alt={expert.fullName} />
                     ) : null}
@@ -156,19 +156,19 @@ export default function ExpertDetails({
                   </span>
                 </div>
               </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <h1 className="text-3xl font-bold tracking-tight md:text-4xl lg:text-5xl">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-center gap-2 sm:justify-start">
+                  <h1 className="text-2xl font-bold tracking-tight sm:text-3xl md:text-4xl lg:text-5xl">
                     {expert.fullName}
                   </h1>
                   {expert.isVerified && (
-                    <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-emerald-900/60 ring-2 ring-white/20">
+                    <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-900/60 ring-2 ring-white/20">
                       <BadgeCheck className="size-5 text-emerald-300" />
                     </span>
                   )}
                 </div>
-                <p className="mt-2 text-base text-white/85 md:text-lg">{expert.title}</p>
-                <div className="mt-3 flex flex-wrap gap-2">
+                <p className="mt-2 text-sm text-white/85 sm:text-base md:text-lg">{expert.title}</p>
+                <div className="mt-3 flex flex-wrap justify-center gap-2 sm:justify-start">
                   <Badge className="border-white/15 bg-white/10 text-white hover:bg-white/10">
                     {expert.industry?.name || "General consulting"}
                   </Badge>
@@ -187,9 +187,9 @@ export default function ExpertDetails({
                 `Work with ${expert.fullName} for focused guidance on ${expert.industry?.name || "business"} challenges, planning, and next-step decision making.`}
             </p>
 
-            <div className="flex flex-wrap gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:flex md:flex-wrap">
               <Button
-                className="bg-white text-slate-900 hover:bg-white/90"
+                className="w-full bg-white text-slate-900 hover:bg-white/90 md:w-auto"
                 onClick={handleOpenBookingFromHero}
               >
                 <CalendarDays className="mr-2 size-4" />
@@ -205,7 +205,7 @@ export default function ExpertDetails({
               <Button
                 asChild
                 variant="outline"
-                className="border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white"
+                className="w-full border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white md:w-auto"
               >
                 <a href={`mailto:${expert.email}`}>
                   <Mail className="mr-2 size-4" />
@@ -217,7 +217,7 @@ export default function ExpertDetails({
                 <Button
                   asChild
                   variant="outline"
-                  className="border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white"
+                  className="w-full border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white md:w-auto"
                 >
                   <a href={`tel:${expert.phone}`}>
                     <Phone className="mr-2 size-4" />

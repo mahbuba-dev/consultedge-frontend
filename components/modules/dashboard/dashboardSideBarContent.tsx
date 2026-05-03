@@ -27,7 +27,7 @@ const DashboardSidebarContent = ({dashboardHome, navItems, userInfo} : Dashboard
   const { pendingCount } = usePendingApplicantsCount(userInfo.role === "ADMIN")
 
   return (
-    <div className="hidden md:flex h-full w-64 flex-col border-r bg-card overflow-y-auto">
+    <div className="hidden lg:flex h-full w-64 flex-col border-r bg-card overflow-y-auto">
       {/* Logo / Brand */}
       <div className="flex h-20 items-end px-6 pb-4 border-b">
         <Link href={dashboardHome}>

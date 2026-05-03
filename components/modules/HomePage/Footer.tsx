@@ -149,14 +149,14 @@ export default function Footer() {
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-3">
-              <Button asChild className="h-11 rounded-full bg-white px-5 text-slate-900 hover:bg-white/90">
+            <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap">
+              <Button asChild className="h-11 w-full rounded-full bg-white px-5 text-slate-900 hover:bg-white/90 sm:w-44">
                 <Link href="/experts">
-                  Browse experts <ArrowRight className="ml-2 size-4" />
+                  Browse experts <ArrowRight className="ml-1.5 size-3.5" />
                 </Link>
               </Button>
 
-              <Button asChild className="h-11 rounded-full bg-linear-to-r from-blue-600 via-cyan-500 to-teal-400 px-10 text-white shadow-lg shadow-cyan-500/30 transition-all hover:from-blue-700 hover:via-cyan-600 hover:to-teal-500 hover:shadow-xl hover:shadow-cyan-500/40">
+              <Button asChild className="h-11 w-full rounded-full bg-linear-to-r from-blue-600 via-cyan-500 to-teal-400 px-5 text-white shadow-lg shadow-cyan-500/30 transition-all hover:from-blue-700 hover:via-cyan-600 hover:to-teal-500 hover:shadow-xl hover:shadow-cyan-500/40 sm:w-44">
                 <Link href="/contact">Contact us</Link>
               </Button>
             </div>

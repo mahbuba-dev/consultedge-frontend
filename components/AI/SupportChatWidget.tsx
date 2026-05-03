@@ -60,7 +60,7 @@ export default function SupportChatWidget() {
     <div className="pointer-events-none fixed bottom-4 right-4 z-70 flex max-w-[calc(100vw-1rem)] flex-col items-end gap-3 sm:bottom-5 sm:right-5">
       {isOpen ? (
         <div className={cn("pointer-events-auto origin-bottom-right transition-all duration-300 ease-out translate-y-0 scale-100 opacity-100")}>
-          <div className="relative h-[min(84vh,760px)] w-[min(96vw,1080px)] overflow-hidden rounded-[28px] border border-cyan-200/70 bg-white/75 shadow-[0_30px_90px_-28px_rgba(14,116,144,0.55)] backdrop-blur-2xl dark:border-cyan-300/20 dark:bg-slate-950/75">
+          <div className="relative h-[min(86vh,760px)] w-[min(96vw,1080px)] overflow-hidden rounded-2xl border border-cyan-200/70 bg-white/75 shadow-[0_30px_90px_-28px_rgba(14,116,144,0.55)] backdrop-blur-2xl sm:rounded-[28px] dark:border-cyan-300/20 dark:bg-slate-950/75">
             <div className="pointer-events-none absolute inset-0">
               <div className="absolute -left-16 top-8 h-56 w-56 rounded-full bg-cyan-400/20 blur-3xl" />
               <div className="absolute -right-10 bottom-12 h-52 w-52 rounded-full bg-blue-500/20 blur-3xl" />

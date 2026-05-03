@@ -127,7 +127,11 @@ export default function HomeSearchBar({
             setQuery(event.target.value);
             setOpen(true);
           }}
-          onFocus={() => setOpen(true)}
+          onFocus={() => {
+            // On mobile variant, only open dropdown when user actually types,
+            // so opening the hamburger menu doesn't auto-open results.
+            if (variant !== "mobile") setOpen(true);
+          }}
           onKeyDown={handleKeyDown}
           placeholder="Jump to pages, sections..."
           className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"

@@ -24,7 +24,7 @@ type AiChatWorkspaceProps = {
 };
 
 const isMobileViewport = () =>
-  typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches;
+  typeof window !== "undefined" && window.matchMedia("(max-width: 1023px)").matches;
 
 export default function AiChatWorkspace({ mode = "page" }: AiChatWorkspaceProps) {
   const {
@@ -43,7 +43,7 @@ export default function AiChatWorkspace({ mode = "page" }: AiChatWorkspaceProps)
   } = useAiChat(mode === "widget" ? "homepage" : "dashboard");
 
   const [input, setInput] = useState("");
-  const [sidebarOpen, setSidebarOpen] = useState(mode === "page");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [attachment, setAttachment] = useState<{ file: File; previewUrl: string } | null>(null);
   const [loadingStep, setLoadingStep] = useState(0);
   const [likeDialogOpen, setLikeDialogOpen] = useState(false);
@@ -64,7 +64,12 @@ export default function AiChatWorkspace({ mode = "page" }: AiChatWorkspaceProps)
   }, [messages, isLoading]);
 
   useEffect(() => {
-    setSidebarOpen(mode === "page");
+    if (typeof window === "undefined") return;
+    const mql = window.matchMedia("(min-width: 1024px)");
+    const apply = () => setSidebarOpen(mode === "page" && mql.matches);
+    apply();
+    mql.addEventListener("change", apply);
+    return () => mql.removeEventListener("change", apply);
   }, [mode]);
 
   useEffect(() => {
@@ -227,7 +232,7 @@ export default function AiChatWorkspace({ mode = "page" }: AiChatWorkspaceProps)
         <button
           type="button"
           aria-label="Close chat sidebar"
-          className="absolute inset-0 z-10 bg-black/40 backdrop-blur-[1px] md:hidden"
+          className="absolute inset-0 z-10 bg-black/40 backdrop-blur-[1px] lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -235,8 +240,8 @@ export default function AiChatWorkspace({ mode = "page" }: AiChatWorkspaceProps)
       {/* Sidebar */}
       <div
         className={cn(
-          "absolute inset-y-0 left-0 z-20 transition-transform duration-200 md:static md:z-0",
-          sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
+          "absolute inset-y-0 left-0 z-20 transition-transform duration-200 lg:static lg:z-0",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
         )}
       >
         <AiChatSidebar
@@ -259,7 +264,7 @@ export default function AiChatWorkspace({ mode = "page" }: AiChatWorkspaceProps)
             type="button"
             variant="ghost"
             size="icon"
-            className="h-8 w-8 md:hidden"
+            className="h-8 w-8 lg:hidden"
             onClick={() => setSidebarOpen((prev) => !prev)}
             aria-label="Toggle chat sidebar"
           >
@@ -355,7 +360,7 @@ export default function AiChatWorkspace({ mode = "page" }: AiChatWorkspaceProps)
             </div>
           )}
 
-          <div className="flex items-end gap-1.5 rounded-xl border border-cyan-200/45 bg-white/60 px-2.5 py-1.5 shadow-[0_8px_32px_-20px_rgba(2,132,199,0.45)] backdrop-blur-xl transition-all focus-within:border-cyan-400/55 focus-within:ring-1 focus-within:ring-cyan-400/30 sm:gap-2 sm:px-3 sm:py-2 dark:border-cyan-300/15 dark:bg-slate-900/45">
+          <div className="flex items-end gap-1 rounded-xl border border-cyan-200/45 bg-white/60 px-2 py-1.5 shadow-[0_8px_32px_-20px_rgba(2,132,199,0.45)] backdrop-blur-xl transition-all focus-within:border-cyan-400/55 focus-within:ring-1 focus-within:ring-cyan-400/30 sm:gap-2 sm:px-3 sm:py-2 dark:border-cyan-300/15 dark:bg-slate-900/45">
             <input
               ref={attachmentInputRef}
               type="file"
@@ -368,7 +373,7 @@ export default function AiChatWorkspace({ mode = "page" }: AiChatWorkspaceProps)
               type="button"
               size="icon"
               variant="ghost"
-              className="h-8 w-8 shrink-0 mb-0.5 text-cyan-700 hover:text-cyan-800 dark:text-cyan-300"
+              className="h-8 w-7 sm:w-8 shrink-0 mb-0.5 text-cyan-700 hover:text-cyan-800 dark:text-cyan-300"
               onClick={handlePickImage}
               aria-label="Share image"
             >
@@ -379,9 +384,9 @@ export default function AiChatWorkspace({ mode = "page" }: AiChatWorkspaceProps)
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Message AI assistant..."
+              placeholder="Message AI..."
               className={cn(
-                "max-h-36 min-h-10 flex-1 resize-none border-0 bg-transparent p-0 text-xs sm:text-sm shadow-none focus-visible:ring-0",
+                "max-h-36 min-h-9 sm:min-h-10 flex-1 min-w-0 resize-none border-0 bg-transparent p-0 text-xs sm:text-sm shadow-none focus-visible:ring-0",
               )}
               rows={1}
               disabled={isLoading}
@@ -389,7 +394,7 @@ export default function AiChatWorkspace({ mode = "page" }: AiChatWorkspaceProps)
             <Button
               type="button"
               size="icon"
-              className="mb-0.5 h-9 w-9 shrink-0 bg-linear-to-br from-fuchsia-500 via-sky-500 to-cyan-400 text-white shadow-[0_10px_24px_-12px_rgba(14,165,233,0.95)] hover:opacity-95"
+              className="mb-0.5 h-8 w-8 sm:h-9 sm:w-9 shrink-0 bg-linear-to-br from-fuchsia-500 via-sky-500 to-cyan-400 text-white shadow-[0_10px_24px_-12px_rgba(14,165,233,0.95)] hover:opacity-95"
               onClick={() => void handleSend()}
               disabled={(!input.trim() && !attachment) || isLoading}
             >

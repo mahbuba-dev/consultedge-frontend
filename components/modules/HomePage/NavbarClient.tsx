@@ -322,7 +322,7 @@ const NavbarClient = ({
                 </Button>
               </SheetTrigger>
 
-              <SheetContent side="right" className="flex w-[88vw] flex-col border-slate-200/70 bg-background/95 sm:max-w-sm dark:border-white/10 dark:bg-slate-950/95">
+              <SheetContent side="right" onOpenAutoFocus={(e) => e.preventDefault()} className="flex w-[88vw] flex-col overflow-y-auto border-slate-200/70 bg-background/95 sm:max-w-sm dark:border-white/10 dark:bg-slate-950/95">
                 <SheetHeader className="px-4 pb-2">
                   <div className="rounded-2xl border border-slate-200/70 bg-linear-to-br from-blue-50 via-white to-cyan-50 p-4 text-left dark:border-white/10 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900">
                     <div className="mb-3 flex items-center gap-3.5">
@@ -335,12 +335,22 @@ const NavbarClient = ({
                           className="h-full w-full object-contain"
                         />
                       </div>
-                      <div>
+                      <div className="flex-1">
                         <SheetTitle className="text-lg font-semibold tracking-tight">ConsultEdge</SheetTitle>
                         <SheetDescription className="text-xs md:text-sm">
                           Premium expert consultation network.
                         </SheetDescription>
                       </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={handleThemeToggle}
+                        className="relative size-9 shrink-0 rounded-full border-slate-200 bg-white/90 text-slate-600 dark:border-white/10 dark:bg-slate-900/70 dark:text-slate-200"
+                        aria-label={themeLabel}
+                      >
+                        {isDarkMode ? <Sun className="size-4" /> : <Moon className="size-4" />}
+                      </Button>
                     </div>
 
                     {isLoggedIn ? (
@@ -352,11 +362,68 @@ const NavbarClient = ({
                   </div>
                 </SheetHeader>
 
+                {isLoggedIn ? (
+                  <div className="grid grid-cols-2 gap-2 px-4 pb-2">
+                    <SheetClose asChild>
+                      <Button asChild variant="outline" size="sm" className="w-full justify-center rounded-full text-xs dark:border-white/10 dark:bg-slate-950/70 dark:text-slate-100">
+                        <Link href={dashboardHref}>
+                          <LayoutDashboard className="mr-1.5 size-3.5" />
+                          Dashboard
+                        </Link>
+                      </Button>
+                    </SheetClose>
+                    <SheetClose asChild>
+                      <Button asChild variant="outline" size="sm" className="w-full justify-center rounded-full text-xs dark:border-white/10 dark:bg-slate-950/70 dark:text-slate-100">
+                        <Link href={bookingHref}>
+                          <BriefcaseBusiness className="mr-1.5 size-3.5" />
+                          {bookingLabel}
+                        </Link>
+                      </Button>
+                    </SheetClose>
+                    <SheetClose asChild>
+                      <Button asChild variant="outline" size="sm" className="w-full justify-center rounded-full text-xs dark:border-white/10 dark:bg-slate-950/70 dark:text-slate-100">
+                        <Link href="/my-profile">
+                          <Settings className="mr-1.5 size-3.5" />
+                          Settings
+                        </Link>
+                      </Button>
+                    </SheetClose>
+                    <LogoutButton className="inline-flex h-8 w-full items-center justify-center rounded-full bg-linear-to-r from-blue-600 to-cyan-500 text-xs font-medium text-white transition-colors hover:from-blue-700 hover:to-cyan-600 disabled:opacity-60">
+                      <LogOut className="mr-1.5 size-3.5" />
+                      Logout
+                    </LogoutButton>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2 px-4 pb-2">
+                    <SheetClose asChild>
+                      <Button asChild variant="outline" size="sm" className="w-full rounded-full text-xs dark:border-white/10 dark:bg-slate-950/70 dark:text-slate-100">
+                        <Link href="/login">
+                          <LogIn className="mr-1.5 size-3.5" />
+                          Login
+                        </Link>
+                      </Button>
+                    </SheetClose>
+                    <SheetClose asChild>
+                      <Button asChild size="sm" className="w-full rounded-full bg-linear-to-r from-blue-600 to-cyan-500 text-xs hover:from-blue-700 hover:to-cyan-600">
+                        <Link href="/register">
+                          Sign up
+                          <ArrowRight className="ml-1.5 size-3.5" />
+                        </Link>
+                      </Button>
+                    </SheetClose>
+                    <SheetClose asChild>
+                      <Button asChild variant="outline" size="sm" className="col-span-2 w-full rounded-full text-xs dark:border-white/10 dark:bg-slate-950/70 dark:text-slate-100">
+                        <Link href="/apply-expert">Apply Expert</Link>
+                      </Button>
+                    </SheetClose>
+                  </div>
+                )}
+
                 <div className="px-4 pb-3">
                   <HomeSearchBar variant="mobile" />
                 </div>
 
-                <div className="flex flex-1 flex-col gap-2 px-4 pb-4">
+                <div className="flex flex-1 flex-col gap-2 px-4 pb-6">
                   {navItems.map((item) => {
                     const isActive = isActiveRoute(item.href);
 
@@ -375,80 +442,6 @@ const NavbarClient = ({
                       </SheetClose>
                     );
                   })}
-                </div>
-
-                <div className="mt-auto space-y-3 border-t p-4 dark:border-white/10">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleThemeToggle}
-                    className="relative w-full justify-center rounded-full dark:border-white/10 dark:bg-slate-950/70 dark:text-slate-100"
-                  >
-                    {isDarkMode ? <Sun className="mr-2 size-4" /> : <Moon className="mr-2 size-4" />}
-                    {themeLabel}
-                  </Button>
-
-                  {isLoggedIn ? (
-                    <>
-                      <SheetClose asChild>
-                        <Button asChild variant="outline" className="w-full justify-center rounded-full dark:border-white/10 dark:bg-slate-950/70 dark:text-slate-100">
-                          <Link href={dashboardHref}>
-                            <LayoutDashboard className="mr-2 size-4" />
-                            Dashboard
-                          </Link>
-                        </Button>
-                      </SheetClose>
-
-                      <SheetClose asChild>
-                        <Button asChild variant="outline" className="w-full justify-center rounded-full dark:border-white/10 dark:bg-slate-950/70 dark:text-slate-100">
-                          <Link href={bookingHref}>
-                            <BriefcaseBusiness className="mr-2 size-4" />
-                            {bookingLabel}
-                          </Link>
-                        </Button>
-                      </SheetClose>
-
-                      <SheetClose asChild>
-                        <Button asChild variant="outline" className="w-full justify-center rounded-full dark:border-white/10 dark:bg-slate-950/70 dark:text-slate-100">
-                          <Link href="/my-profile">
-                            <Settings className="mr-2 size-4" />
-                            Settings
-                          </Link>
-                        </Button>
-                      </SheetClose>
-
-                      <LogoutButton className="inline-flex h-10 w-full items-center justify-center rounded-full bg-linear-to-r from-blue-600 to-cyan-500 text-sm font-medium text-white transition-colors hover:from-blue-700 hover:to-cyan-600 disabled:opacity-60">
-                        <LogOut className="mr-2 size-4" />
-                        Logout
-                      </LogoutButton>
-                    </>
-                  ) : (
-                    <>
-                      <SheetClose asChild>
-                        <Button asChild variant="outline" className="w-full rounded-full dark:border-white/10 dark:bg-slate-950/70 dark:text-slate-100">
-                          <Link href="/login">
-                            <LogIn className="mr-2 size-4" />
-                            Login
-                          </Link>
-                        </Button>
-                      </SheetClose>
-
-                      <SheetClose asChild>
-                        <Button asChild className="w-full rounded-full bg-linear-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600">
-                          <Link href="/register">
-                            Sign up
-                            <ArrowRight className="ml-2 size-4" />
-                          </Link>
-                        </Button>
-                      </SheetClose>
-
-                      <SheetClose asChild>
-                        <Button asChild variant="outline" className="w-full rounded-full dark:border-white/10 dark:bg-slate-950/70 dark:text-slate-100">
-                          <Link href="/apply-expert">Apply Expert</Link>
-                        </Button>
-                      </SheetClose>
-                    </>
-                  )}
                 </div>
               </SheetContent>
             </Sheet>

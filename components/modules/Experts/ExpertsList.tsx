@@ -661,7 +661,7 @@ export default function ExpertsPageClient() {
             </div>
         </div>
 
-        <div className="mt-6 grid gap-3 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:items-start">
+        <div className="mt-6 grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:items-start">
           <div className="min-w-0">
             <DataTableSearch
               initialValue={searchTerm}
@@ -680,7 +680,7 @@ export default function ExpertsPageClient() {
             />
           </div>
 
-          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]">
+          <div className="grid gap-2 grid-cols-1 sm:grid-cols-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]">
             <Select
               value={selectedIndustryId}
               onValueChange={(value) =>

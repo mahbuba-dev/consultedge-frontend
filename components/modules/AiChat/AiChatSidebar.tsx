@@ -30,7 +30,7 @@ export default function AiChatSidebar({
     <aside
       className={cn(
         "pointer-events-auto flex h-full min-h-0 shrink-0 flex-col overflow-hidden border-r border-border bg-muted/30",
-        mode === "widget" ? "w-46 sm:w-52 md:w-64 lg:w-72" : "w-60 md:w-64 lg:w-72",
+        mode === "widget" ? "w-44 sm:w-52 md:w-60 lg:w-72" : "w-64 lg:w-72",
       )}
     >
       {/* Header */}

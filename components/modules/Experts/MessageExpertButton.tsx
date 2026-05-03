@@ -37,7 +37,7 @@ export default function MessageExpertButton({
     <Button
       asChild
       variant="outline"
-      className="border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white"
+      className="w-full border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white md:w-auto"
     >
       <Link href={href}>
         <MessageCircleMore className="mr-2 size-4" />

@@ -156,8 +156,8 @@ export default function HomeSection2({ testimonials }: HomeSection2Props) {
 
         {/* Trust signals + CTA */}
         <div className="consultedge-reveal--visible relative mt-8 rounded-[1.8rem] border border-border/60 bg-linear-to-r from-slate-950 via-blue-950 to-cyan-950 text-white shadow-sm dark:border-white/10" style={{ animationDelay: "520ms" }}>
-          <div className="grid gap-6 p-6 md:grid-cols-[1fr_auto] md:items-center md:p-8">
-            <div className="grid gap-5 sm:grid-cols-3">
+          <div className="grid gap-6 p-5 sm:p-6 lg:grid-cols-[1fr_auto] lg:items-center lg:p-8">
+            <div className="grid gap-4 sm:grid-cols-3">
               {trustSignals.map((signal) => {
                 const Icon = signal.icon;
                 return (
@@ -165,7 +165,7 @@ export default function HomeSection2({ testimonials }: HomeSection2Props) {
                     <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/10">
                       <Icon className="size-4 text-cyan-200" />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-sm font-semibold text-white">{signal.label}</p>
                       <p className="text-xs text-slate-300">{signal.sub}</p>
                     </div>
@@ -173,17 +173,17 @@ export default function HomeSection2({ testimonials }: HomeSection2Props) {
                 );
               })}
             </div>
-            <div className="flex shrink-0 flex-wrap gap-3">
+            <div className="flex w-full shrink-0 flex-col gap-3 sm:flex-row sm:flex-wrap lg:w-auto">
               <Link
                 href="/experts"
-                className="inline-flex h-11 items-center gap-2 rounded-full bg-white px-5 text-sm font-medium text-slate-900 transition-all hover:bg-white/90"
+                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-white px-5 text-sm font-medium text-slate-900 transition-all hover:bg-white/90 sm:w-auto"
               >
                 Browse experts
-                <ArrowRight className="ml-2 size-4" />
+                <ArrowRight className="ml-1 size-4" />
               </Link>
               <Link
                 href="/register"
-                className="inline-flex h-11 items-center gap-2 rounded-full border border-white/20 bg-transparent px-10 text-sm font-medium text-white transition-all hover:bg-white/10"
+                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full border border-white/20 bg-transparent px-6 text-sm font-medium text-white transition-all hover:bg-white/10 sm:w-auto"
               >
                 Create account
               </Link>
@@ -244,7 +244,7 @@ export default function HomeSection2({ testimonials }: HomeSection2Props) {
               {scrollingTestimonials.map((testimonial, index) => (
                 <article
                   key={`${testimonial.id}-${index}`}
-                  className="w-[84vw] shrink-0 rounded-3xl border border-white/25 bg-linear-to-b from-white/22 to-white/10 p-5 shadow-[0_24px_56px_-34px_rgba(15,23,42,0.85)] backdrop-blur-md sm:w-80 lg:w-64 xl:w-64"
+                  className="w-[68vw] shrink-0 rounded-3xl border border-white/25 bg-linear-to-b from-white/22 to-white/10 p-4 shadow-[0_24px_56px_-34px_rgba(15,23,42,0.85)] backdrop-blur-md sm:w-72 sm:p-5 lg:w-64 xl:w-64"
                 >
                   <div className="mb-3 flex items-center justify-between gap-3">
                     <div>

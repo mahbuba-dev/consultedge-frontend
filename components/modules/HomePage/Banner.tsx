@@ -131,7 +131,7 @@ export default function Banner() {
 
   return (
     <section className="relative -mx-4 -mt-6 overflow-hidden rounded-b-[2rem] border-b border-slate-800/80 bg-slate-950 shadow-[0_30px_80px_-30px_rgba(34,211,238,0.35)] md:-mx-6 lg:-mt-8 lg:rounded-b-[2.5rem]">
-      <div className="relative h-[clamp(460px,62vh,640px)] overflow-hidden md:h-[clamp(480px,66vh,680px)] lg:h-[clamp(520px,70vh,720px)]">
+      <div className="relative h-[clamp(380px,58vh,520px)] overflow-hidden sm:h-[clamp(420px,62vh,600px)] md:h-[clamp(460px,60vh,640px)] lg:h-[clamp(520px,70vh,720px)]">
         {slides.map((slide, index) => (
           <div
             key={slide.title}
@@ -173,14 +173,14 @@ export default function Banner() {
 
               <h1
                 data-anim
-                className="text-2xl font-bold leading-[1.1] tracking-tight text-balance md:text-3xl lg:text-4xl xl:text-5xl"
+                className="text-2xl font-bold leading-[1.1] tracking-tight text-balance sm:text-3xl md:text-4xl lg:text-4xl xl:text-5xl"
               >
                 {currentSlide.title}
               </h1>
 
               <p
                 data-anim
-                className="max-w-xl text-sm leading-6 text-slate-200/90 md:text-base md:leading-7"
+                className="max-w-xl text-sm leading-6 text-slate-200/90 sm:text-base sm:leading-7 md:text-lg md:leading-8"
               >
                 {currentSlide.description}
               </p>
