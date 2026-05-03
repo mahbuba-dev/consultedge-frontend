@@ -147,16 +147,25 @@ export default function ExpertsShowcase({ experts, limit = 4 }: ExpertsShowcaseP
       ...experts,
       ...(Array.isArray(fallbackExpertsResult?.data) ? fallbackExpertsResult.data : []),
     ];
-    const unique = new Map<string, IExpert>();
+    const seen = new Set<string>();
+    const nonSeeded: IExpert[] = [];
+    const seededPool: IExpert[] = [];
 
     for (const expert of pool) {
-      if (!expert?.id || unique.has(expert.id)) continue;
-      if (isSeededExpert(expert)) continue;
-      unique.set(expert.id, expert);
+      if (!expert?.id || seen.has(expert.id)) continue;
+      seen.add(expert.id);
+      if (isSeededExpert(expert)) {
+        seededPool.push(expert);
+      } else {
+        nonSeeded.push(expert);
+      }
     }
 
-    return Array.from(unique.values());
-  }, [experts, fallbackExpertsResult]);
+    // Prefer non-seeded (frontend-created) experts; fall back to seeded ones
+    // only when there aren't enough real experts to fill the grid.
+    if (nonSeeded.length >= cap) return nonSeeded;
+    return [...nonSeeded, ...seededPool];
+  }, [experts, fallbackExpertsResult, cap]);
 
   const expertsByName = useMemo(() => {
     const map = new Map<string, IExpert>();

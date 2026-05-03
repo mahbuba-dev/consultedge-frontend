@@ -76,15 +76,24 @@ export default function TrendingExperts({ experts }: TrendingExpertsProps) {
       ...experts,
       ...(Array.isArray(fallbackExpertsResult?.data) ? fallbackExpertsResult.data : []),
     ];
-    const unique = new Map<string, IExpert>();
+    const seen = new Set<string>();
+    const nonSeeded: IExpert[] = [];
+    const seededPool: IExpert[] = [];
 
     for (const expert of pool) {
-      if (!expert?.id || unique.has(expert.id)) continue;
-      if (isSeededExpert(expert)) continue;
-      unique.set(expert.id, expert);
+      if (!expert?.id || seen.has(expert.id)) continue;
+      seen.add(expert.id);
+      if (isSeededExpert(expert)) {
+        seededPool.push(expert);
+      } else {
+        nonSeeded.push(expert);
+      }
     }
 
-    return Array.from(unique.values());
+    // Prefer non-seeded (frontend-created) experts; fill remaining slots
+    // with seeded experts when there aren't enough real ones.
+    if (nonSeeded.length >= MAX) return nonSeeded;
+    return [...nonSeeded, ...seededPool];
   }, [experts, fallbackExpertsResult]);
 
   const expertsById = useMemo(() => {
@@ -114,11 +123,11 @@ export default function TrendingExperts({ experts }: TrendingExpertsProps) {
     if (backendItems.length > 0) {
       const resolved = backendItems
         .map((it) => it.expert ?? expertsById.get(it.expertId))
-        .filter((e): e is IExpert => Boolean(e) && !isSeededExpert(e))
+        .filter((e): e is IExpert => Boolean(e))
         .slice(0, MAX);
       if (resolved.length > 0) return resolved;
     }
-    return heuristicTrending.filter((expert) => !isSeededExpert(expert));
+    return heuristicTrending;
   }, [aiResult, expertsById, heuristicTrending]);
 
   const cards: TrendingCard[] = useMemo(() => {
