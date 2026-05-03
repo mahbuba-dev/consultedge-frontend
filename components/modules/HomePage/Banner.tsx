@@ -131,7 +131,7 @@ export default function Banner() {
 
   return (
     <section className="relative -mx-4 -mt-6 overflow-hidden rounded-b-[2rem] border-b border-slate-800/80 bg-slate-950 shadow-[0_30px_80px_-30px_rgba(34,211,238,0.35)] md:-mx-6 lg:-mt-8 lg:rounded-b-[2.5rem]">
-      <div className="relative h-[clamp(420px,72vh,560px)] overflow-hidden sm:h-[clamp(440px,68vh,620px)] md:h-[clamp(500px,72vh,720px)] lg:h-[clamp(520px,70vh,720px)]">
+      <div className="relative h-[clamp(420px,72svh,560px)] overflow-hidden sm:h-[clamp(440px,68svh,620px)] md:h-[clamp(500px,72svh,720px)] lg:h-[clamp(520px,70svh,720px)]">
         {slides.map((slide, index) => (
           <div
             key={slide.title}
