@@ -27,6 +27,16 @@ const isUnexpectedFieldError = (error: unknown) => {
   return message.includes("unexpected field") || message.includes("unknown field");
 };
 
+const isIndustryFieldError = (error: unknown) => {
+  const message = getErrorMessage(error).toLowerCase();
+  return (
+    message.includes("industry is required") ||
+    message.includes("industryid is required") ||
+    message.includes("industry id is required") ||
+    (message.includes("industry") && message.includes("required"))
+  );
+};
+
 const getAllFormDataValues = (payload: FormData, key: string): FormDataEntryValue[] => {
   const values: FormDataEntryValue[] = [];
   payload.forEach((value, currentKey) => {
@@ -59,11 +69,53 @@ const cloneWithFileKeyAliases = (
   return next;
 };
 
+// Industry alias permutations. Some backends are picky and only accept *one*
+// of these keys at a time (rejecting the request if extra/unknown keys are
+// present). Try the most-common combination first, then narrow to a single
+// canonical key.
+const INDUSTRY_KEYS = ["industryId", "industry", "industry_id", "industryName"] as const;
+
+const cloneWithIndustryKeysOnly = (payload: FormData, keepKeys: string[]) => {
+  const next = new FormData();
+  // Pick the first available industry value to use as the source-of-truth ID.
+  // The frontend appends industryId, industry, industry_id all set to the ID,
+  // and industryName set to the name.
+  const idValue =
+    (getAllFormDataValues(payload, "industryId")[0] as string | undefined) ??
+    (getAllFormDataValues(payload, "industry")[0] as string | undefined) ??
+    (getAllFormDataValues(payload, "industry_id")[0] as string | undefined) ??
+    "";
+  const nameValue =
+    (getAllFormDataValues(payload, "industryName")[0] as string | undefined) ?? "";
+
+  payload.forEach((value, key) => {
+    if ((INDUSTRY_KEYS as readonly string[]).includes(key)) return;
+    next.append(key, value);
+  });
+
+  for (const key of keepKeys) {
+    if (key === "industryName") {
+      if (nameValue) next.append(key, nameValue);
+    } else if (idValue) {
+      next.append(key, idValue);
+    }
+  }
+
+  return next;
+};
+
 const getPayloadVariants = (payload: IApplyExpertPayload | FormData) => {
   if (!(payload instanceof FormData)) return [payload];
 
   return [
     payload,
+    // Industry-key narrowing: some servers reject "extra" unknown industry
+    // aliases. Re-try with progressively narrower industry key sets.
+    cloneWithIndustryKeysOnly(payload, ["industryId"]),
+    cloneWithIndustryKeysOnly(payload, ["industry"]),
+    cloneWithIndustryKeysOnly(payload, ["industry_id"]),
+    cloneWithIndustryKeysOnly(payload, ["industryId", "industry"]),
+    // File-key aliases (legacy fallbacks).
     cloneWithFileKeyAliases(payload, { profilePhoto: "image", resume: "resume" }),
     cloneWithFileKeyAliases(payload, { profilePhoto: "photo", resume: "resume" }),
     cloneWithFileKeyAliases(payload, { profilePhoto: "profileImage", resume: "resume" }),
@@ -222,6 +274,14 @@ export async function applyExpertAction(payload: IApplyExpertPayload | FormData)
         }
 
         if (isUnexpectedFieldError(error) && hasNextPayloadVariant) {
+          continue;
+        }
+
+        if (isIndustryFieldError(error) && hasNextPayloadVariant) {
+          continue;
+        }
+
+        if (status === 400 && isIndustryFieldError(error) && hasNextPayloadVariant) {
           continue;
         }
 

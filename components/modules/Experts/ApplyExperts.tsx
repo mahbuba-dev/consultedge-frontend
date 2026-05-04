@@ -190,10 +190,17 @@ export default function ApplyExpertForm() {
       formData.append("title", title);
       formData.append("experience", String(experience));
       formData.append("consultationFee", String(consultationFee));
-      // Send under every common alias so any variant of the backend accepts it.
+      // Backend has been observed to reject with "Industry is required" when only
+      // `industryId` is sent. Send the *ID* under every plausible key so any
+      // schema (Zod/express-validator/Mongoose) on the server side accepts it.
       formData.append("industryId", industryId);
-      formData.append("industry", selectedIndustry?.name ?? industryId);
-      formData.append("industryName", selectedIndustry?.name ?? "");
+      formData.append("industry", industryId);
+      formData.append("industry_id", industryId);
+      // The human-readable name is sent under a separate key to avoid colliding
+      // with the ID-based fields above.
+      if (selectedIndustry?.name) {
+        formData.append("industryName", selectedIndustry.name);
+      }
       if (profilePhoto) {
         formData.append("profilePhoto", profilePhoto);
       }
