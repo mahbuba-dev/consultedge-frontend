@@ -198,7 +198,7 @@ export default function BookingSummary({
           </div>
         </div>
 
-        {/* Coupon code */}
+        {/* Coupon code
         {fee && fee > 0 ? (
           <div className="rounded-2xl border bg-background p-3">
             <div className="mb-2 flex items-center gap-2 text-muted-foreground">
@@ -267,7 +267,7 @@ export default function BookingSummary({
               </>
             )}
           </div>
-        ) : null}
+        ) : null} */}
 
         <Separator />
 

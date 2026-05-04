@@ -180,6 +180,8 @@ export default function ApplyExpertForm() {
         return;
       }
 
+      const selectedIndustry = industries.find((ind) => ind.id === industryId);
+
       const formData = new FormData();
       formData.append("fullName", fullName);
       formData.append("email", email);
@@ -188,7 +190,10 @@ export default function ApplyExpertForm() {
       formData.append("title", title);
       formData.append("experience", String(experience));
       formData.append("consultationFee", String(consultationFee));
+      // Send under every common alias so any variant of the backend accepts it.
       formData.append("industryId", industryId);
+      formData.append("industry", selectedIndustry?.name ?? industryId);
+      formData.append("industryName", selectedIndustry?.name ?? "");
       if (profilePhoto) {
         formData.append("profilePhoto", profilePhoto);
       }
@@ -472,13 +477,24 @@ export default function ApplyExpertForm() {
           </form.Field>
 
           {/* ── Industry — selecting this triggers AI ── */}
-          <form.Field name="industryId">
-            {(field) => (
+          <form.Field
+            name="industryId"
+            validators={{
+              onChange: ({ value }) =>
+                !value ? "Please select an industry." : undefined,
+              onSubmit: ({ value }) =>
+                !value ? "Please select an industry." : undefined,
+            }}
+          >
+            {(field) => {
+              const industryError = field.state.meta.errors?.[0];
+              return (
               <div className="space-y-1.5">
                 <label className="text-sm font-medium">Industry</label>
                 <div className="relative">
                   <select
                     value={field.state.value}
+                    onBlur={field.handleBlur}
                     onChange={(e) => {
                       const id = e.target.value;
                       field.handleChange(id);
@@ -508,6 +524,9 @@ export default function ApplyExpertForm() {
                   </select>
                   <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 </div>
+                {industryError && !isIndustriesError && (
+                  <p className="text-sm text-red-500">{String(industryError)}</p>
+                )}
                 {isIndustriesError && (
                   <p className="text-sm text-red-500">
                     Could not load industries right now. Please refresh.
@@ -520,7 +539,8 @@ export default function ApplyExpertForm() {
                   </p>
                 )}
               </div>
-            )}
+              );
+            }}
           </form.Field>
 
           {/* ── Title (AI suggested) ── */}
@@ -758,17 +778,17 @@ export default function ApplyExpertForm() {
             )}
           </div>
 
-          {/* industryId hidden field — the visible select is rendered above, but TanStack Form
-               needs the field subscribed so setFieldValue("industryId") works from the select */}
-          <form.Field name="industryId">{() => null}</form.Field>
-
-          <Button
-            type="submit"
-            disabled={mutation.isPending || isIndustriesLoading}
-            className="w-full"
-          >
-            {mutation.isPending ? "Submitting…" : "Submit Application"}
-          </Button>
+          <form.Subscribe selector={(state) => state.values.industryId}>
+            {(industryId) => (
+              <Button
+                type="submit"
+                disabled={mutation.isPending || isIndustriesLoading || !industryId}
+                className="w-full"
+              >
+                {mutation.isPending ? "Submitting…" : "Submit Application"}
+              </Button>
+            )}
+          </form.Subscribe>
         </form>
       </CardContent>
     </Card>
