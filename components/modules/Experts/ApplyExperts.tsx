@@ -66,9 +66,9 @@ export default function ApplyExpertForm() {
   // ── submit mutation ──────────────────────────────────────────────────────
   const mutation = useMutation({
     mutationFn: applyExpertAction,
-    onSuccess: async (response: any) => {
-      toast.success("Application submitted successfully.");
-
+    onSuccess: async () => {
+      // The success dialog IS the success message. Avoid stacking sonner
+      // toasts on top of it (previously fired success + debug + AI toasts).
       try {
         const admins = await getUsers({ role: "ADMIN", limit: 100 });
         await Promise.all(
@@ -87,14 +87,9 @@ export default function ApplyExpertForm() {
         // Submission should remain successful even if notifications fail.
       }
 
-      if (response?.__debugApplyEndpoint) {
-        toast.message(`Debug: submitted via ${response.__debugApplyEndpoint}`);
-      }
-
+      // Open the confirmation dialog. Do NOT auto-redirect — the user must
+      // click "Go to homepage" / Contact / Terms themselves.
       setSubmitSuccessOpen(true);
-      window.setTimeout(() => {
-        window.location.href = "/";
-      }, 2600);
     },
     onError: (err: any) => {
       const backendMessage = err?.response?.data?.message;
@@ -802,10 +797,8 @@ export default function ApplyExpertForm() {
     <Dialog
       open={submitSuccessOpen}
       onOpenChange={(open) => {
+        // No auto-redirect — let the user choose Home / Terms / Contact.
         setSubmitSuccessOpen(open);
-        if (!open) {
-          window.location.href = "/";
-        }
       }}
     >
       <DialogContent className="max-w-lg">
@@ -816,10 +809,31 @@ export default function ApplyExpertForm() {
           </DialogTitle>
           <DialogDescription className="pt-1 text-sm leading-relaxed">
             You have successfully submitted your application as an expert. Our admin team will review your
-            form shortly. Once approved, you will join our expert team and we will notify you right away.
+            form shortly. Once approved, we will notify you by email and you will be able to access your
+            expert dashboard.
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter>
+        <DialogFooter className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              setSubmitSuccessOpen(false);
+              window.location.href = "/contact";
+            }}
+          >
+            Contact us
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              setSubmitSuccessOpen(false);
+              window.location.href = "/terms";
+            }}
+          >
+            Terms
+          </Button>
           <Button
             type="button"
             onClick={() => {

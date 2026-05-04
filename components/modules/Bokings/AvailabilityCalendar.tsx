@@ -3,12 +3,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { format, isSameDay, parseISO } from "date-fns";
-import { CalendarDays, Clock3, Sparkles } from "lucide-react";
+import { CalendarDays, Clock3, RefreshCw, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 import BookingCard from "./BookingCard";
 import BookingSummary from "./BookingSummary";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Card,
@@ -21,7 +22,6 @@ import {
 import type { IExpertAvailability } from "@/src/types/expert.types";
 import { bookConsultation, bookConsultationWithPayLater } from "@/src/services/bookings.service";
 import type { ICouponValidationResult } from "@/src/services/coupon.service";
-import { isPlaceholderSlotId } from "@/src/lib/seededExpertContent";
 
 type AvailabilityCalendarProps = {
   expertId: string;
@@ -141,6 +141,13 @@ export default function AvailabilityCalendar({
   const selectedSlot =
     selectedDaySlots.find((slot) => slot.id === selectedSlotId) ?? selectedDaySlots[0] ?? null;
 
+  const handleRefreshAvailability = () => {
+    router.refresh();
+    toast.message("Refreshing availability…", {
+      description: "Fetching the latest published slots for this expert.",
+    });
+  };
+
   const ensureBookingAccess = () => {
     if (!selectedSlot) {
       toast.error("Please select an available time slot first.");
@@ -167,14 +174,6 @@ export default function AvailabilityCalendar({
 
   const handleBookAction = async (mode: "pay-now" | "pay-later") => {
     if (!ensureBookingAccess() || !selectedSlot) {
-      return;
-    }
-
-    if (isPlaceholderSlotId(selectedSlot.id)) {
-      toast.info("This is a sample preview slot.", {
-        description:
-          "Real booking will open once this expert publishes their availability schedule.",
-      });
       return;
     }
 
@@ -323,6 +322,16 @@ export default function AvailabilityCalendar({
               <p className="mt-2 text-sm text-muted-foreground">
                 Once this expert adds open time slots, they will appear here for booking.
               </p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-4"
+                onClick={handleRefreshAvailability}
+              >
+                <RefreshCw className="mr-1.5 size-3.5" />
+                Refresh availability
+              </Button>
             </div>
           )}
         </CardContent>
@@ -340,6 +349,7 @@ export default function AvailabilityCalendar({
         onCouponChange={setAppliedCoupon}
         onBookNow={() => handleBookAction("pay-now")}
         onPayLater={() => handleBookAction("pay-later")}
+        onRefreshAvailability={handleRefreshAvailability}
       />
     </div>
   );

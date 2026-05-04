@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Download, ExternalLink, FileText, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
@@ -128,6 +128,7 @@ const getErrorMessage = (error: unknown, fallback: string) => {
 };
 
 export default function NewApplicantsTable() {
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterValues, setFilterValues] = useState<DataTableFilterValues>({});
   const [applicationTarget, setApplicationTarget] = useState<IExpertApplication | null>(null);
@@ -135,6 +136,11 @@ export default function NewApplicantsTable() {
     application: IExpertApplication;
     status: IReviewExpertApplicationPayload["status"];
   } | null>(null);
+  // Track applications the admin already acted on so the row UI updates the
+  // moment they click Approve / Reject — even before the network round-trip.
+  const [optimisticDecisions, setOptimisticDecisions] = useState<
+    Record<string, "APPROVED" | "REJECTED">
+  >({});
 
   const {
     paginationState,
@@ -166,20 +172,58 @@ export default function NewApplicantsTable() {
       applicationId: string;
       payload: IReviewExpertApplicationPayload;
     }) => reviewExpertApplicationAction(applicationId, payload),
-    onSuccess: async (_, variables) => {
-      const approved = variables.payload.status === "APPROVED";
-      toast.success(approved ? "Applicant approved." : "Applicant rejected.");
-
-      await refetch();
+    // Optimistic: immediately reflect the decision in the table + toast, so the
+    // admin doesn't sit through a 30-second cold start spinner.
+    onMutate: ({ applicationId, payload }) => {
+      const status = payload.status as "APPROVED" | "REJECTED";
+      setOptimisticDecisions((prev) => ({ ...prev, [applicationId]: status }));
+      toast.success(
+        status === "APPROVED"
+          ? "Applicant approved. They are now an expert."
+          : "Applicant rejected.",
+      );
+      return { applicationId };
     },
-    onError: (mutationError) => {
-      toast.error(getErrorMessage(mutationError, "Failed to review application."));
+    onSuccess: () => {
+      // Refresh the pending list + the sidebar badge in the background.
+      void queryClient.invalidateQueries({ queryKey: ["new-applicants-table"] });
+      void queryClient.invalidateQueries({ queryKey: ["pending-applicants-count"] });
+    },
+    onError: (mutationError, variables, context) => {
+      const message = getErrorMessage(mutationError, "Failed to review application.");
+      // The very common race when the optimistic toast already fired AND the
+      // server confirms the previous click — treat as success and keep the row
+      // in its decided state.
+      if (/already reviewed|already approved|already rejected/i.test(message)) {
+        void queryClient.invalidateQueries({ queryKey: ["new-applicants-table"] });
+        return;
+      }
+      // Real failure — roll back the optimistic state and surface a single
+      // error toast (replaces the optimistic success).
+      if (context?.applicationId) {
+        setOptimisticDecisions((prev) => {
+          const next = { ...prev };
+          delete next[context.applicationId];
+          return next;
+        });
+      }
+      toast.dismiss();
+      toast.error(message);
     },
   });
 
   const applicants = useMemo<IExpertApplication[]>(() => {
     return Array.isArray(data?.data) ? data.data : [];
   }, [data]);
+
+  const decoratedApplicants = useMemo<IExpertApplication[]>(
+    () =>
+      applicants.map((applicant) => {
+        const decision = optimisticDecisions[applicant.id];
+        return decision ? { ...applicant, status: decision } : applicant;
+      }),
+    [applicants, optimisticDecisions],
+  );
 
   const industryOptions = useMemo(
     () =>
@@ -204,7 +248,7 @@ export default function NewApplicantsTable() {
     const industryFilter =
       typeof filterValues.industry === "string" ? filterValues.industry : undefined;
 
-    return applicants.filter((expert) => {
+    return decoratedApplicants.filter((expert) => {
       const matchesSearch =
         !normalizedSearch ||
         [expert.fullName, expert.email, expert.title, expert.industry?.name]
@@ -214,12 +258,14 @@ export default function NewApplicantsTable() {
       const matchesIndustry = !industryFilter || expert.industry?.name === industryFilter;
       return matchesSearch && matchesIndustry;
     });
-  }, [applicants, filterValues, searchTerm]);
+  }, [decoratedApplicants, filterValues, searchTerm]);
 
-  const submitDecision = async () => {
+  const submitDecision = () => {
     if (!decisionTarget) return;
 
-    await verifyMutation.mutateAsync({
+    // Fire-and-forget: optimistic UI handles the rest. Close the dialog
+    // immediately so the admin gets instant feedback.
+    verifyMutation.mutate({
       applicationId: decisionTarget.application.id,
       payload: { status: decisionTarget.status },
     });
@@ -253,7 +299,7 @@ export default function NewApplicantsTable() {
             data={filteredApplicants}
             columns={columns}
             meta={data?.meta}
-            isLoading={isLoading || isFetching || verifyMutation.isPending}
+            isLoading={isLoading || isFetching}
             emptyMessage="No pending applicants found."
             pagination={{
               state: paginationState,
@@ -427,12 +473,8 @@ export default function NewApplicantsTable() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={verifyMutation.isPending}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => void submitDecision()} disabled={verifyMutation.isPending}>
-              {verifyMutation.isPending
-                ? "Saving..."
-                : decisionTarget?.status === "APPROVED"
-                  ? "Approve"
-                  : "Reject"}
+            <AlertDialogAction onClick={() => submitDecision()} disabled={verifyMutation.isPending}>
+              {decisionTarget?.status === "APPROVED" ? "Approve" : "Reject"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

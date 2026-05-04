@@ -130,8 +130,8 @@ export default function Banner() {
   const goToNext = () => setActiveSlide((c) => (c + 1) % slides.length);
 
   return (
-    <section className="relative -mx-4 -mt-6 overflow-hidden rounded-b-[2rem] border-b border-slate-800/80 bg-slate-950 shadow-[0_30px_80px_-30px_rgba(34,211,238,0.35)] md:-mx-6 lg:-mt-8 lg:rounded-b-[2.5rem]">
-      <div className="relative h-[clamp(420px,72svh,560px)] overflow-hidden sm:h-[clamp(440px,68svh,620px)] md:h-[clamp(500px,72svh,720px)] lg:h-[clamp(520px,70svh,720px)]">
+    <section className="relative overflow-hidden rounded-[1.5rem] border border-slate-800/80 bg-slate-950 shadow-[0_30px_80px_-30px_rgba(34,211,238,0.35)] md:-mx-6 md:-mt-6 md:rounded-b-[2rem] md:rounded-t-none md:border-b md:border-t-0 lg:-mt-8 lg:rounded-b-[2.5rem]">
+      <div className="relative h-[clamp(380px,68svh,540px)] overflow-hidden sm:h-[clamp(440px,68svh,620px)] md:h-[clamp(500px,72svh,720px)] lg:h-[clamp(520px,70svh,720px)]">
         {slides.map((slide, index) => (
           <div
             key={slide.title}
@@ -152,10 +152,10 @@ export default function Banner() {
           </div>
         ))}
 
-        <div className="relative z-10 mx-auto flex h-full w-full max-w-360 flex-col justify-between px-5 py-5 text-white sm:py-6 md:px-8 md:py-7 lg:px-10 lg:py-8">
+        <div className="relative z-10 mx-auto flex h-full w-full max-w-360 flex-col justify-between px-4 py-4 text-white sm:px-5 sm:py-6 md:px-8 md:py-7 lg:px-10 lg:py-8">
           <div className="grid h-full content-center gap-6 md:grid-cols-[minmax(0,1.25fr)_minmax(260px,0.75fr)] md:items-center">
             {/* LEFT: copy */}
-            <div ref={copyRef} className="max-w-2xl space-y-4">
+            <div ref={copyRef} className="max-w-2xl space-y-3 sm:space-y-4">
               <Badge
                 data-anim
                 className="border-white/20 bg-white/10 text-white hover:bg-white/10"
@@ -166,30 +166,30 @@ export default function Banner() {
 
               <p
                 data-anim
-                className="text-[10px] font-semibold uppercase tracking-[0.32em] text-cyan-200 md:text-xs"
+                className="text-[10px] font-semibold uppercase tracking-[0.28em] text-cyan-200 sm:tracking-[0.32em] md:text-xs"
               >
                 {currentSlide.eyebrow}
               </p>
 
               <h1
                 data-anim
-                className="text-2xl font-bold leading-[1.1] tracking-tight text-balance sm:text-3xl md:text-4xl lg:text-4xl xl:text-5xl"
+                className="text-xl font-bold leading-[1.15] tracking-tight text-balance sm:text-2xl md:text-4xl lg:text-4xl xl:text-5xl"
               >
                 {currentSlide.title}
               </h1>
 
               <p
                 data-anim
-                className="max-w-xl text-sm leading-6 text-slate-200/90 sm:text-base sm:leading-7 md:text-lg md:leading-8"
+                className="max-w-xl text-[13px] leading-5 text-slate-200/90 sm:text-sm sm:leading-7 md:text-lg md:leading-8"
               >
                 {currentSlide.description}
               </p>
 
-              <div data-anim className="flex flex-col gap-3 pt-2 sm:flex-row sm:flex-wrap">
+              <div data-anim className="flex flex-col gap-2.5 pt-1 sm:flex-row sm:flex-wrap sm:gap-3 sm:pt-2">
                 <Link
                   href="/experts"
                   className={cn(
-                    "inline-flex h-11 w-full items-center justify-center rounded-full px-5 text-sm font-medium transition-all sm:w-auto sm:min-w-44",
+                    "inline-flex h-10 w-full items-center justify-center rounded-full px-4 text-[13px] font-medium transition-all sm:h-11 sm:w-auto sm:min-w-44 sm:px-5 sm:text-sm",
                     "bg-white text-slate-900 hover:bg-white/90",
                   )}
                 >
@@ -199,7 +199,7 @@ export default function Banner() {
                 <Link
                   href="/apply-expert"
                   className={cn(
-                    "inline-flex h-11 w-full items-center justify-center rounded-full border px-5 text-sm font-medium transition-all sm:w-auto sm:min-w-44",
+                    "inline-flex h-10 w-full items-center justify-center rounded-full border px-4 text-[13px] font-medium transition-all sm:h-11 sm:w-auto sm:min-w-44 sm:px-5 sm:text-sm",
                     "border-white/30 bg-transparent text-white hover:bg-white/10",
                   )}
                 >

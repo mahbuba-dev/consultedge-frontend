@@ -42,6 +42,7 @@ type BookingSummaryProps = {
   onCouponChange?: (coupon: ICouponValidationResult | null) => void;
   onBookNow: () => void;
   onPayLater: () => void;
+  onRefreshAvailability?: () => void;
 };
 
 const formatCurrency = (value?: number | null) =>
