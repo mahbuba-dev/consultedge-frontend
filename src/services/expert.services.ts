@@ -104,10 +104,50 @@ const cloneWithIndustryKeysOnly = (payload: FormData, keepKeys: string[]) => {
   return next;
 };
 
+// Convert a FormData payload to a plain JSON object (files dropped). This is
+// used as a first-attempt variant against approval endpoints that are wired to
+// `express.json()` only (no multer). When `req.body` is populated by the JSON
+// parser, validators for `industryId` actually see the value, and the
+// `"Industry is required"` 400 disappears.
+const formDataToJson = (payload: FormData): Record<string, unknown> => {
+  const next: Record<string, unknown> = {};
+  payload.forEach((value, key) => {
+    if (typeof File !== "undefined" && value instanceof File) return;
+    if (typeof Blob !== "undefined" && value instanceof Blob) return;
+    next[key] = value;
+  });
+
+  // Coerce numeric fields the backend Zod/express-validator schemas care about.
+  if (typeof next.experience === "string") {
+    const parsed = Number(next.experience);
+    if (!Number.isNaN(parsed)) next.experience = parsed;
+  }
+  if (typeof next.consultationFee === "string") {
+    const parsed = Number(next.consultationFee);
+    if (!Number.isNaN(parsed)) next.consultationFee = parsed;
+  }
+
+  return next;
+};
+
 const getPayloadVariants = (payload: IApplyExpertPayload | FormData) => {
   if (!(payload instanceof FormData)) return [payload];
 
-  return [
+  const hasFiles = (() => {
+    let found = false;
+    payload.forEach((value) => {
+      if (typeof File !== "undefined" && value instanceof File) found = true;
+    });
+    return found;
+  })();
+
+  // JSON-first variant runs against every endpoint. If a server is JSON-only
+  // (most likely cause of the "Industry is required" toast on
+  // `/expert-verification/applications`), the very first attempt succeeds.
+  const jsonVariant = formDataToJson(payload);
+
+  const variants: Array<FormData | Record<string, unknown>> = [
+    jsonVariant,
     payload,
     // Industry-key narrowing: some servers reject "extra" unknown industry
     // aliases. Re-try with progressively narrower industry key sets.
@@ -115,14 +155,20 @@ const getPayloadVariants = (payload: IApplyExpertPayload | FormData) => {
     cloneWithIndustryKeysOnly(payload, ["industry"]),
     cloneWithIndustryKeysOnly(payload, ["industry_id"]),
     cloneWithIndustryKeysOnly(payload, ["industryId", "industry"]),
-    // File-key aliases (legacy fallbacks).
-    cloneWithFileKeyAliases(payload, { profilePhoto: "image", resume: "resume" }),
-    cloneWithFileKeyAliases(payload, { profilePhoto: "photo", resume: "resume" }),
-    cloneWithFileKeyAliases(payload, { profilePhoto: "profileImage", resume: "resume" }),
-    cloneWithFileKeyAliases(payload, { profilePhoto: "profilePhoto", resume: "cv" }),
-    cloneWithFileKeyAliases(payload, { profilePhoto: undefined, resume: "resume" }),
-    cloneWithFileKeyAliases(payload, { profilePhoto: "profilePhoto", resume: undefined }),
   ];
+
+  if (hasFiles) {
+    variants.push(
+      cloneWithFileKeyAliases(payload, { profilePhoto: "image", resume: "resume" }),
+      cloneWithFileKeyAliases(payload, { profilePhoto: "photo", resume: "resume" }),
+      cloneWithFileKeyAliases(payload, { profilePhoto: "profileImage", resume: "resume" }),
+      cloneWithFileKeyAliases(payload, { profilePhoto: "profilePhoto", resume: "cv" }),
+      cloneWithFileKeyAliases(payload, { profilePhoto: undefined, resume: "resume" }),
+      cloneWithFileKeyAliases(payload, { profilePhoto: "profilePhoto", resume: undefined }),
+    );
+  }
+
+  return variants;
 };
 
 export interface IExpertQueryParams {
@@ -281,8 +327,12 @@ export async function applyExpertAction(payload: IApplyExpertPayload | FormData)
           continue;
         }
 
-        if (status === 400 && isIndustryFieldError(error) && hasNextPayloadVariant) {
-          continue;
+        // If every variant against this endpoint has been exhausted and the
+        // server still complains about the industry field, advance to the next
+        // endpoint rather than surfacing the misleading "Industry is required"
+        // toast to the user.
+        if (isIndustryFieldError(error) && !hasNextPayloadVariant && hasNextEndpoint) {
+          break;
         }
 
         if (status === 422 && hasNextPayloadVariant) {
