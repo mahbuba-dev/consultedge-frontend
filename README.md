@@ -20,8 +20,9 @@ It supports three core roles:
 - 🧑‍💼 Expert application & onboarding system  
 - 💬 Realtime chat system (WebSocket + fallback polling)  
 - 🎥 Live consultation sessions using WebRTC  
+- 💳 Payment integration (Stripe-ready architecture)  
 - ⭐ Reviews & rating system with moderation flow  
-- 🛡️ Admin dashboard for platform management  
+- 🧑‍💻 Role-based dashboards for Clients, Experts, and Admins  
 
 ---
 
