@@ -1,6 +1,6 @@
 "use client";
 
-import { Bot, MessageSquarePlus, Loader2 } from "lucide-react";
+import { Bot, MessageSquarePlus, Loader2, X } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 import type { AIConversationSummary } from "@/src/types/ai.types";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ interface AiChatSidebarProps {
   onSelect: (id: string) => void;
   onNew: () => void;
   onSuggestedPrompt: (prompt: string) => void;
+  onClearRecent?: () => void;
 }
 
 export default function AiChatSidebar({
@@ -25,6 +26,7 @@ export default function AiChatSidebar({
   onSelect,
   onNew,
   onSuggestedPrompt,
+  onClearRecent,
 }: AiChatSidebarProps) {
   return (
     <aside
@@ -73,9 +75,22 @@ export default function AiChatSidebar({
       {/* Recent messages (conversation history) */}
       <div className="consultedge-ai-scrollbar-native min-h-0 flex-1 overflow-y-auto">
         <div className="p-2 pt-3">
-          <p className="mb-1.5 px-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-            Recent messages
-          </p>
+          <div className="flex items-center justify-between mb-1.5 px-2">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+              Recent messages
+            </p>
+            {conversations.length > 0 && onClearRecent && (
+              <button
+                type="button"
+                title="Clear recent messages"
+                aria-label="Clear recent messages"
+                className="ml-2 rounded-full p-1 hover:bg-muted transition"
+                onClick={onClearRecent}
+              >
+                <X className="h-3.5 w-3.5 text-muted-foreground" />
+              </button>
+            )}
+          </div>
 
           {isFetching ? (
             <div className="flex items-center justify-center py-10">

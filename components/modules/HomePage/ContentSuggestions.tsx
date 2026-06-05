@@ -16,7 +16,9 @@ import { useQuery } from "@tanstack/react-query";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import dynamic from "next/dynamic";
+const Card = dynamic(() => import("@/components/ui/card").then(mod => mod.Card), { ssr: false });
+const CardContent = dynamic(() => import("@/components/ui/card").then(mod => mod.CardContent), { ssr: false });
 import {
   getBehavior,
   hasPersonalSignal,
@@ -93,27 +95,41 @@ const ICON_BY_TYPE: Record<string, typeof BookOpen> = {
   "Case study": Wand2,
 };
 
+
 export default function ContentSuggestions({ industries }: ContentSuggestionsProps) {
-  const [tick, setTick] = useState(0);
+  // Hydration flag
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => { setHydrated(true); }, []);
 
-  useEffect(() => {
-    const handler = () => setTick((t) => t + 1);
-    window.addEventListener("consultedge:behavior-updated", handler);
-    return () => window.removeEventListener("consultedge:behavior-updated", handler);
-  }, []);
-
+  // For SSR, always use the first industry as fallback. Only use personalized logic after hydration.
   const focusIndustry = useMemo<IIndustry | null>(() => {
-    if (industries.length === 0) return industries[0] ?? null;
-    const { industryWeights } = getBehavior();
-    const sorted = Object.entries(industryWeights).sort((a, b) => b[1] - a[1]);
-    for (const [id] of sorted) {
-      const found = industries.find((i) => i.id === id);
-      if (found) return found;
+    if (!hydrated) {
+      // SSR/first render: deterministic fallback
+      return industries[0] ?? null;
     }
-    return industries[0] ?? null;
-  }, [industries, tick]);
+    // After hydration, use personalized logic
+    try {
+      const { industryWeights } = getBehavior();
+      const sorted = Object.entries(industryWeights).sort((a, b) => b[1] - a[1]);
+      for (const [id] of sorted) {
+        const found = industries.find((i) => i.id === id);
+        if (found) return found;
+      }
+      return industries[0] ?? null;
+    } catch {
+      return industries[0] ?? null;
+    }
+  }, [industries, hydrated]);
 
-  const personalised = !!focusIndustry && hasPersonalSignal(getBehavior());
+  // Only check for personal signal after hydration
+  const personalised = hydrated && !!focusIndustry && (() => {
+    try {
+      return hasPersonalSignal(getBehavior());
+    } catch {
+      return false;
+    }
+  })();
+
   const industryName = focusIndustry?.name ?? "consulting";
 
   const { data: aiResult, isPending: aiLoading } = useQuery({
@@ -140,25 +156,15 @@ export default function ContentSuggestions({ industries }: ContentSuggestionsPro
     href: string;
   };
 
+  // Always use deterministic fallback for SSR/first render.
+  // Only switch to AI-personalized items after hydration to avoid hydration mismatch.
   const items: DisplayItem[] = useMemo(() => {
-    const backend = aiResult?.data?.items ?? [];
-    if (backend.length > 0) {
-      return backend.slice(0, 4).map((it, i) => ({
-        id: it.id || `ai-${i}`,
-        type: it.type || "Insight",
-        title: it.title,
-        description: it.description,
-        readMinutes: it.readMinutes ?? 6,
-        icon: ICON_BY_TYPE[it.type ?? ""] ?? BookOpen,
-        href: `/insights/${toInsightSlug(it.title)}?topic=${encodeURIComponent(industryName)}&type=${encodeURIComponent(it.type || "Insight")}`,
-      }));
-    }
     // Heuristic fallback: deterministic from industry name for SSR/CSR consistency.
     const baseHash = industryName
       .split("")
       .reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
     const offset = baseHash % TEMPLATES.length;
-    return Array.from({ length: 4 }, (_, i) => {
+    const fallbackItems = Array.from({ length: 4 }, (_, i) => {
       const t = TEMPLATES[(offset + i) % TEMPLATES.length];
       const title = t.title(industryName);
       return {
@@ -171,7 +177,20 @@ export default function ContentSuggestions({ industries }: ContentSuggestionsPro
         href: `/insights/${toInsightSlug(title)}?topic=${encodeURIComponent(industryName)}&type=${encodeURIComponent(t.type)}`,
       };
     });
-  }, [aiResult, industryName]);
+    // Only use AI-personalized items after hydration is true
+    if (hydrated && aiResult?.data?.items?.length > 0) {
+      return aiResult.data.items.slice(0, 4).map((it, i) => ({
+        id: it.id || `ai-${i}`,
+        type: it.type || "Insight",
+        title: it.title,
+        description: it.description,
+        readMinutes: it.readMinutes ?? 6,
+        icon: ICON_BY_TYPE[it.type ?? ""] ?? BookOpen,
+        href: `/insights/${toInsightSlug(it.title)}?topic=${encodeURIComponent(industryName)}&type=${encodeURIComponent(it.type || "Insight")}`,
+      }));
+    }
+    return fallbackItems;
+  }, [aiResult, industryName, hydrated]);
 
   const showSkeleton = aiLoading && items.length === 0;
 

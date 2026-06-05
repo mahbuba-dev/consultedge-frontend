@@ -72,12 +72,25 @@ export default function ChatWorkspace({
   } = useChatRooms();
 
   const visibleRooms = useMemo(() => {
+    const sortedByPriority = [...rooms].sort((a, b) => {
+      const unreadDiff = Number(Boolean(b.unreadCount && b.unreadCount > 0)) - Number(Boolean(a.unreadCount && a.unreadCount > 0));
+
+      if (unreadDiff !== 0) {
+        return unreadDiff;
+      }
+
+      const updatedA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+      const updatedB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+
+      return updatedB - updatedA;
+    });
+
     if (!currentUser?.role) {
-      return rooms;
+      return sortedByPriority;
     }
 
     if (currentUser.role === "EXPERT") {
-      return rooms.filter(
+      return sortedByPriority.filter(
         (room) =>
           room.participants.length === 0 ||
           room.participants.some((participant) => participant.role === "CLIENT"),
@@ -85,14 +98,14 @@ export default function ChatWorkspace({
     }
 
     if (currentUser.role === "CLIENT") {
-      return rooms.filter(
+      return sortedByPriority.filter(
         (room) =>
           room.participants.length === 0 ||
           room.participants.some((participant) => participant.role === "EXPERT"),
       );
     }
 
-    return rooms;
+    return sortedByPriority;
   }, [currentUser?.role, rooms]);
 
   const selectedRoom = useMemo(

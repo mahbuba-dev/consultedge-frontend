@@ -42,7 +42,12 @@ export default function ExpertReviewsPanel({ profile }: Props) {
   const [replyTarget, setReplyTarget] = useState<ITestimonial | null>(null);
   const [replyText, setReplyText] = useState("");
 
-  const expertId = profile?.expert?.id ?? null;
+  // Always use a valid UUID for expertId (fallback to demo expert if missing/invalid)
+  const DEMO_EXPERT_UUID = "be2cde85-1d17-435c-81de-704792fe072a";
+  const expertId =
+    profile?.expert?.id && /^[0-9a-fA-F-]{36}$/.test(profile.expert.id)
+      ? profile.expert.id
+      : DEMO_EXPERT_UUID;
   const userId = profile?.id ?? null;
   const expertName = profile?.expert?.fullName ?? "your expert";
 

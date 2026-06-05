@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
 import {
   ArrowRight,
   BriefcaseBusiness,
@@ -72,6 +73,8 @@ const NavbarClient = ({
 }: NavbarClientProps) => {
   const pathname = usePathname();
   const { resolvedTheme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const isActiveRoute = (href: string) => {
     if (href === "/") {
@@ -234,6 +237,14 @@ const NavbarClient = ({
           </nav>
 
           <div className="hidden items-center gap-2.5 lg:flex">
+                        <Button
+                          asChild
+                          size="sm"
+                          className="rounded-full bg-gradient-to-r from-blue-600 to-cyan-500 px-5 py-2 text-xs font-bold text-white shadow-md hover:from-blue-700 hover:to-cyan-600 focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
+                          style={{ marginRight: 8 }}
+                        >
+                          <Link href="/apply-expert">Be a Expert</Link>
+                        </Button>
             <div className="hidden w-64 xl:block">
               <HomeSearchBar />
             </div>
@@ -241,15 +252,26 @@ const NavbarClient = ({
               {/* Theme toggle */}
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleThemeToggle}
-                    className="relative size-9 rounded-full border border-slate-200/80 bg-white/80 text-slate-600 backdrop-blur transition-transform duration-300 hover:scale-110 hover:bg-blue-50 hover:text-blue-700 dark:border-white/10 dark:bg-slate-900/70 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-blue-300"
-                  >
-                    {isDarkMode ? <Sun className="size-4" /> : <Moon className="size-4" />}
-                  </Button>
+                  {mounted ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleThemeToggle}
+                      className="relative size-9 rounded-full border border-slate-200/80 bg-white/80 text-slate-600 backdrop-blur transition-transform duration-300 hover:scale-110 hover:bg-blue-50 hover:text-blue-700 dark:border-white/10 dark:bg-slate-900/70 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-blue-300"
+                    >
+                      {isDarkMode ? <Sun className="size-4" /> : <Moon className="size-4" />}
+                    </Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="relative size-9 rounded-full border border-slate-200/80 bg-white/80 text-slate-600 backdrop-blur transition-transform duration-300 hover:scale-110 hover:bg-blue-50 hover:text-blue-700 dark:border-white/10 dark:bg-slate-900/70 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-blue-300"
+                      aria-label="Theme toggle (loading)"
+                      disabled
+                    />
+                  )}
                 </TooltipTrigger>
                 <TooltipContent side="bottom" className="text-xs">
                   {themeLabel}

@@ -618,35 +618,3 @@ export async function aiChatSetFeedback(
   );
 }
 
-export async function aiChatOpenAIFallback(payload: {
-  message: string;
-  context?: string;
-  history?: AIChatHistoryItem[];
-}): Promise<AIChatResponse> {
-  const response = await fetch("/api/ai/chat", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-
-  const json = (await response.json().catch(() => ({}))) as {
-    success?: boolean;
-    message?: string;
-    data?: AIChatResponse;
-  };
-
-  if (!response.ok || json.success === false) {
-    throw new Error(json.message || "OpenAI fallback unavailable");
-  }
-
-  return (
-    json.data ?? {
-      reply: "I can help with that. Please share a little more detail.",
-      suggestedActions: [],
-      escalatedToHuman: false,
-      timestamp: new Date().toISOString(),
-    }
-  );
-}

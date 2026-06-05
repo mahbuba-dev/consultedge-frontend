@@ -12,7 +12,6 @@ import {
   ShieldCheck,
   Users,
 } from "lucide-react";
-import gsap from "gsap";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -105,22 +104,34 @@ export default function Banner() {
     const targets = node.querySelectorAll<HTMLElement>("[data-anim]");
     if (!targets.length) return;
 
-    const ctx = gsap.context(() => {
-      gsap.fromTo(
-        targets,
-        { y: 14, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 0.55,
-          ease: "power2.out",
-          stagger: 0.06,
-          clearProps: "transform,opacity",
-        },
-      );
-    }, node);
+    let cleanup: (() => void) | undefined;
+    let isCancelled = false;
 
-    return () => ctx.revert();
+    void import("gsap").then(({ default: gsap }) => {
+      if (isCancelled) return;
+
+      const ctx = gsap.context(() => {
+        gsap.fromTo(
+          targets,
+          { y: 14, opacity: 0 },
+          {
+            y: 0,
+            opacity: 1,
+            duration: 0.55,
+            ease: "power2.out",
+            stagger: 0.06,
+            clearProps: "transform,opacity",
+          },
+        );
+      }, node);
+
+      cleanup = () => ctx.revert();
+    });
+
+    return () => {
+      isCancelled = true;
+      cleanup?.();
+    };
   }, [activeSlide]);
 
   const currentSlide = slides[activeSlide] ?? slides[0];
@@ -144,6 +155,7 @@ export default function Banner() {
               alt={slide.title}
               fill
               priority={index === 0}
+              loading={index === 0 ? "eager" : "lazy"}
               sizes="100vw"
               className={`object-cover ${index === activeSlide ? "consultedge-carousel-image" : ""}`}
             />

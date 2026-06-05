@@ -1,6 +1,6 @@
 "use client";
 
-import { RefreshCw } from "lucide-react";
+import { BriefcaseBusiness, RefreshCw, ShieldCheck, UserCircle2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -42,10 +42,44 @@ export default function ChatSidebar({
         ? "No conversation threads yet. Active message rooms will appear here automatically."
         : "No conversations yet. Open a room from an expert profile to get started.";
 
+  const roleMeta =
+    role === "EXPERT"
+      ? {
+          label: "Expert inbox",
+          icon: BriefcaseBusiness,
+          panelClass:
+            "border-cyan-200/70 bg-cyan-50/40 dark:border-cyan-500/20 dark:bg-cyan-500/6",
+          badgeClass:
+            "border-cyan-200 bg-cyan-100 text-cyan-700 dark:border-cyan-500/25 dark:bg-cyan-500/10 dark:text-cyan-200",
+        }
+      : role === "ADMIN"
+        ? {
+            label: "Admin desk",
+            icon: ShieldCheck,
+            panelClass:
+              "border-amber-200/70 bg-amber-50/35 dark:border-amber-500/20 dark:bg-amber-500/6",
+            badgeClass:
+              "border-amber-200 bg-amber-100 text-amber-700 dark:border-amber-500/25 dark:bg-amber-500/10 dark:text-amber-200",
+          }
+        : {
+            label: "Client chat",
+            icon: UserCircle2,
+            panelClass:
+              "border-slate-200/70 bg-white/70 dark:border-white/10 dark:bg-slate-900/60",
+            badgeClass:
+              "border-blue-200 bg-blue-100 text-blue-700 dark:border-blue-500/25 dark:bg-blue-500/10 dark:text-blue-200",
+          };
+
+  const RoleIcon = roleMeta.icon;
+
   return (
-    <aside className="flex min-h-[70vh] flex-col rounded-2xl border border-slate-200/70 bg-white/70 shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-900/60">
+    <aside className={`flex min-h-[70vh] flex-col rounded-2xl border shadow-sm backdrop-blur ${roleMeta.panelClass}`}>
       <div className="flex items-start justify-between gap-3 border-b border-slate-200/70 p-4 dark:border-white/10">
         <div>
+          <div className={`mb-1.5 inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium tracking-wide uppercase ${roleMeta.badgeClass}`}>
+            <RoleIcon className="size-3.5" />
+            {roleMeta.label}
+          </div>
           <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
           <p className="text-sm text-muted-foreground">{description}</p>
         </div>

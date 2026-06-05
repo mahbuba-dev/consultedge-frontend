@@ -1,14 +1,17 @@
+
 import Banner from "@/components/modules/HomePage/Banner";
-import ExpertsShowcase from "@/components/modules/HomePage/ExpertsShowcase";
 import HomeSection2 from "@/components/modules/HomePage/HomeSection2";
 import HomeSection3 from "@/components/modules/HomePage/HomeSection3";
 import InViewReveal from "@/components/modules/HomePage/InViewReveal";
 import IndustryTicker from "@/components/modules/HomePage/IndustryTicker";
+import PremiumGlassBackground from "@/components/modules/HomePage/PremiumGlassBackground";
+import SmartNewsletter from "@/components/modules/HomePage/SmartNewsletter";
+import type { PremiumGlassIntensity } from "@/components/modules/HomePage/PremiumGlassBackground";
+
+import { cache, Suspense } from "react";
+import ExpertsShowcase from "@/components/modules/HomePage/ExpertsShowcase";
 import TrendingExperts from "@/components/modules/HomePage/TrendingExperts";
 import ContentSuggestions from "@/components/modules/HomePage/ContentSuggestions";
-import PremiumGlassBackground from "@/components/modules/HomePage/PremiumGlassBackground";
-import type { PremiumGlassIntensity } from "@/components/modules/HomePage/PremiumGlassBackground";
-import SmartNewsletter from "@/components/modules/HomePage/SmartNewsletter";
 
 import { getExperts } from "@/src/services/expert.services";
 import { getAllIndustries } from "@/src/services/industry.services";
@@ -99,31 +102,85 @@ const fallbackTestimonials: ITestimonial[] = [
   },
 ];
 
-const HomePage = async () => {
+const getHomepageExperts = cache(async (): Promise<IExpert[]> => {
+  try {
+    const result = await getExperts();
+    return Array.isArray(result?.data) ? result.data : [];
+  } catch {
+    return [];
+  }
+});
+
+const getHomepageIndustries = cache(async (): Promise<IIndustry[]> => {
+  try {
+    const result = await getAllIndustries();
+    return Array.isArray(result?.data) ? result.data : [];
+  } catch {
+    return [];
+  }
+});
+
+const getHomepageTestimonials = cache(async (): Promise<ITestimonial[]> => {
+  try {
+    const result = await getAllTestimonials(4);
+    return result.length > 0 ? result.slice(0, 4) : fallbackTestimonials;
+  } catch {
+    return fallbackTestimonials;
+  }
+});
+
+function SectionFallback({ className }: { className: string }) {
+  return (
+    <div className={`animate-pulse rounded-(--ce-shell-radius) border border-white/70 bg-white/55 dark:border-white/10 dark:bg-slate-900/40 ${className}`} />
+  );
+}
+
+async function IndustrySections() {
+  const industries = await getHomepageIndustries();
+  const featuredIndustries = industries.slice(0, 6);
+
+  return (
+    <>
+      <InViewReveal delay={40}>
+        <IndustryTicker industries={featuredIndustries} />
+      </InViewReveal>
+      <InViewReveal delay={130}>
+        <ContentSuggestions industries={industries} />
+      </InViewReveal>
+      <InViewReveal delay={180}>
+        <SmartNewsletter industries={industries} />
+      </InViewReveal>
+    </>
+  );
+}
+
+async function ExpertSections() {
+  const experts = await getHomepageExperts();
+
+  return (
+    <>
+      <InViewReveal delay={80}>
+        <ExpertsShowcase experts={experts} limit={4} />
+      </InViewReveal>
+      <InViewReveal delay={110}>
+        <TrendingExperts experts={experts} />
+      </InViewReveal>
+    </>
+  );
+}
+
+async function TestimonialSection() {
+  const testimonials = await getHomepageTestimonials();
+
+  return (
+    <InViewReveal delay={120}>
+      <HomeSection2 testimonials={testimonials} />
+    </InViewReveal>
+  );
+}
+
+const HomePage = () => {
   const layoutPreset = HOME_LAYOUT_PRESETS[HOME_LAYOUT_VARIANT];
-
-  const [expertsResult, industriesResult, testimonialsResult] = await Promise.allSettled([
-    getExperts(),
-    getAllIndustries(),
-    getAllTestimonials(4),
-  ]);
-
-  const allExperts: IExpert[] =
-    expertsResult.status === "fulfilled" && Array.isArray(expertsResult.value?.data)
-      ? expertsResult.value.data
-      : [];
-
-  const allIndustries: IIndustry[] =
-    industriesResult.status === "fulfilled" && Array.isArray(industriesResult.value?.data)
-      ? industriesResult.value.data
-      : [];
-
-  const featuredIndustries: IIndustry[] = allIndustries.slice(0, 6);
-
-  const featuredTestimonials: ITestimonial[] =
-    testimonialsResult.status === "fulfilled" && testimonialsResult.value.length > 0
-      ? testimonialsResult.value.slice(0, 4)
-      : fallbackTestimonials;
 
   return (
     <div className={`relative overflow-x-hidden bg-white pb-20 dark:bg-slate-950 ${layoutPreset.surfaceClass}`}>
@@ -131,26 +188,17 @@ const HomePage = async () => {
       <Banner />
 
       <div id="home-after-hero" className={layoutPreset.stackClass}>
-        <InViewReveal delay={40}>
-          <IndustryTicker industries={featuredIndustries} />
-        </InViewReveal>
-        <InViewReveal delay={80}>
-          <ExpertsShowcase experts={allExperts} limit={4} />
-        </InViewReveal>
-        <InViewReveal delay={110}>
-          <TrendingExperts experts={allExperts} />
-        </InViewReveal>
-        <InViewReveal delay={130}>
-          <ContentSuggestions industries={allIndustries} />
-        </InViewReveal>
-        <InViewReveal delay={120}>
-          <HomeSection2 testimonials={featuredTestimonials} />
-        </InViewReveal>
+        <Suspense fallback={<SectionFallback className="h-52 md:h-60" />}>
+          <IndustrySections />
+        </Suspense>
+        <Suspense fallback={<SectionFallback className="h-72 md:h-80" />}>
+          <ExpertSections />
+        </Suspense>
+        <Suspense fallback={<SectionFallback className="h-60 md:h-72" />}>
+          <TestimonialSection />
+        </Suspense>
         <InViewReveal delay={160}>
           <HomeSection3 />
-        </InViewReveal>
-        <InViewReveal delay={180}>
-          <SmartNewsletter industries={allIndustries} />
         </InViewReveal>
       </div>
     </div>

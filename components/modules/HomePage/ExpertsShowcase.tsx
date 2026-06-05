@@ -14,8 +14,10 @@ import { useQuery } from "@tanstack/react-query";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import RecDebugPanel from "@/components/modules/HomePage/RecDebugPanel";
+const Card = dynamic(() => import("@/components/ui/card").then(mod => mod.Card), { ssr: false });
+const CardContent = dynamic(() => import("@/components/ui/card").then(mod => mod.CardContent), { ssr: false });
+import dynamic from "next/dynamic";
+const RecDebugPanel = dynamic(() => import("@/components/modules/HomePage/RecDebugPanel"), { ssr: false });
 import {
   getBehavior,
   recommendExperts,
@@ -76,47 +78,7 @@ const formatFee = (value?: number | null) =>
       }).format(value)
     : "Contact";
 
-const fallbackBio =
-  "Focused 1:1 guidance for strategy, growth, operations, and decision-making support.";
-
-const persistentFeaturedExperts: LocalFallbackExpert[] = [
-  {
-    name: "Ava Peterson",
-    title: "Growth Strategy Advisor",
-    specialization: "Growth Strategy",
-    description: "Helps startups tighten positioning, pricing, and go-to-market execution with pragmatic weekly guidance.",
-    experienceYears: 11,
-    fee: 140,
-    whyReason: "Featured expert",
-  },
-  {
-    name: "Nadia Rahman",
-    title: "Operations Excellence Consultant",
-    specialization: "Operations",
-    description: "Builds lean delivery systems, team rituals, and operating cadences that improve execution quality.",
-    experienceYears: 9,
-    fee: 125,
-    whyReason: "Featured expert",
-  },
-  {
-    name: "Daniel Brooks",
-    title: "Customer Experience Specialist",
-    specialization: "Customer Experience",
-    description: "Works with service teams on retention, journey design, and measurable client experience improvements.",
-    experienceYears: 10,
-    fee: 135,
-    whyReason: "Featured expert",
-  },
-  {
-    name: "Sara Kim",
-    title: "Brand and Demand Consultant",
-    specialization: "Marketing",
-    description: "Supports founders with offer clarity, channel focus, and repeatable demand generation systems.",
-    experienceYears: 8,
-    fee: 120,
-    whyReason: "Featured expert",
-  },
-] as const;
+// No fallback experts. If no data, show nothing.
 
 const normalizeName = (value: string) => value.trim().toLowerCase();
 
@@ -185,7 +147,7 @@ export default function ExpertsShowcase({ experts, limit = 4 }: ExpertsShowcaseP
   const { data: aiResult } = useQuery({
     queryKey: ["ai-recommendations", cap, recommendationPayload],
     queryFn: () => getAIRecommendations(recommendationPayload),
-    enabled: hydrated,
+    enabled: false,
     staleTime: 1000 * 60 * 10,
     gcTime: 1000 * 60 * 30,
   });
@@ -199,6 +161,7 @@ export default function ExpertsShowcase({ experts, limit = 4 }: ExpertsShowcaseP
         sortBy: "createdAt",
         sortOrder: "desc",
       }),
+    enabled: experts.length === 0,
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 20,
   });
@@ -220,22 +183,15 @@ export default function ExpertsShowcase({ experts, limit = 4 }: ExpertsShowcaseP
     return uniqueExperts;
   }, [experts, fallbackExpertsResult]);
 
+  // Only show frontend-posted (non-seeded) experts on homepage
   const candidateExperts = useMemo(() => {
-    const nonSeeded: IExpert[] = [];
-
-    for (const expert of allExpertsPool) {
-      if (!isSeededExpert(expert)) {
-        nonSeeded.push(expert);
-      }
-    }
-
-    // Curated section should only show frontend-created (non-seeded) experts.
-    return nonSeeded;
+    return allExpertsPool.filter((expert) => !isSeededExpert(expert));
   }, [allExpertsPool]);
 
+  // Show only the top 4 frontend-posted experts for homepage
   const featuredExperts = useMemo(
-    () => [...allExpertsPool].sort((a, b) => getFeaturedScore(b) - getFeaturedScore(a)).slice(0, cap * 2),
-    [allExpertsPool, cap],
+    () => candidateExperts.sort((a, b) => getFeaturedScore(b) - getFeaturedScore(a)).slice(0, 4),
+    [candidateExperts],
   );
 
   const expertsByName = useMemo(() => {
@@ -320,21 +276,12 @@ export default function ExpertsShowcase({ experts, limit = 4 }: ExpertsShowcaseP
     [featuredExperts],
   );
 
-  const persistentFallbackCards = useMemo(
-    () =>
-      persistentFeaturedExperts.map((expert, index) => ({
-        key: `persistent-featured-${index}`,
-        href: "/experts",
-        ...expert,
-        profilePhoto: buildAvatarUrl(expert.name),
-        isVerified: true,
-      })),
-    [],
-  );
 
+
+  // Only show the 4 featured experts on homepage
   const displayItems = useMemo(
-    () => dedupeDisplayCards([...items, ...featuredFallbackCards, ...persistentFallbackCards], cap),
-    [items, featuredFallbackCards, persistentFallbackCards, cap],
+    () => featuredFallbackCards,
+    [featuredFallbackCards],
   );
   const isDevFallbackActive =
     process.env.NODE_ENV !== "production" &&
@@ -363,23 +310,14 @@ export default function ExpertsShowcase({ experts, limit = 4 }: ExpertsShowcaseP
             className="gap-1 bg-cyan-100 text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-200"
           >
             <Target className="size-3.5" />
-            {isPersonalized ? "Picked for your interests" : "Great first matches"}
+            Featured Experts
           </Badge>
           <h2 className="text-2xl font-bold tracking-tight md:text-3xl lg:text-4xl">
-            {isPersonalized
-              ? "Curated from the industries you've been exploring"
-              : "Start with proven experts trusted by growing teams"}
+            Curated from the industries you've been exploring
           </h2>
           <p className="text-sm text-muted-foreground md:text-base">
-            {isPersonalized
-              ? "Our AI ranks specialists that match your recent activity."
-              : "Selected from verified specialists, weekly momentum, and quality signals so you can book with confidence."}
+            Discover top experts across various industries.
           </p>
-          {isDevFallbackActive ? (
-            <span className="inline-flex w-fit items-center gap-1 rounded-full border border-amber-300/70 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:border-amber-400/30 dark:bg-amber-500/10 dark:text-amber-200">
-              Fallback mode active
-            </span>
-          ) : null}
           <RecDebugPanel mode={mode} activityCount={activityCount} />
         </div>
 

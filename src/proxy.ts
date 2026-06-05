@@ -113,11 +113,13 @@ export async function proxy(request: NextRequest) {
       const userInfo = await getUserInfo();
       const resolvedRole = (userInfo?.role as UserRole) || userRole;
 
-      if (userInfo || (isValidAccessToken && resolvedRole)) {
+      // Only redirect if userInfo is valid and role is present
+      if (userInfo && resolvedRole) {
         return NextResponse.redirect(
-          new URL(getPostLoginRedirectPath(resolvedRole ?? null), request.url)
+          new URL(getPostLoginRedirectPath(resolvedRole), request.url)
         );
       }
+      // If userInfo is missing or invalid, allow access to /login
     }
 
     // ---------------------------------------------------------

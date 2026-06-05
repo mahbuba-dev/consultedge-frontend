@@ -1,8 +1,11 @@
-import ExpertDashboardContent from "@/components/modules/dashboard/ExpertDashboardContent";
+
+import React, { Suspense } from "react";
+import { dehydrate, HydrationBoundary, QueryClient } from "@tanstack/react-query";
 import { getUserInfo } from "@/src/services/auth.services";
 import { getDashboardData } from "@/src/services/dashboard.services";
 import { IExpertDashboardStats } from "@/src/types/expert.dashboard";
-import { dehydrate, HydrationBoundary, QueryClient } from "@tanstack/react-query";
+import ExpertDashboardContent from "@/components/modules/dashboard/ExpertDashboardContent";
+import Loading from "@/src/app/loading";
 
 const ExpertDashboardPage = async () => {
   const queryClient = new QueryClient();
@@ -19,7 +22,9 @@ const ExpertDashboardPage = async () => {
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <ExpertDashboardContent />
+      <Suspense fallback={<Loading />}>
+        <ExpertDashboardContent />
+      </Suspense>
     </HydrationBoundary>
   );
 };

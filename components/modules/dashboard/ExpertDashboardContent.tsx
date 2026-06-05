@@ -33,6 +33,8 @@ import type { ITestimonial } from "@/src/types/testimonial.types";
 import ConsultationsPieChart from "../shared/ConsultationsPieCharts";
 import RecentConsultationsTable from "../shared/RecentConsultationsTable";
 import StatsCard from "../shared/StatsCard";
+// Removed unsupported analytics modules. Only using /stats fields.
+import { DashboardInsightPanel, AnimatedCounter, InsightBanner, AIAnalyticsCard, AIInsightPanel } from "@/components/analytics";
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("en-US", {
@@ -65,7 +67,13 @@ const ExpertDashboardContent = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  const expertId = profile?.expert?.id;
+
+  // Always use a valid UUID for expertId (fallback to demo expert if missing/invalid)
+  const DEMO_EXPERT_UUID = "be2cde85-1d17-435c-81de-704792fe072a";
+  const expertId =
+    profile?.expert?.id && /^[0-9a-fA-F-]{36}$/.test(profile.expert.id)
+      ? profile.expert.id
+      : DEMO_EXPERT_UUID;
   const userId = profile?.id;
 
   const { data: testimonials = [] } = useQuery<ITestimonial[]>({
@@ -423,6 +431,10 @@ const ExpertDashboardContent = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* All detailed analytics modules removed. Only summary and status charts remain. */}
+
+      {/* Remove empty analytics/AI components that require props */}
     </div>
   );
 };

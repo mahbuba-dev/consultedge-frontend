@@ -57,6 +57,11 @@ export const expertNavItems: NavSection[] = [
         ],
       },
       {
+        title: "Analytics Dashboard",
+        href: "/expert/dashboard/analytics",
+        icon: "BarChart3",
+      },
+      {
         title: "My Sessions",
         href: "/expert/dashboard/my-sessions",
         icon: "Users",
@@ -101,6 +106,16 @@ export const adminNavItems: NavSection[] = [
     ],
   },
   {
+    title: "Analytics",
+    items: [
+      {
+        title: "Analytics Dashboard",
+        href: "/admin/dashboard/analytics",
+        icon: "BarChart3",
+      },
+    ],
+  },
+  {
     title: "Platform Management",
     items: [
       {
@@ -141,6 +156,7 @@ export const adminNavItems: NavSection[] = [
    
     ],
   },
+  
 ];
 
 // CLIENT NAV ITEMS (Patient → Client)
@@ -164,6 +180,16 @@ export const clientNavItems: NavSection[] = [
         icon: "MessageCircleMore",
       },
       
+    ],
+  },
+  {
+    title: "Analytics",
+    items: [
+      {
+        title: "Analytics Dashboard",
+        href: "/dashboard/analytics",
+        icon: "BarChart3",
+      },
     ],
   },
   {

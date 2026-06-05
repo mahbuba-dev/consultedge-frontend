@@ -60,7 +60,6 @@ import {
 } from "@/components/ui/select";
 import { getAllIndustries } from "@/src/services/industry.services";
 import { getExperts } from "@/src/services/expert.services";
-import { aiChatOpenAIFallback } from "@/src/services/ai.service";
 import {
   trackCategoryClick,
   trackIndustryExplore,
@@ -216,7 +215,7 @@ export default function ExpertsPageClient() {
   const aiSearchAbortRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [isMobileViewport, setIsMobileViewport] = useState(false);
-  const PAGE_SIZE = 12;
+  const PAGE_SIZE = 8;
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 767px)");
@@ -274,6 +273,7 @@ export default function ExpertsPageClient() {
     staleTime: 5 * 60 * 1000,
   });
 
+  // Show all experts (seeded and non-seeded) on experts page
   const experts = useMemo<IExpert[]>(() => (Array.isArray(data?.data) ? data.data : []), [data]);
   const meta = data?.meta;
   const selectedIndustryId = currentSearchParams.get("industryId") ?? "all";

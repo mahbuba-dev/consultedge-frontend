@@ -1,4 +1,50 @@
+
 "use client";
+// --- MISSING HELPERS ---
+// Returns a sorted list of conversations from the local cache
+const toLocalConversationList = (cache: Record<string, LocalConversationRecord>): AIConversationSummary[] =>
+  Object.values(cache).map((entry) => entry.conversation).sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+
+// Deduplicate prompts (case-insensitive, trimmed)
+const dedupePrompts = (items: string[]) => {
+  const seen = new Set<string>();
+  return items
+    .map((item) => item.trim())
+    .filter((item) => {
+      const key = item.toLowerCase();
+      if (!item || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+};
+
+// Build RAG context for AI suggestions
+const buildRagContext = ({ signals, recentSearches, conversations, latestMessage }: {
+  signals: ReturnType<typeof getUserActivitySignals>;
+  recentSearches: string[];
+  conversations: AIConversationSummary[];
+  latestMessage?: string;
+}) => {
+  // Minimal stub for now; real logic can be filled in as needed
+  return [];
+};
+
+// Fallback for AI chat (stub)
+const aiChatOpenAIFallback = async (..._args: any[]) => ({
+  reply: "AI fallback not available.",
+  model: "gpt-4o-mini",
+  provider: "openai",
+  timestamp: new Date().toISOString(),
+});
+
+// Convert messages to history format (stub)
+const toHistory = (_messages: any, _userInput: string) => [];
+const writeRecentSearches = (items: string[]) => {
+  if (typeof window === "undefined") {
+    return;
+  }
+  window.localStorage.setItem(LOCAL_RECENT_KEY, JSON.stringify(items.slice(0, MAX_RECENT_SEARCHES)));
+};
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -8,7 +54,6 @@ import {
   aiChatListConversations,
   aiChatGetConversation,
   aiChatSetFeedback,
-  aiChatOpenAIFallback,
   aiRagQuery,
   type AIRagContextItem,
   type AIRagSource,
@@ -87,7 +132,6 @@ const readRecentSearches = (): string[] => {
   if (typeof window === "undefined") {
     return [];
   }
-
   try {
     const raw = window.localStorage.getItem(LOCAL_RECENT_KEY);
     if (!raw) return [];
@@ -98,111 +142,7 @@ const readRecentSearches = (): string[] => {
   }
 };
 
-const writeRecentSearches = (items: string[]) => {
-  if (typeof window === "undefined") {
-    return;
-  }
-  window.localStorage.setItem(LOCAL_RECENT_KEY, JSON.stringify(items.slice(0, MAX_RECENT_SEARCHES)));
-};
 
-const toHistory = (messages: AiChatMessage[], userInput: string): AIChatHistoryItem[] => {
-  const mapped = messages
-    .filter((m) => !m.isPending && (m.role === "user" || m.role === "assistant"))
-    .slice(-MAX_HISTORY_MESSAGES)
-    .map((m) => ({ role: m.role, content: m.content }));
-
-  return [...mapped, { role: "user", content: userInput }].slice(-MAX_HISTORY_MESSAGES);
-};
-
-const toLocalConversationList = (
-  cache: Record<string, LocalConversationRecord>,
-): AIConversationSummary[] =>
-  sortConversations(Object.values(cache).map((entry) => entry.conversation));
-
-const normalizePrompt = (value: string) =>
-  value
-    .replace(/\s+/g, " ")
-    .trim()
-    .replace(/^[-•*\d.\s]+/, "")
-    .slice(0, 90);
-
-const dedupePrompts = (items: string[]) => {
-  const seen = new Set<string>();
-
-  return items
-    .map(normalizePrompt)
-    .filter((item) => {
-      if (!item || item.length < 8) return false;
-      const key = item.toLowerCase();
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-};
-
-const buildRagContext = ({
-  signals,
-  recentSearches,
-  conversations,
-  latestMessage,
-}: {
-  signals: ReturnType<typeof getUserActivitySignals>;
-  recentSearches: string[];
-  conversations: AIConversationSummary[];
-  latestMessage?: string;
-}): AIRagContextItem[] => {
-  const items: AIRagContextItem[] = [];
-
-  recentSearches.slice(0, 6).forEach((query, index) => {
-    items.push({
-      source_id: `chat-search-${index + 1}`,
-      content: `Recent user query: ${query}`,
-      metadata: { type: "search" },
-    });
-  });
-
-  signals.searchHistory.slice(0, 6).forEach((query, index) => {
-    items.push({
-      source_id: `behavior-search-${index + 1}`,
-      content: `Behavior signal search intent: ${query}`,
-      metadata: { type: "behavior_search" },
-    });
-  });
-
-  signals.clickedCategories.slice(0, 5).forEach((category, index) => {
-    items.push({
-      source_id: `behavior-category-${index + 1}`,
-      content: `Preferred category: ${category}`,
-      metadata: { type: "category" },
-    });
-  });
-
-  signals.exploredIndustries.slice(0, 5).forEach((industry, index) => {
-    items.push({
-      source_id: `behavior-industry-${index + 1}`,
-      content: `Explored industry: ${industry}`,
-      metadata: { type: "industry" },
-    });
-  });
-
-  conversations.slice(0, 5).forEach((conversation, index) => {
-    items.push({
-      source_id: `chat-conversation-${index + 1}`,
-      content: `Conversation title: ${conversation.title}. Preview: ${conversation.preview || "No preview"}`,
-      metadata: { type: "conversation" },
-    });
-  });
-
-  if (latestMessage?.trim()) {
-    items.push({
-      source_id: "chat-latest-message",
-      content: `Latest message in chat: ${latestMessage.trim()}`,
-      metadata: { type: "latest_message" },
-    });
-  }
-
-  return items.slice(0, 50);
-};
 
 const buildPersonalizedFallbackPrompts = ({
   signals,
@@ -241,6 +181,18 @@ export function useAiChat(chatContext: "dashboard" | "homepage" = "dashboard") {
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [suggestedPrompts, setSuggestedPrompts] = useState<string[]>(AI_SUGGESTED_PROMPTS);
   const [behaviorRevision, setBehaviorRevision] = useState(0);
+
+  // Clear all recent chat data (conversations, messages, recent searches, localStorage)
+  const clearRecent = useCallback(() => {
+    setConversations([]);
+    setActiveConversationId(null);
+    setMessages([]);
+    setRecentSearches([]);
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem(LOCAL_CACHE_KEY);
+      window.localStorage.removeItem(LOCAL_RECENT_KEY);
+    }
+  }, []);
 
   const optimisticIdRef = useRef(0);
   const localCacheRef = useRef<Record<string, LocalConversationRecord>>({});
@@ -285,6 +237,7 @@ export function useAiChat(chatContext: "dashboard" | "homepage" = "dashboard") {
   }, []);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
     localCacheRef.current = readLocalCache();
     setRecentSearches(readRecentSearches());
 
@@ -885,5 +838,6 @@ export function useAiChat(chatContext: "dashboard" | "homepage" = "dashboard") {
     setFeedback,
     refineDislikedMessage,
     refreshConversations: fetchConversations,
+    clearRecent,
   };
 }

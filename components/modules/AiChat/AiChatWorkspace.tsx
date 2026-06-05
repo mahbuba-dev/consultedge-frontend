@@ -21,12 +21,18 @@ import type { AIMessageFeedback } from "@/src/types/ai.types";
 
 type AiChatWorkspaceProps = {
   mode?: "page" | "widget";
+  currentUserId?: string;
 };
 
 const isMobileViewport = () =>
   typeof window !== "undefined" && window.matchMedia("(max-width: 1023px)").matches;
 
-export default function AiChatWorkspace({ mode = "page" }: AiChatWorkspaceProps) {
+import React, { Suspense } from "react";
+import dynamic from "next/dynamic";
+const Loading = dynamic(() => import("@/src/app/loading"));
+
+
+function AiChatWorkspaceInner({ mode = "page", currentUserId }: AiChatWorkspaceProps) {
   const {
     conversations,
     suggestedPrompts,
@@ -40,7 +46,14 @@ export default function AiChatWorkspace({ mode = "page" }: AiChatWorkspaceProps)
     newConversation,
     setFeedback,
     refineDislikedMessage,
+    clearRecent,
   } = useAiChat(mode === "widget" ? "homepage" : "dashboard");
+
+  // Clear recent messages handler using the hook's clearRecent
+  const handleClearRecent = () => {
+    clearRecent();
+    toast.success("Recent messages cleared.");
+  };
 
   const [input, setInput] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -245,7 +258,7 @@ export default function AiChatWorkspace({ mode = "page" }: AiChatWorkspaceProps)
         )}
       >
         <AiChatSidebar
-          conversations={conversations}
+          conversations={currentUserId ? conversations.filter(c => c.userId === currentUserId) : conversations}
           suggestedPrompts={suggestedPrompts}
           mode={mode}
           activeConversationId={activeConversationId}
@@ -253,6 +266,7 @@ export default function AiChatWorkspace({ mode = "page" }: AiChatWorkspaceProps)
           onSelect={handleSelectConversation}
           onNew={handleNewConversation}
           onSuggestedPrompt={handleSuggestedPrompt}
+          onClearRecent={handleClearRecent}
         />
       </div>
 
@@ -472,5 +486,13 @@ export default function AiChatWorkspace({ mode = "page" }: AiChatWorkspaceProps)
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+export default function AiChatWorkspace(props: AiChatWorkspaceProps) {
+  return (
+    <Suspense fallback={<Loading />}>
+      <AiChatWorkspaceInner {...props} />
+    </Suspense>
   );
 }

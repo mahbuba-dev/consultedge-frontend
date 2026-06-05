@@ -173,7 +173,13 @@ export default function AvailabilityCalendar({
   };
 
   const handleBookAction = async (mode: "pay-now" | "pay-later") => {
-    if (!ensureBookingAccess() || !selectedSlot) {
+
+    if (!ensureBookingAccess()) {
+      return;
+    }
+    if (!expertId || !selectedSlot?.id) {
+      toast.error("Please select a time slot before booking.");
+      console.log({ expertId, selectedSlotId: selectedSlot?.id });
       return;
     }
 

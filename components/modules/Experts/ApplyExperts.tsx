@@ -22,7 +22,6 @@ import {
 import { toast } from "sonner";
 import { applyExpertAction } from "@/src/services/expert.services";
 import { getAllIndustries } from "@/src/services/industry.services";
-import { aiChatOpenAIFallback } from "@/src/services/ai.service";
 import { getMe } from "@/src/services/auth.services";
 import { createNotification } from "@/src/services/notification.service";
 import { getUsers } from "@/src/services/user.services";
@@ -211,28 +210,9 @@ export default function ApplyExpertForm() {
     setIsAnalyzingResume(true);
     setResumeAnalysis("");
 
-    try {
-      const reply = await aiChatOpenAIFallback({
-        context: "expert-apply-resume-review",
-        message: [
-          "You are an expert reviewer for consulting applications.",
-          `Evaluate this resume metadata and rate it as Strong or Weak with 2 concise reasons.`,
-          `File name: ${file.name}`,
-          `File type: ${file.type || "unknown"}`,
-          `File size KB: ${Math.max(1, Math.round(file.size / 1024))}`,
-          `Expert title: ${form.state.values.title || "not provided"}`,
-          `Industry id: ${form.state.values.industryId || "not provided"}`,
-          `Experience years: ${form.state.values.experience || 0}`,
-          "Return format: Rating: Strong/Weak. Reasons: ...",
-        ].join("\n"),
-      });
-
-      setResumeAnalysis(reply.reply || "Rating unavailable.");
-    } catch {
-      setResumeAnalysis("Rating: Weak. Reasons: AI review is unavailable right now, but your resume is attached successfully.");
-    } finally {
-      setIsAnalyzingResume(false);
-    }
+    // TODO: Implement AI resume analysis using new OpenAI API helper
+    setResumeAnalysis("Rating: Weak. Reasons: AI review is unavailable right now, but your resume is attached successfully.");
+    setIsAnalyzingResume(false);
   };
 
   // ── pre-fill name + email once user data arrives ─────────────────────────
@@ -254,36 +234,35 @@ export default function ApplyExpertForm() {
   // ── core AI helper (direct OpenAI — bypasses unreliable aiSummary) ──────────
   const runAISuggest = async (industry: IIndustry, feedback?: string) => {
     const feeRange = feeHintForIndustry(industry.name);
-
-    const prompt = feedback?.trim()
-      ? [
-          `You are an expert profile writer for a consulting platform.`,
-          `Write a professional profile for a "${industry.name}" expert. The user gave this feedback: "${feedback.trim()}".`,
-          `Return ONLY this exact format with no extra text:`,
-          `TITLE: <specific expert title, e.g. "Senior E-Commerce Strategy Consultant">`,
-          `BIO: <2-3 sentence professional bio in first person>`,
-          `FEE: <suggested hourly USD rate as a plain number>`,
-        ].join("\n")
-      : [
-          `You are an expert profile writer for a consulting platform.`,
-          `Write a professional profile for a "${industry.name}" expert.`,
-          `Return ONLY this exact format with no extra text:`,
-          `TITLE: <specific expert title, e.g. "Senior E-Commerce Strategy Consultant">`,
-          `BIO: <2-3 sentence professional bio in first person>`,
-          `FEE: <suggested hourly USD rate as a plain number>`,
-        ].join("\n");
-
-    const response = await aiChatOpenAIFallback({
-      context: "expert-apply-profile-suggestion",
-      message: prompt,
-    });
-
-    return { response, feeRange };
+    try {
+      const res = await fetch("/api/ai/profile-suggest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          industry: industry.name,
+          feedback: feedback || "",
+        }),
+      });
+      if (!res.ok) throw new Error("AI suggestion failed");
+      const data = await res.json();
+      // Expecting: { title: string, bio: string, fee: number }
+      return {
+        response: {
+          reply: `TITLE: ${data.title || ""}\nBIO: ${data.bio || ""}\nFEE: ${data.fee || ""}`,
+        },
+        feeRange,
+      };
+    } catch (err) {
+      return {
+        response: { reply: "" },
+        feeRange,
+      };
+    }
   };
 
   // ── apply structured AI response to form ─────────────────────────────────
   const applyOpenAIResult = (
-    response: Awaited<ReturnType<typeof aiChatOpenAIFallback>>,
+    response: { reply?: string },
     industry: IIndustry,
     feeRange: { min: number; max: number; mid: number },
     forceOverwrite = false,
@@ -296,27 +275,40 @@ export default function ApplyExpertForm() {
     const bioMatch = text.match(/BIO:\s*([\s\S]+?)(?:\nFEE:|$)/i);
     const feeMatch = text.match(/FEE:\s*(\d+)/i);
 
-    const generatedTitle =
-      titleMatch?.[1]?.trim() ||
-      `${industry.name} Consultant`;
 
-    const generatedBio =
-      bioMatch?.[1]?.trim() ||
-      `I am a seasoned ${industry.name} professional helping clients achieve measurable outcomes. My expertise spans strategic planning, execution, and hands-on advisory across various ${industry.name.toLowerCase()} domains. I bring a client-first approach to every engagement.`;
+    // Only use real AI output. If missing, do not fill and show error.
+    const generatedTitle = titleMatch?.[1]?.trim() || "";
+    const generatedBio = bioMatch?.[1]?.trim() || "";
+    const generatedFee = feeMatch?.[1] ? Number(feeMatch[1]) : null;
 
-    const generatedFee = feeMatch?.[1] ? Number(feeMatch[1]) : feeRange.mid;
-
+    let aiError = false;
     if (forceOverwrite || !values.title.trim()) {
-      form.setFieldValue("title", generatedTitle);
-      filled.add("title");
+      if (generatedTitle) {
+        form.setFieldValue("title", generatedTitle);
+        filled.add("title");
+      } else {
+        aiError = true;
+      }
     }
     if (forceOverwrite || !values.bio.trim()) {
-      form.setFieldValue("bio", generatedBio);
-      filled.add("bio");
+      if (generatedBio) {
+        form.setFieldValue("bio", generatedBio);
+        filled.add("bio");
+      } else {
+        aiError = true;
+      }
     }
     if (forceOverwrite || (values.consultationFee ?? 0) <= 0) {
-      form.setFieldValue("consultationFee", generatedFee);
-      filled.add("consultationFee");
+      if (generatedFee !== null) {
+        form.setFieldValue("consultationFee", generatedFee);
+        filled.add("consultationFee");
+      } else {
+        aiError = true;
+      }
+    }
+
+    if (aiError) {
+      toast.error("AI could not generate a suggestion. Please try again later.");
     }
 
     setAiFilledFields(filled);

@@ -341,8 +341,8 @@ export default function MyScheduleList() {
   // ---------------- FINAL UI ----------------
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="space-y-5 max-w-7xl mx-auto w-full px-2 md:px-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 w-full">
         <Button
           variant="outline"
           onClick={() => refetch()}
@@ -381,11 +381,11 @@ export default function MyScheduleList() {
 
         <TabsContent value="available" className="mt-5">
           {available.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-200/70 bg-white/40 p-8 text-center text-sm text-muted-foreground dark:border-white/10 dark:bg-white/5">
+            <div className="rounded-2xl border border-dashed border-slate-200/70 bg-white/40 p-8 text-center text-sm text-muted-foreground dark:border-white/10 dark:bg-white/5 min-h-50">
               No available sessions yet — add one to get started.
             </div>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid w-full gap-4 md:grid-cols-2 xl:grid-cols-3">
               {available.map((x) => renderCard(x.item))}
             </div>
           )}
@@ -393,11 +393,11 @@ export default function MyScheduleList() {
 
         <TabsContent value="booked" className="mt-5">
           {Booked.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-200/70 bg-white/40 p-8 text-center text-sm text-muted-foreground dark:border-white/10 dark:bg-white/5">
+            <div className="rounded-2xl border border-dashed border-slate-200/70 bg-white/40 p-8 text-center text-sm text-muted-foreground dark:border-white/10 dark:bg-white/5 min-h-50">
               No booked sessions yet.
             </div>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid w-full gap-4 md:grid-cols-2 xl:grid-cols-3">
               {Booked.map((x) => renderCard(x.item))}
             </div>
           )}

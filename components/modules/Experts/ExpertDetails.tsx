@@ -392,11 +392,7 @@ export default function ExpertDetails({
           <p className="text-muted-foreground">
             Choose an open slot, review the session summary, and continue with a secure consultation flow.
           </p>
-          {availability.length === 0 ? (
-            <p className="mt-2 text-xs font-medium text-amber-700 dark:text-amber-300">
-              Showing sample availability — real slots will appear once {expert.fullName.split(" ")[0]} publishes their schedule.
-            </p>
-          ) : null}
+          
         </div>
 
         <BookSessionPanel

@@ -65,10 +65,10 @@ export default function PaymentStatusBanner({
       className={cn(
         "shadow-sm",
         issuccess
-          ? "border-emerald-200 bg-emerald-50/60"
+          ? "border-emerald-200 bg-emerald-50/60 dark:border-emerald-400/30 dark:bg-slate-900/80"
           : isCancelled
-            ? "border-amber-200 bg-amber-50/60"
-            : "border-sky-200 bg-sky-50/60",
+            ? "border-amber-200 bg-amber-50/60 dark:border-amber-400/30 dark:bg-slate-900/80"
+            : "border-sky-200 bg-sky-50/60 dark:border-sky-400/30 dark:bg-slate-900/80",
       )}
     >
       <CardHeader>
@@ -95,7 +95,7 @@ export default function PaymentStatusBanner({
 
       <CardContent>
         <div className="grid gap-3 md:grid-cols-4">
-          <div className="rounded-2xl border bg-white/80 p-3">
+          <div className="rounded-2xl border bg-white/80 dark:bg-slate-800/80 p-3">
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Consultation ID
             </p>
@@ -104,14 +104,14 @@ export default function PaymentStatusBanner({
             </p>
           </div>
 
-          <div className="rounded-2xl border bg-white/80 p-3">
+          <div className="rounded-2xl border bg-white/80 dark:bg-slate-800/80 p-3">
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Payment ID
             </p>
             <p className="mt-1 text-sm font-semibold text-foreground">{paymentId || "Not provided"}</p>
           </div>
 
-          <div className="rounded-2xl border bg-white/80 p-3">
+          <div className="rounded-2xl border bg-white/80 dark:bg-slate-800/80 p-3">
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Transaction ID
             </p>
@@ -120,7 +120,7 @@ export default function PaymentStatusBanner({
             </p>
           </div>
 
-          <div className="rounded-2xl border bg-white/80 p-3">
+          <div className="rounded-2xl border bg-white/80 dark:bg-slate-800/80 p-3">
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Amount
             </p>

@@ -73,7 +73,7 @@ export default function MessageComposer({
 
         <Button
           type="button"
-          className="bg-blue-600 hover:bg-blue-700"
+          className="bg-linear-to-r from-cyan-500 to-blue-600 text-white shadow-sm shadow-cyan-500/30 hover:from-cyan-400 hover:to-blue-500 dark:from-cyan-400 dark:to-blue-500 dark:text-white dark:shadow-cyan-500/40"
           disabled={disabled || isSending || !text.trim()}
           onClick={() => void handleSubmit()}
         >

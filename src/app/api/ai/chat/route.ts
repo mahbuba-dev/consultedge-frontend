@@ -52,15 +52,10 @@ export async function POST(request: Request) {
     }
 
     if (!process.env.OPENAI_API_KEY) {
-      return NextResponse.json({
-        success: true,
-        data: {
-          reply: buildLocalReply(message, body.context),
-          provider: "local-fallback",
-          model: "heuristic",
-          timestamp: new Date().toISOString(),
-        },
-      });
+      return NextResponse.json(
+        { success: false, message: "OpenAI API key is missing. Real AI is required." },
+        { status: 503 }
+      );
     }
 
     const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -97,15 +92,9 @@ export async function POST(request: Request) {
       },
     });
   } catch {
-    const safeReply = "AI is currently busy. I can still help: tell me your goal, timeline, and budget, and I will suggest your next step.";
-    return NextResponse.json({
-      success: true,
-      data: {
-        reply: safeReply,
-        provider: "local-fallback",
-        model: "heuristic",
-        timestamp: new Date().toISOString(),
-      },
-    });
+    return NextResponse.json(
+      { success: false, message: "AI service unavailable. Please try again later." },
+      { status: 503 }
+    );
   }
 }

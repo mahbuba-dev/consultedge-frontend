@@ -176,8 +176,30 @@ export default function ChatRoomHeader({
     primaryParticipant?.profilePhoto ||
     undefined;
 
+  const roleMeta =
+    currentUserRole === "EXPERT"
+      ? {
+          label: "Expert",
+          badgeClass:
+            "border-cyan-200 bg-cyan-100 text-cyan-700 dark:border-cyan-500/25 dark:bg-cyan-500/10 dark:text-cyan-200",
+          panelClass: "border-cyan-200/60 bg-cyan-50/30 dark:border-cyan-500/15 dark:bg-cyan-500/6",
+        }
+      : currentUserRole === "ADMIN"
+        ? {
+            label: "Admin",
+            badgeClass:
+              "border-amber-200 bg-amber-100 text-amber-700 dark:border-amber-500/25 dark:bg-amber-500/10 dark:text-amber-200",
+            panelClass: "border-amber-200/60 bg-amber-50/30 dark:border-amber-500/15 dark:bg-amber-500/6",
+          }
+        : {
+            label: "Client",
+            badgeClass:
+              "border-blue-200 bg-blue-100 text-blue-700 dark:border-blue-500/25 dark:bg-blue-500/10 dark:text-blue-200",
+            panelClass: "border-slate-200/70 bg-white/60 dark:border-white/10 dark:bg-slate-900/40",
+          };
+
   return (
-    <div className="flex flex-col gap-4 border-b p-4 md:flex-row md:items-center md:justify-between md:px-6">
+    <div className={`flex flex-col gap-4 border-b p-4 md:flex-row md:items-center md:justify-between md:px-6 ${roleMeta.panelClass}`}>
       <div className="flex items-center gap-3">
         <Avatar className="size-11 border bg-background">
           {avatarSrc ? (
@@ -198,6 +220,10 @@ export default function ChatRoomHeader({
             <h2 className="text-lg font-semibold tracking-tight text-foreground">
               {title}
             </h2>
+
+            <Badge variant="outline" className={`gap-1 ${roleMeta.badgeClass}`}>
+              {roleMeta.label}
+            </Badge>
 
             <Badge variant="outline" className="gap-1">
               {connectionState === "connected" ? (

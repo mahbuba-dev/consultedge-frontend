@@ -7,9 +7,10 @@ import { useQuery } from "@tanstack/react-query";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { getTrendingExperts } from "@/src/lib/aiPersonalization";
-import { getAIRecommendations } from "@/src/services/ai.service";
+import dynamic from "next/dynamic";
+const Card = dynamic(() => import("@/components/ui/card").then(mod => mod.Card), { ssr: false });
+const CardContent = dynamic(() => import("@/components/ui/card").then(mod => mod.CardContent), { ssr: false });
+
 import { getExperts } from "@/src/services/expert.services";
 import type { IExpert } from "@/src/types/expert.types";
 
@@ -27,72 +28,25 @@ type TrendingCard = {
   profilePhoto?: string | null;
 };
 
-type LocalTrendingFallback = {
-  name: string;
-  title: string;
-  industry?: string;
-  bio: string;
-};
-
 const MAX = 4;
+
 const fallbackBio =
   "Trusted operator helping teams move faster with focused 1:1 sessions.";
-
-const variedFallbackBios = [
-  "Builds practical operating systems for teams that need cleaner execution under growth pressure.",
-  "Advises leaders on prioritization, stakeholder alignment, and measurable quarterly outcomes.",
-  "Designs repeatable client-delivery playbooks that improve quality without slowing momentum.",
-  "Supports founders with offer strategy, positioning, and retention-focused customer journeys.",
-] as const;
-
-const persistentTrendingFallback: LocalTrendingFallback[] = [
-  {
-    name: "Ryan Coleman",
-    title: "Go-To-Market Advisor",
-    industry: "Sales Strategy",
-    bio: "Supports teams with pricing, positioning, and repeatable pipeline growth.",
-  },
-  {
-    name: "Fatima Noor",
-    title: "Brand and Demand Consultant",
-    industry: "Marketing",
-    bio: "Builds demand generation systems focused on conversion and retention.",
-  },
-  {
-    name: "Leo Martins",
-    title: "Technical Program Specialist",
-    industry: "Technical Teams",
-    bio: "Improves cross-functional delivery with practical program execution frameworks.",
-  },
-  {
-    name: "Hana Kim",
-    title: "Leadership Coach",
-    industry: "Executive Coaching",
-    bio: "Helps leaders improve clarity, decision velocity, and team alignment.",
-  },
-] as const;
 
 const getInitials = (name: string) =>
   name
     .split(" ")
     .map((p) => p[0])
     .join("")
-    .slice(0, 1)
+    .slice(0, 2)
     .toUpperCase();
 
 const buildAvatarUrl = (name: string) =>
-  `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(name)}&radius=50&backgroundType=gradientLinear`;
+  `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(
+    name
+  )}&radius=50&backgroundType=gradientLinear`;
 
-  const normalizeName = (value: string) => value.trim().toLowerCase();
-
-const isSeededExpert = (expert: IExpert) => {
-  if (typeof expert.isSeeded === "boolean") {
-    return expert.isSeeded;
-  }
-
-  const email = (expert.email ?? expert.user?.email ?? "").toLowerCase();
-  return email.endsWith("@consultedge.test");
-};
+const normalizeName = (value: string) => value.trim().toLowerCase();
 
 const getFeaturedScore = (expert: IExpert) => {
   const verified = expert.isVerified ? 4 : 0;
@@ -100,12 +54,13 @@ const getFeaturedScore = (expert: IExpert) => {
   const hasBio = expert.bio?.trim() ? 1 : 0;
   const hasTitle = expert.title?.trim() ? 0.5 : 0;
   const experience = Math.min(Number(expert.experience ?? 0), 15) / 15;
+
   return verified + hasPhoto + hasBio + hasTitle + experience;
 };
 
 export default function TrendingExperts({ experts }: TrendingExpertsProps) {
   const { data: fallbackExpertsResult } = useQuery({
-    queryKey: ["homepage-trending-fallback-experts", MAX],
+    queryKey: ["homepage-trending-fallback-experts"],
     queryFn: () =>
       getExperts({
         page: 1,
@@ -113,6 +68,7 @@ export default function TrendingExperts({ experts }: TrendingExpertsProps) {
         sortBy: "createdAt",
         sortOrder: "desc",
       }),
+    enabled: experts.length === 0,
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 20,
   });
@@ -120,222 +76,120 @@ export default function TrendingExperts({ experts }: TrendingExpertsProps) {
   const allExpertsPool = useMemo(() => {
     const pool = [
       ...experts,
-      ...(Array.isArray(fallbackExpertsResult?.data) ? fallbackExpertsResult.data : []),
+      ...(fallbackExpertsResult?.data ?? []),
     ];
+
     const seen = new Set<string>();
-    const uniqueExperts: IExpert[] = [];
+    const unique: IExpert[] = [];
 
     for (const expert of pool) {
       if (!expert?.id || seen.has(expert.id)) continue;
       seen.add(expert.id);
-      uniqueExperts.push(expert);
+      unique.push(expert);
     }
 
-    return uniqueExperts;
+    return unique;
   }, [experts, fallbackExpertsResult]);
 
-  const candidateExperts = useMemo(() => {
-    const nonSeeded: IExpert[] = [];
-
-    for (const expert of allExpertsPool) {
-      if (isSeededExpert(expert)) {
-        continue;
-      } else {
-        nonSeeded.push(expert);
-      }
-    }
-
-    return nonSeeded;
-  }, [allExpertsPool]);
-
-  const featuredExperts = useMemo(
-    () => [...allExpertsPool].sort((a, b) => getFeaturedScore(b) - getFeaturedScore(a)).slice(0, MAX * 2),
-    [allExpertsPool],
-  );
-
-  const expertsById = useMemo(() => {
-    const m = new Map<string, IExpert>();
-    for (const e of candidateExperts) m.set(e.id, e);
-    return m;
-  }, [candidateExperts]);
-
-  const { data: aiResult } = useQuery({
-    queryKey: ["ai-trending", MAX],
-    queryFn: () =>
-      getAIRecommendations({
-        limit: MAX,
-        source: "homepage",
-      }),
-    staleTime: 1000 * 60 * 10,
-    gcTime: 1000 * 60 * 30,
-  });
-
-  const heuristicTrending = useMemo(
-    () => getTrendingExperts(candidateExperts, MAX),
-    [candidateExperts],
-  );
-
-  const trending: IExpert[] = useMemo(() => {
-    const backendItems = aiResult?.data?.items ?? [];
-    if (backendItems.length > 0) {
-      const resolved = backendItems
-        .map((it) => it.expert ?? expertsById.get(it.expertId))
-        .filter((e): e is IExpert => Boolean(e))
-        .slice(0, MAX);
-      if (resolved.length > 0) return resolved;
-    }
-    return heuristicTrending;
-  }, [aiResult, expertsById, heuristicTrending]);
-
   const cards: TrendingCard[] = useMemo(() => {
-    const used = new Set<string>();
-    const primary = trending
-      .filter((expert) => {
-        const key = normalizeName(expert.fullName);
-        if (used.has(key)) return false;
-        used.add(key);
-        return true;
-      })
-      .slice(0, MAX)
-      .map((expert, index) => ({
-        key: expert.id,
-        href: `/experts/${expert.id}`,
-        name: expert.fullName,
-        title: expert.title || "Consultant",
-        industry: expert.industry?.name,
-        bio:
-          expert.bio?.trim() ||
-          variedFallbackBios[index % variedFallbackBios.length] ||
-          fallbackBio,
-        profilePhoto: expert.profilePhoto || null,
-      }));
+    const sorted = [...allExpertsPool]
+      .sort((a, b) => getFeaturedScore(b) - getFeaturedScore(a))
+      .slice(0, MAX);
 
-    if (primary.length >= MAX) {
-      return primary.slice(0, MAX);
-    }
-
-    const padded = [...primary];
-
-    for (const expert of featuredExperts) {
-      if (padded.length >= MAX) break;
-      const key = normalizeName(expert.fullName);
-      if (used.has(key)) continue;
-      used.add(key);
-      padded.push({
-        key: `featured-trending-${expert.id}`,
-        href: `/experts/${expert.id}`,
-        name: expert.fullName,
-        title: expert.title || "Consultant",
-        industry: expert.industry?.name,
-        bio: expert.bio?.trim() || fallbackBio,
-        profilePhoto: expert.profilePhoto || null,
-      });
-    }
-
-    for (let i = 0; i < persistentTrendingFallback.length && padded.length < MAX; i += 1) {
-      const fallback = persistentTrendingFallback[i];
-      const key = normalizeName(fallback.name);
-      if (used.has(key)) continue;
-      used.add(key);
-      padded.push({
-        key: `trending-fallback-${i}`,
-        href: "/experts",
-        name: fallback.name,
-        title: fallback.title,
-        industry: fallback.industry,
-        bio: fallback.bio,
-        profilePhoto: buildAvatarUrl(fallback.name),
-      });
-    }
-
-    return padded.slice(0, MAX);
-  }, [trending, featuredExperts]);
-  const isDevFallbackActive =
-    process.env.NODE_ENV !== "production" && (aiResult?.data?.items?.length ?? 0) === 0;
+    return sorted.map((expert) => ({
+      key: expert.id,
+      href: `/experts/${expert.id}`,
+      name: expert.fullName,
+      title: expert.title || "Consultant",
+      industry: expert.industry?.name,
+      bio: expert.bio?.trim() || fallbackBio,
+      profilePhoto: expert.profilePhoto || null,
+    }));
+  }, [allExpertsPool]);
 
   return (
     <section
       id="trending-experts"
-      className="relative scroll-mt-28 overflow-hidden rounded-(--ce-shell-radius) border border-orange-100/70 bg-white/55 p-5 shadow-(--ce-shell-shadow-strong) backdrop-blur-2xl md:rounded-(--ce-shell-radius-md) md:p-7 lg:p-8 dark:rounded-(--ce-shell-radius-dark) dark:border-white/10 dark:bg-slate-950/45"
+      className="relative overflow-hidden rounded-xl border border-orange-100/70 bg-white/60 p-6 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/40"
     >
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[linear-gradient(128deg,rgba(255,255,255,0.34),rgba(255,255,255,0.08)_42%,rgba(251,146,60,0.1)_100%)] dark:bg-[linear-gradient(128deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02)_42%,rgba(251,146,60,0.08)_100%)]"
-      />
-      <div className="mb-6 flex flex-col gap-3 md:mb-8 md:flex-row md:items-end md:justify-between">
-        <div className="max-w-2xl space-y-2">
-          <Badge variant="secondary" className="gap-1 bg-orange-100 text-orange-700 dark:bg-orange-500/10 dark:text-orange-200">
+      <div className="mb-6 flex items-end justify-between">
+        <div className="space-y-2">
+          <Badge className="gap-1 bg-orange-100 text-orange-700 dark:bg-orange-500/10 dark:text-orange-200">
             <Flame className="size-3.5" />
             Trending now
           </Badge>
-          <h2 className="text-2xl font-bold tracking-tight md:text-3xl">
+          <h2 className="text-2xl font-bold">
             Experts gaining traction this week
           </h2>
-          <p className="text-sm text-muted-foreground md:text-base">
-            Powered by our AI ranking with heuristic fallback for resilience.
+          <p className="text-sm text-muted-foreground">
+            Based on profile activity & engagement signals
           </p>
-          {isDevFallbackActive ? (
-            <span className="inline-flex items-center gap-1 rounded-full border border-amber-300/70 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:border-amber-400/30 dark:bg-amber-500/10 dark:text-amber-200">
-              Fallback mode active
-            </span>
-          ) : null}
         </div>
-        <div className="hidden items-center gap-2 rounded-full border border-orange-200/70 bg-white/80 px-3 py-1.5 text-xs font-medium text-orange-700 dark:border-white/10 dark:bg-slate-900/70 dark:text-orange-200 md:inline-flex">
-          <TrendingUp className="size-3.5" />
-          Updates daily
+
+        <div className="hidden items-center gap-2 text-xs font-medium text-orange-700 md:flex">
+          <TrendingUp className="size-4" />
+          Updated daily
         </div>
       </div>
 
       {cards.length === 0 ? (
-        <div className="rounded-xl border border-orange-100 bg-orange-50/40 p-5 text-sm text-orange-900 dark:border-orange-500/20 dark:bg-orange-500/5 dark:text-orange-100">
+        <div className="rounded-lg border bg-orange-50 p-4 text-sm text-orange-800 dark:border-orange-500/20 dark:bg-orange-500/10 dark:text-orange-100">
           No trending experts available yet.
         </div>
       ) : (
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {cards.map((card, idx) => (
-          <Link
-            key={card.key}
-            href={card.href}
-            className="group block h-full"
-          >
-            <Card className="relative h-full overflow-hidden border border-slate-200 bg-white transition duration-300 hover:-translate-y-1 hover:border-orange-400 hover:shadow-[0_28px_70px_-26px_rgba(251,146,60,0.4)] dark:border-white/10 dark:bg-slate-900/80 dark:hover:border-orange-400/40">
-              <CardContent className="flex h-full flex-col gap-3 p-4">
-                <div className="flex items-center justify-between">
-                  <Badge className="gap-1 rounded-full bg-orange-500/10 text-[10px] font-bold text-orange-700 hover:bg-orange-500/20 dark:bg-orange-500/15 dark:text-orange-200">
-                    <Flame className="size-3" />#{idx + 1}
-                  </Badge>
-                  <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-                    Trending
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <Avatar size="default" className="size-12 border-2 border-orange-100 ring-2 ring-orange-50 dark:border-white/15 dark:ring-white/10">
-                    <AvatarImage src={card.profilePhoto || buildAvatarUrl(card.name)} alt={card.name} />
-                    <AvatarFallback>{getInitials(card.name)}</AvatarFallback>
-                  </Avatar>
-                  <div className="min-w-0 flex-1">
-                    <h3 className="line-clamp-1 text-sm font-semibold">{card.name}</h3>
-                    <p className="line-clamp-1 text-xs text-muted-foreground">{card.title}</p>
-                    {card.industry ? (
-                      <p className="line-clamp-1 text-[11px] font-medium text-orange-700 dark:text-orange-300">
-                        {card.industry}
-                      </p>
-                    ) : null}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {cards.map((card, idx) => (
+            <Link key={card.key} href={card.href} className="group block">
+              <Card className="h-full border transition hover:-translate-y-1 hover:border-orange-400 hover:shadow-lg dark:border-white/10 dark:bg-slate-900/60">
+                <CardContent className="flex h-full flex-col gap-3 p-4">
+                  <div className="flex items-center justify-between">
+                    <Badge className="bg-orange-500/10 text-xs text-orange-700 dark:text-orange-200">
+                      #{idx + 1}
+                    </Badge>
+                    <span className="text-[10px] text-muted-foreground">
+                      Trending
+                    </span>
                   </div>
-                </div>
 
-                <p className="line-clamp-2 text-sm text-gray-600 dark:text-gray-300">{card.bio}</p>
+                  <div className="flex items-center gap-3">
+                    <Avatar className="size-12 border">
+                      <AvatarImage
+                        src={card.profilePhoto || buildAvatarUrl(card.name)}
+                        alt={card.name}
+                      />
+                      <AvatarFallback>
+                        {getInitials(card.name)}
+                      </AvatarFallback>
+                    </Avatar>
 
-                <div className="mt-auto flex items-center justify-between text-xs font-medium text-orange-700 transition-colors group-hover:text-orange-600 dark:text-orange-300">
-                  <span>View profile</span>
-                  <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
-      </div>
+                    <div className="min-w-0">
+                      <h3 className="truncate text-sm font-semibold">
+                        {card.name}
+                      </h3>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {card.title}
+                      </p>
+                      {card.industry && (
+                        <p className="truncate text-[11px] text-orange-600 dark:text-orange-300">
+                          {card.industry}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <p className="line-clamp-2 text-sm text-muted-foreground">
+                    {card.bio}
+                  </p>
+
+                  <div className="mt-auto flex items-center justify-between text-xs font-medium text-orange-700 group-hover:text-orange-600">
+                    <span>View profile</span>
+                    <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+        </div>
       )}
     </section>
   );

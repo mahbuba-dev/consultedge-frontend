@@ -28,6 +28,7 @@ import type { IAdminDashboardStats } from "@/src/types/admin.dashboard";
 import type { ApiResponse } from "@/src/types/api.types";
 import ConsultationsBarChart from "../shared/ConsultationsBarChart";
 import ConsultationsPieChart from "../shared/ConsultationsPieCharts";
+import ConsultationsLineChart from "../shared/ConsultationsLineChart";
 import RecentConsultationsTable from "../shared/RecentConsultationsTable";
 import StatsCard from "../shared/StatsCard";
 
@@ -51,13 +52,8 @@ const AdminDashboardContent = () => {
     refetchOnWindowFocus: false,
     retry: false,
   });
-
   const data = (adminDashboardResponse as ApiResponse<IAdminDashboardStats> | undefined)?.data;
   const statusItems = data?.consultationStatusDistribution || [];
-  const averageRevenuePerConsultation = data?.consultationCount
-    ? Math.round((data.totalRevenue || 0) / data.consultationCount)
-    : 0;
-
   if (isLoading) {
     return (
       <div className="grid gap-6">
@@ -83,6 +79,10 @@ const AdminDashboardContent = () => {
       </Card>
     );
   }
+
+  const averageRevenuePerConsultation = data.consultationCount
+    ? Math.round((data.totalRevenue || 0) / data.consultationCount)
+    : 0;
 
   return (
     <div className="space-y-8">
@@ -347,6 +347,6 @@ const AdminDashboardContent = () => {
       />
     </div>
   );
-};
+}
 
 export default AdminDashboardContent;

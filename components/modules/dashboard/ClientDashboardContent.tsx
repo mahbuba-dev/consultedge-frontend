@@ -24,6 +24,7 @@ import {
 import ConsultationsPieChart from "../shared/ConsultationsPieCharts";
 import RecentConsultationsTable from "../shared/RecentConsultationsTable";
 import StatsCard from "../shared/StatsCard";
+// Removed unsupported analytics modules. Only using /stats fields.
 import { getDashboardData } from "@/src/services/dashboard.services";
 import type { ApiResponse } from "@/src/types/api.types";
 import type { IClientDashboardStats } from "@/src/types/client.dashboard";
@@ -245,78 +246,7 @@ const ClientDashboardContent = () => {
         />
       </div>
 
-      {/* Pie chart + smart next steps */}
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-        <div className="xl:col-span-2">
-          <ConsultationsPieChart
-            data={statusItems}
-            title="Your Consultation Journey"
-            description="See how your consultations are distributed across each stage."
-          />
-        </div>
-
-        <Card className="relative overflow-hidden border-slate-200/70 bg-white/70 shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-900/60">
-          <div className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-blue-600 via-cyan-500 to-teal-400" />
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Sparkles className="size-4 text-cyan-500" />
-              Smart next steps
-            </CardTitle>
-            <CardDescription>
-              Keep your workflow moving with these quick actions.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="rounded-xl border border-blue-200/60 bg-blue-50/70 p-4 dark:border-blue-500/20 dark:bg-blue-500/10">
-              <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-blue-700 dark:text-blue-300">
-                <Compass className="size-4" />
-                Recommended focus
-              </div>
-              <p className="text-sm text-muted-foreground">
-                {pendingCount > 0
-                  ? `You have ${pendingCount} pending consultation${pendingCount > 1 ? "s" : ""}. Review them first.`
-                  : "You are all caught up. Explore new experts for your next session."}
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              {statusItems.length > 0 ? (
-                statusItems.map((item) => (
-                  <div
-                    key={item.status}
-                    className="flex items-center justify-between rounded-lg border border-slate-200/60 bg-white/50 px-3 py-2 dark:border-white/10 dark:bg-white/5"
-                  >
-                    <span className="text-sm font-medium">
-                      {formatStatusLabel(item.status)}
-                    </span>
-                    <Badge variant="secondary">{item.count}</Badge>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  No consultation data available yet.
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-2 pt-1">
-              <Link href="/experts" className="inline-flex w-full">
-                <Button className="w-full justify-between bg-linear-to-r from-blue-600 to-cyan-500 text-white shadow-md shadow-cyan-500/25 hover:from-blue-700 hover:to-cyan-600">
-                  Browse experts
-                  <ArrowRight className="size-4" />
-                </Button>
-              </Link>
-
-              <Link href="/my-profile" className="inline-flex w-full">
-                <Button variant="outline" className="w-full justify-between">
-                  Update profile
-                  <ArrowRight className="size-4" />
-                </Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {/* All detailed analytics modules removed. Only summary and status charts remain. */}
 
       <RecentConsultationsTable
         data={statusItems}
