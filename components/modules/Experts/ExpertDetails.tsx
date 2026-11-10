@@ -28,11 +28,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { toast } from "sonner";
 import type { IExpert, IExpertAvailability } from "@/src/types/expert.types";
 import type { ITestimonial } from "@/src/types/testimonial.types";
 import { trackExpertView } from "@/src/lib/aiPersonalization";
 import {
-  buildSeededAvailability,
   buildSeededTestimonials,
 } from "@/src/lib/seededExpertContent";
 
@@ -69,16 +69,18 @@ export default function ExpertDetails({
   userRole,
 }: ExpertDetailsProps) {
   const [openBookingSignal, setOpenBookingSignal] = useState(0);
-  const effectiveAvailability = useMemo<IExpertAvailability[]>(
-    () => (availability.length > 0 ? availability : buildSeededAvailability(expert)),
-    [availability, expert],
-  );
+  const effectiveAvailability = availability;
   const effectiveTestimonials = useMemo<ITestimonial[]>(
     () => (testimonials.length > 0 ? testimonials : buildSeededTestimonials(expert)),
     [testimonials, expert],
   );
   const availableSlots = effectiveAvailability.filter(
-    (slot) => !slot.isBooked && !slot.isDeleted,
+    (slot) =>
+      Boolean(slot.id) &&
+      (!slot.expertId || slot.expertId === expert.id) &&
+      slot.isPublished !== false &&
+      !slot.isBooked &&
+      !slot.isDeleted,
   ).length;
   const reviewCount = effectiveTestimonials.length;
   const consultationFee = formatCurrency(expert.consultationFee ?? expert.price);
@@ -100,6 +102,19 @@ export default function ExpertDetails({
         block: "start",
       });
     }, 50);
+  };
+
+  const handleEmailClick = async () => {
+    try {
+      await navigator.clipboard.writeText(expert.email.trim());
+      toast.success("Email address copied", {
+        description: "If your email app did not open, paste the address into a new message.",
+      });
+    } catch {
+      toast.error("Could not copy the email address", {
+        description: `You can still email ${expert.email.trim()} manually.`,
+      });
+    }
   };
 
   return (
@@ -207,7 +222,10 @@ export default function ExpertDetails({
                 variant="outline"
                 className="w-full border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white md:w-auto"
               >
-                <a href={`mailto:${expert.email}`}>
+                <a
+                  href={`mailto:${expert.email.trim()}`}
+                  onClick={() => void handleEmailClick()}
+                >
                   <Mail className="mr-2 size-4" />
                   Email
                 </a>

@@ -225,6 +225,7 @@
 
 
 
+import { z } from "zod";
 import { httpClient } from "../lib/axious/httpClient";
 import type { ApiResponse } from "../types/api.types";
 import type {
@@ -316,6 +317,23 @@ const requestBookings = async (
   return asBookingsResponse(response);
 };
 
+const bookingPayloadSchema = z.object({
+  expertId: z.string().uuid(),
+  expertScheduleId: z.string().uuid(),
+  couponCode: z.string().optional(),
+});
+
+const validateBookingPayload = (payload: IBookConsultationPayload) => {
+  const parsedPayload = bookingPayloadSchema.safeParse(payload);
+  if (!parsedPayload.success) {
+    const firstIssue = parsedPayload.error.issues[0];
+    const field = firstIssue.path.join(".") || "payload";
+    throw new Error(`Invalid booking payload: ${field} ${firstIssue.message}.`);
+  }
+
+  return parsedPayload.data;
+};
+
 /* -------------------------------------------------------
  * Booking Actions (Client)
  * ----------------------------------------------------- */
@@ -323,9 +341,10 @@ const requestBookings = async (
 export const bookConsultation = async (
   payload: IBookConsultationPayload,
 ): Promise<IBookConsultationResult> => {
+  const validatedPayload = validateBookingPayload(payload);
   const response = await httpClient.post<IBookConsultationResult>(
     "/consultations/book",
-    payload,
+    validatedPayload,
   );
   return response.data;
 };
@@ -333,9 +352,10 @@ export const bookConsultation = async (
 export const bookConsultationWithPayLater = async (
   payload: IBookConsultationPayload,
 ): Promise<IBookConsultationResult> => {
+  const validatedPayload = validateBookingPayload(payload);
   const response = await httpClient.post<IBookConsultationResult>(
     "/consultations/book/pay-later",
-    payload,
+    validatedPayload,
   );
   return response.data;
 };

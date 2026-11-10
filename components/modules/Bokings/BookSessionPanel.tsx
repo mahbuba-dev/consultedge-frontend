@@ -82,6 +82,9 @@ export default function BookSessionPanel({
     const upcoming = availability
       .filter(
         (slot) =>
+          Boolean(slot.id) &&
+          (!slot.expertId || slot.expertId === expertId) &&
+          slot.isPublished !== false &&
           !slot.isBooked &&
           !slot.isDeleted &&
           Boolean(getSlotStartDateTime(slot))
@@ -95,7 +98,7 @@ export default function BookSessionPanel({
       });
 
     return upcoming[0] ?? null;
-  }, [availability]);
+  }, [availability, expertId]);
 
   const handleBookNow = () => {
     if (!isLoggedIn) {

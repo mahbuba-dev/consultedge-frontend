@@ -77,6 +77,9 @@ export default function AvailabilityCalendar({
     return [...availability]
       .filter(
         (slot) =>
+          Boolean(slot.id) &&
+          (!slot.expertId || slot.expertId === expertId) &&
+          slot.isPublished !== false &&
           !slot.isBooked &&
           !slot.isDeleted &&
           Boolean(getSlotStartDateTime(slot)) &&
@@ -87,7 +90,7 @@ export default function AvailabilityCalendar({
         const rightTime = parseDateSafe(getSlotStartDateTime(right))?.getTime() ?? 0;
         return leftTime - rightTime;
       });
-  }, [availability]);
+  }, [availability, expertId]);
 
   const availableDateKeys = useMemo(
     () =>

@@ -122,7 +122,8 @@ const normalizeExpertAvailability = (value: any): IExpertAvailability => {
     scheduleId: String(resolvedScheduleId),
     consultationId: raw?.consultationId ?? raw?.consultation?.id ?? null,
     isBooked: Boolean(raw?.isBooked ?? raw?.booked ?? raw?.consultationId),
-    isPublished: Boolean(raw?.isPublished),
+    isPublished:
+      typeof raw?.isPublished === "boolean" ? raw.isPublished : undefined,
     isDeleted: Boolean(raw?.isDeleted ?? raw?.deleted),
     deletedAt: raw?.deletedAt ?? null,
     createdAt: raw?.createdAt ?? schedule?.createdAt ?? new Date().toISOString(),
@@ -189,114 +190,28 @@ export const getPublishedExpertAvailability = async (
     } as unknown as ApiResponse<IExpertAvailability[]>;
   }
 
-  try {
-    const publishedResponse = await requestAvailabilityList(
-      `${EXPERT_SCHEDULE_BASE}/published/${expertId}`,
-      // Add a per-request cache buster so any intermediary CDN / proxy can't
-      // serve a stale "next available" slot list right after the expert
-      // creates a new schedule.
-      { ...params, _t: Date.now() },
-    );
-
-    // Helper: merge a secondary response into the primary, dedupe by id.
-    const mergeInto = (
-      primary: ApiResponse<IExpertAvailability[]>,
-      secondary: ApiResponse<IExpertAvailability[]> | null | undefined,
-    ): ApiResponse<IExpertAvailability[]> => {
-      if (!secondary?.data?.length) return primary;
-      const seen = new Set(
-        (primary.data ?? []).map((s) => String((s as any)?.id ?? "")),
-      );
-      const extras = secondary.data.filter((s) => {
-        const id = String((s as any)?.id ?? "");
-        return id && !seen.has(id);
-      });
-      if (!extras.length) return primary;
-      return { ...primary, data: [...(primary.data ?? []), ...extras] };
-    };
-
-    // Always also try the broader endpoint scoped to this expert so that any
-    // slot the published endpoint omitted (e.g. due to server-side time
-    // filtering, lead-time rules, or stale caches) is still surfaced. Soft-
-    // fail — never let the merge break the primary response.
-    let merged = publishedResponse;
-    try {
-      const expertScoped = await requestAvailabilityList(EXPERT_SCHEDULE_BASE, {
-        ...params,
-        expertId,
-        isDeleted: false,
-        isBooked: false,
-        _t: Date.now(),
-      });
-      merged = mergeInto(merged, expertScoped);
-    } catch {
-      /* ignore */
-    }
-
-    // Also try the broader endpoint without isBooked/isDeleted filters in
-    // case the backend mis-handles those query params and silently returns
-    // an empty list. We then narrow on the client.
-    try {
-      const expertScopedLoose = await requestAvailabilityList(
-        EXPERT_SCHEDULE_BASE,
-        { ...params, expertId, _t: Date.now() },
-      );
-      const filteredLoose: ApiResponse<IExpertAvailability[]> = {
-        ...expertScopedLoose,
-        data: (expertScopedLoose.data ?? []).filter(
-          (item) => !item?.isDeleted && !item?.isBooked,
-        ),
-      };
-      merged = mergeInto(merged, filteredLoose);
-    } catch {
-      /* ignore */
-    }
-
-    if (Array.isArray(merged?.data) && merged.data.length > 0) {
-      return merged;
-    }
-
-    // Last fallback: some backends ignore/deny expertId filter for this route.
-    // Query without expertId and narrow on client side.
-    const broadResponse = await requestAvailabilityList(EXPERT_SCHEDULE_BASE, {
+  const publishedResponse = await requestAvailabilityList(
+    `${EXPERT_SCHEDULE_BASE}/published/`,
+    {
       ...params,
-      isDeleted: false,
+      expertId,
+      // Avoid stale availability immediately after an expert publishes a slot.
       _t: Date.now(),
-    });
+    },
+  );
 
-    if (Array.isArray(broadResponse?.data) && broadResponse.data.length > 0) {
-      const narrowedData = broadResponse.data.filter((item) => {
-        const itemExpertId = item?.expertId ?? item?.expert?.id ?? "";
-        return String(itemExpertId) === String(expertId);
-      });
+  //test
+  console.log(
+    "PUBLISHED SCHEDULES:",
+    publishedResponse.data.map((item) => ({
+      id: item.id,
+      scheduleId: item.scheduleId,
+      isBooked: item.isBooked,
+      consultationId: item.consultationId,
+    })),
+  );
 
-      return {
-        ...broadResponse,
-        data: narrowedData,
-      };
-    }
-
-    return publishedResponse;
-  } catch (error: any) {
-    if ([401, 403, 404].includes(error?.response?.status)) {
-      try {
-        return await requestAvailabilityList(EXPERT_SCHEDULE_BASE, {
-          ...params,
-          expertId,
-          isDeleted: false,
-          isBooked: false,
-        });
-      } catch {
-        return {
-          success: true,
-          message: "No published schedules found.",
-          data: [],
-        } as unknown as ApiResponse<IExpertAvailability[]>;
-      }
-    }
-
-    throw error;
-  }
+  return publishedResponse;
 };
 
 export const createScheduleSlot = async (
